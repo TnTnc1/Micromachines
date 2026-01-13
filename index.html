@@ -1,717 +1,1207 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Drift NC</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Firebase Imports & Configuration -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-analytics.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Drift NC</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 
-        // CONFIGURATION FIREBASE
-        const firebaseConfig = {
-            apiKey: "AIzaSyAv5_57JNF_-ZK7lRAOnqnD_C6zbXzHxSE",
-            authDomain: "micromachines-8e585.firebaseapp.com",
-            projectId: "micromachines-8e585",
-            storageBucket: "micromachines-8e585.firebasestorage.app",
-            messagingSenderId: "148484924404",
-            appId: "1:148484924404:web:7fe9d8c4abac880a574fa1",
-            measurementId: "G-78WHHQGK2S"
-        };
+  <!-- Fonts (look arcade) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
-        const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+  <!-- Firebase Imports & Configuration -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-analytics.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-        const GAME_COLLECTION_ID = "world_tour_records_v3"; 
+    const firebaseConfig = {
+      apiKey: "AIzaSyAv5_57JNF_-ZK7lRAOnqnD_C6zbXzHxSE",
+      authDomain: "micromachines-8e585.firebaseapp.com",
+      projectId: "micromachines-8e585",
+      storageBucket: "micromachines-8e585.firebasestorage.app",
+      messagingSenderId: "148484924404",
+      appId: "1:148484924404:web:7fe9d8c4abac880a574fa1",
+      measurementId: "G-78WHHQGK2S"
+    };
 
-        signInAnonymously(auth)
-            .then((userCredential) => {
-                console.log("Connecté ID:", userCredential.user.uid);
-                window.Cloud.init(db, GAME_COLLECTION_ID);
-            })
-            .catch((error) => {
-                console.error("Erreur Auth:", error);
-            });
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-        window.fs = { collection, addDoc, query, orderBy, limit, onSnapshot };
-    </script>
+    const GAME_COLLECTION_ID = "world_tour_records_v3";
 
-    <style>
-        body { 
-            margin: 0; overflow: hidden; background-color: #1a202c; 
-            color: white; font-family: 'Segoe UI', sans-serif;
-            touch-action: none; user-select: none; -webkit-user-select: none;
-        }
-        canvas { display: block; }
-        
-        #hud-layer { 
-            position: absolute; top: 0; left: 0; width: 100%;
-            padding: 10px; pointer-events: none; z-index: 10; 
-            display: flex; justify-content: space-between;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-        }
-        .hud-box { text-align: center; }
-        .big-time { font-size: 2.5rem; font-weight: bold; font-family: monospace; color: #fbbf24; }
-        .label { font-size: 0.8rem; text-transform: uppercase; opacity: 0.8; color: #cbd5e0; }
-        .sub-info { font-family: monospace; font-size: 1.2rem; color: white; }
+    signInAnonymously(auth)
+      .then((userCredential) => {
+        console.log("Connecté ID:", userCredential.user.uid);
+        window.Cloud.init(db, GAME_COLLECTION_ID);
+      })
+      .catch((error) => {
+        console.error("Erreur Auth:", error);
+      });
 
-        /* Welcome Screen Styles */
-        #welcome-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 70; /* Au-dessus de tout */
-        }
+    window.fs = { collection, addDoc, query, orderBy, limit, onSnapshot };
+  </script>
 
-        #leaderboard-panel {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(26, 32, 44, 0.95); padding: 25px; border-radius: 15px;
-            border: 1px solid #4a5568; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            width: 90%; max-width: 450px; z-index: 60; text-align: center;
-            display: none; /* Caché au début, affiché après l'écran d'accueil */
-        }
+  <style>
+    :root{
+      --bg0:#0b1020;
+      --bg1:#0f1a2e;
+      --glass: rgba(255,255,255,0.08);
+      --glass2: rgba(255,255,255,0.12);
+      --stroke: rgba(255,255,255,0.16);
+      --stroke2: rgba(255,255,255,0.22);
+      --gold:#fbbf24;
+      --neon:#5eead4;
+      --red:#ef4444;
+      --shadow: 0 20px 60px rgba(0,0,0,0.65);
+    }
 
-        /* Menu Pause */
-        #pause-menu {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
-            display: none; /* Caché par défaut */
-            flex-direction: column; align-items: center; justify-content: center;
-            z-index: 80;
-        }
+    *{ box-sizing: border-box; }
+    body {
+      margin:0; overflow:hidden;
+      background: radial-gradient(1200px 800px at 50% 30%, #172554 0%, var(--bg0) 55%, #050814 100%);
+      color:white;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      touch-action:none; user-select:none; -webkit-user-select:none;
+    }
+    canvas{ display:block; }
 
-        /* Bouton Pause (Engrenage/Menu) */
-        #pause-btn {
-            position: absolute; top: 15px; right: 15px;
-            width: 40px; height: 40px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; pointer-events: auto; z-index: 50;
-            font-weight: bold; border: 2px solid rgba(255,255,255,0.5);
-            transition: transform 0.1s, background 0.2s;
-            display: none; /* Caché hors course */
-        }
-        #pause-btn:active { transform: scale(0.9); background: rgba(255, 255, 255, 0.4); }
-        
-        .score-row {
-            display: flex; justify-content: space-between; padding: 8px 10px;
-            border-bottom: 1px solid #2d3748; font-family: monospace; font-size: 1rem;
-        }
-        .score-row:nth-child(1) { color: #fbbf24; font-weight: bold; }
-        .score-row:nth-child(2) { color: #e2e8f0; }
-        .score-row:nth-child(3) { color: #b794f4; }
+    /* Subtle animated background glow (slow) */
+    body::before{
+      content:"";
+      position:fixed; inset:-30%;
+      background:
+        radial-gradient(700px 500px at 20% 20%, rgba(94,234,212,0.10), transparent 60%),
+        radial-gradient(700px 500px at 80% 30%, rgba(251,191,36,0.10), transparent 60%),
+        radial-gradient(800px 600px at 60% 80%, rgba(239,68,68,0.08), transparent 65%);
+      filter: blur(2px);
+      animation: floatGlow 14s ease-in-out infinite alternate;
+      pointer-events:none;
+    }
+    @keyframes floatGlow{
+      from{ transform: translate3d(-1.5%, -1%, 0) scale(1); }
+      to  { transform: translate3d(1.5%, 1%, 0) scale(1.02); }
+    }
 
-        #name-input-area { display: none; margin-top: 20px; }
-        input {
-            background: #2d3748; border: 2px solid #4a5568; color: white;
-            padding: 10px; border-radius: 5px; width: 80%; text-align: center;
-            font-size: 1.1rem; outline: none;
-        }
-        
-        .action-btn {
-            background: #4299e1; border: none; padding: 10px 20px;
-            color: white; font-weight: bold; border-radius: 20px; cursor: pointer;
-            margin-top: 15px; width: 100%; transition: background 0.2s;
-        }
-        .action-btn:hover { background: #3182ce; }
-        .action-btn:disabled { background: #718096; cursor: not-allowed; }
+    /* HUD */
+    #hud-layer{
+      position:absolute; top:0; left:0; width:100%;
+      padding: 14px 14px 10px;
+      pointer-events:none; z-index:10;
+      display:flex; justify-content:space-between; gap:10px;
+    }
+    .hud-card{
+      pointer-events:none;
+      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.05));
+      border: 1px solid var(--stroke);
+      border-radius: 16px;
+      padding: 10px 12px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+      backdrop-filter: blur(10px);
+      min-width: 110px;
+    }
+    .hud-top{ display:flex; align-items:center; gap:8px; opacity:0.95; }
+    .hud-ico{ width:16px; height:16px; opacity:0.9; }
+    .label{
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.75;
+    }
+    .sub-info{
+      font-family: Orbitron, monospace;
+      font-size: 1.18rem;
+      margin-top: 4px;
+    }
+    .big-time{
+      font-family: Orbitron, monospace;
+      font-weight: 900;
+      font-size: 2.0rem;
+      color: var(--gold);
+      text-shadow: 0 0 18px rgba(251,191,36,0.25);
+      letter-spacing: 0.02em;
+    }
+    .pulse{
+      animation: pulseGlow 0.35s ease-out;
+    }
+    @keyframes pulseGlow{
+      0%{ transform: scale(1); filter: brightness(1); }
+      50%{ transform: scale(1.03); filter: brightness(1.25); }
+      100%{ transform: scale(1); filter: brightness(1); }
+    }
 
-        .menu-btn {
-            background: transparent; border: 2px solid #fff; padding: 12px 30px;
-            color: white; font-weight: bold; border-radius: 50px; cursor: pointer;
-            margin: 10px; width: 200px; text-transform: uppercase;
-            transition: all 0.2s;
-        }
-        .menu-btn:hover { background: white; color: #1a202c; }
-        .menu-btn.red { border-color: #fc8181; color: #fc8181; }
-        .menu-btn.red:hover { background: #fc8181; color: white; }
+    /* Welcome Screen */
+    #welcome-screen{
+      position:absolute; inset:0;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      z-index:70;
+      background:
+        radial-gradient(900px 600px at 50% 15%, rgba(94,234,212,0.16), transparent 60%),
+        radial-gradient(900px 600px at 30% 70%, rgba(251,191,36,0.14), transparent 60%),
+        linear-gradient(135deg, rgba(11,16,32,0.96), rgba(6,8,20,0.96));
+      backdrop-filter: blur(10px);
+    }
+    .title-logo{
+      font-family: Orbitron, sans-serif;
+      font-weight: 900;
+      letter-spacing: -0.06em;
+      text-transform: uppercase;
+      text-shadow: 4px 4px 0 #000;
+    }
+    .badge{
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(10px);
+      font-size: 12px;
+      opacity: 0.9;
+      margin-bottom: 14px;
+    }
+    .badge-dot{
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--neon);
+      box-shadow: 0 0 14px rgba(94,234,212,0.45);
+    }
 
-        #mobile-controls {
-            position: absolute; bottom: 20px; left: 0; width: 100%; height: 140px;
-            display: flex; justify-content: space-between; padding: 0 30px; box-sizing: border-box;
-            pointer-events: none; z-index: 20;
-        }
-        .control-group { display: flex; gap: 20px; align-items: flex-end; pointer-events: auto; }
-        .btn {
-            width: 80px; height: 80px; background: rgba(255, 255, 255, 0.15);
-            border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 32px; color: white; backdrop-filter: blur(4px); touch-action: none;
-        }
-        .btn:active, .btn.active { background: rgba(255, 255, 255, 0.4); transform: scale(0.95); }
-    </style>
+    /* Poster */
+    .poster-wrap{
+      margin-bottom: 18px;
+      padding: 10px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03));
+      box-shadow: var(--shadow);
+      transform: rotate(-1.5deg);
+      transition: transform 400ms ease;
+    }
+    .poster-wrap:hover{ transform: rotate(0deg) scale(1.01); }
+    #poster-img{
+      border-radius: 12px;
+      display:block;
+      max-width: 480px;
+      width: 86vw;
+      height: auto;
+      border: 1px solid rgba(255,255,255,0.10);
+    }
+
+    /* Primary button */
+    .primary-btn{
+      position: relative;
+      padding: 14px 34px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: 0.02em;
+      color: white;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: linear-gradient(90deg, #3b82f6, #14b8a6);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+      transform: translateZ(0);
+      transition: transform 150ms ease, filter 200ms ease;
+    }
+    .primary-btn:hover{ transform: scale(1.04); filter: brightness(1.05); }
+    .primary-btn:active{ transform: scale(0.98); }
+    .primary-btn::after{
+      content:"";
+      position:absolute; inset:0;
+      border-radius: 999px;
+      background: linear-gradient(120deg, transparent 10%, rgba(255,255,255,0.26) 30%, transparent 55%);
+      transform: translateX(-120%);
+      animation: shine 2.4s ease-in-out infinite;
+      pointer-events:none;
+      mix-blend-mode: screen;
+    }
+    @keyframes shine{
+      0%,60% { transform: translateX(-120%); opacity: 0.0; }
+      70%    { opacity: 0.85; }
+      100%   { transform: translateX(120%); opacity: 0.0; }
+    }
+
+    /* Leaderboard */
+    #leaderboard-panel{
+      position:absolute; top:50%; left:50%; transform: translate(-50%,-50%);
+      width: 92%; max-width: 480px;
+      z-index:60;
+      display:none;
+      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.05));
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      padding: 18px;
+      text-align:center;
+    }
+    .score-row{
+      display:flex; justify-content:space-between; padding: 10px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-family: Orbitron, monospace;
+      font-size: 0.95rem;
+    }
+    .score-row:nth-child(1){ color: var(--gold); font-weight: 900; }
+    .score-row:nth-child(2){ color: rgba(255,255,255,0.9); }
+    .score-row:nth-child(3){ color: #c4b5fd; }
+    #scores-list{
+      margin-top: 10px;
+      text-align:left;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 14px;
+      padding: 8px;
+      max-height: 220px;
+      overflow-y:auto;
+    }
+
+    input{
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.16);
+      color: white;
+      padding: 12px;
+      border-radius: 12px;
+      width: 100%;
+      text-align:center;
+      font-size: 1.05rem;
+      outline:none;
+    }
+    input:focus{
+      border-color: rgba(94,234,212,0.55);
+      box-shadow: 0 0 0 4px rgba(94,234,212,0.12);
+    }
+
+    .action-btn{
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.18);
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, rgba(72,187,120,1), rgba(34,197,94,0.85));
+      box-shadow: 0 18px 45px rgba(0,0,0,0.35);
+      transition: transform 150ms ease, filter 200ms ease;
+      cursor:pointer;
+    }
+    .action-btn:hover{ transform: translateY(-1px); filter: brightness(1.05); }
+    .action-btn:active{ transform: translateY(0px) scale(0.99); }
+    .action-btn:disabled{ opacity: 0.55; cursor:not-allowed; filter:none; transform:none; }
+
+    /* Pause button */
+    #pause-btn{
+      position:absolute;
+      top: 16px;
+      right: 16px;
+      width: 44px; height: 44px;
+      border-radius: 999px;
+      display:none;
+      align-items:center; justify-content:center;
+      pointer-events:auto;
+      z-index:50;
+      cursor:pointer;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.20);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 14px 45px rgba(0,0,0,0.45);
+      transition: transform 120ms ease, background 200ms ease;
+    }
+    #pause-btn:active{ transform: scale(0.95); background: rgba(255,255,255,0.18); }
+    .pause-icon{
+      width: 16px; height: 16px;
+      position: relative;
+    }
+    .pause-icon::before, .pause-icon::after{
+      content:""; position:absolute; top:0; bottom:0;
+      width: 5px; border-radius: 3px;
+      background: rgba(255,255,255,0.95);
+      box-shadow: 0 0 18px rgba(255,255,255,0.25);
+    }
+    .pause-icon::before{ left:0; }
+    .pause-icon::after{ right:0; }
+
+    /* Pause Menu */
+    #pause-menu{
+      position:absolute; inset:0;
+      display:none;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      z-index:80;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(10px);
+    }
+    .menu-btn{
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.20);
+      padding: 12px 30px;
+      color: white;
+      font-weight: 900;
+      border-radius: 999px;
+      cursor:pointer;
+      margin: 10px;
+      width: 220px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      transition: transform 150ms ease, background 200ms ease, filter 200ms ease;
+      backdrop-filter: blur(10px);
+    }
+    .menu-btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,0.10); filter: brightness(1.05); }
+    .menu-btn:active{ transform: translateY(0px) scale(0.99); }
+    .menu-btn.red{
+      border-color: rgba(239,68,68,0.6);
+      color: #fecaca;
+      background: rgba(239,68,68,0.10);
+    }
+    .menu-btn.red:hover{ background: rgba(239,68,68,0.18); }
+
+    /* Mobile controls */
+    #mobile-controls{
+      position:absolute;
+      left:0; right:0;
+      bottom: calc(18px + env(safe-area-inset-bottom));
+      height: 150px;
+      display:flex;
+      justify-content:space-between;
+      padding: 0 18px;
+      pointer-events:none;
+      z-index:20;
+    }
+    .control-group{
+      display:flex;
+      gap: 14px;
+      align-items:flex-end;
+      pointer-events:auto;
+    }
+    .btn{
+      width: 78px; height: 78px;
+      border-radius: 999px;
+      display:flex; align-items:center; justify-content:center;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      color: white;
+      background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.18), rgba(255,255,255,0.08));
+      border: 1px solid rgba(255,255,255,0.18);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 16px 50px rgba(0,0,0,0.45);
+      touch-action:none;
+      user-select:none;
+    }
+    .btn:active, .btn.active{ transform: scale(0.95); filter: brightness(1.1); }
+    .btn.gas{
+      background: radial-gradient(circle at 30% 25%, rgba(94,234,212,0.24), rgba(255,255,255,0.06));
+      border-color: rgba(94,234,212,0.28);
+    }
+    .btn.brake{
+      background: radial-gradient(circle at 30% 25%, rgba(239,68,68,0.22), rgba(255,255,255,0.06));
+      border-color: rgba(239,68,68,0.28);
+    }
+
+    /* Reduce motion accessibility */
+    @media (prefers-reduced-motion: reduce){
+      body::before, .primary-btn::after{ animation: none !important; }
+      .poster-wrap{ transition: none !important; }
+    }
+  </style>
 </head>
+
 <body>
-
-    <div id="hud-layer">
-        <div class="hud-box" style="text-align: left;">
-            <div class="label">Tour</div>
-            <div id="lap-display" class="sub-info text-2xl">1 / 3</div>
-        </div>
-        <div class="hud-box">
-            <div class="label">Chrono</div>
-            <div id="time-display" class="big-time">00:00.00</div>
-        </div>
-        <div class="hud-box" style="text-align: right; padding-right: 50px;"> <!-- Padding pour laisser place au bouton pause -->
-            <div class="label">Record</div>
-            <div id="wr-display" class="sub-info" style="color: #fbbf24;">--:--.--</div>
-        </div>
+  <!-- HUD -->
+  <div id="hud-layer">
+    <div class="hud-card" style="text-align:left;">
+      <div class="hud-top">
+        <svg class="hud-ico" viewBox="0 0 24 24" fill="none">
+          <path d="M4 7h16M4 12h16M4 17h16" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
+        </svg>
+        <div class="label">Tour</div>
+      </div>
+      <div id="lap-display" class="sub-info">1 / 3</div>
     </div>
 
-    <!-- BOUTON PAUSE -->
-    <div id="pause-btn">||</div>
-
-    <!-- MENU PAUSE -->
-    <div id="pause-menu">
-        <h2 class="text-4xl font-bold text-white mb-8">PAUSE</h2>
-        <button id="resume-btn" class="menu-btn">Reprendre</button>
-        <button id="restart-btn" class="menu-btn">Recommencer</button>
-        <button id="quit-btn" class="menu-btn red">Quitter</button>
+    <div class="hud-card" style="text-align:center; min-width: 160px;">
+      <div class="hud-top" style="justify-content:center;">
+        <svg class="hud-ico" viewBox="0 0 24 24" fill="none">
+          <path d="M12 7v5l3 2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+          <path d="M12 21a9 9 0 1 0-9-9" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+        </svg>
+        <div class="label">Chrono</div>
+      </div>
+      <div id="time-display" class="big-time">00:00.00</div>
     </div>
 
-    <!-- ÉCRAN D'ACCUEIL DRIFT NC -->
-    <div id="welcome-screen">
-        <h1 class="text-6xl font-black text-yellow-400 mb-6 italic tracking-tighter drop-shadow-lg" style="text-shadow: 4px 4px 0 #000;">DRIFT NC</h1>
-        
-        <!-- ZONE IMAGE ACCUEIL -->
-        <div class="mb-8 p-2 bg-white rounded-lg shadow-2xl transform -rotate-2 hover:rotate-0 transition duration-500">
-            <!-- IMAGE MISE A JOUR -->
-            <img id="poster-img" src="https://i.postimg.cc/vB21QZmP/image-drift-nc.png" alt="Drift NC Poster" class="rounded w-full max-w-md h-auto border border-gray-200">
-        </div>
+    <div class="hud-card" style="text-align:right; min-width: 140px; margin-right: 54px;">
+      <div class="hud-top" style="justify-content:flex-end;">
+        <svg class="hud-ico" viewBox="0 0 24 24" fill="none">
+          <path d="M7 4h10v3H7V4Z" stroke="white" stroke-width="2" opacity="0.75"/>
+          <path d="M9 7v3a3 3 0 0 0 6 0V7" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.75"/>
+          <path d="M8 20h8" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+        </svg>
+        <div class="label">Record</div>
+      </div>
+      <div id="wr-display" class="sub-info" style="color: var(--gold); text-shadow: 0 0 16px rgba(251,191,36,0.22);">--:--.--</div>
+    </div>
+  </div>
 
-        <button id="enter-btn" class="px-10 py-4 bg-gradient-to-r from-blue-500 to-teal-400 text-white font-bold text-2xl rounded-full shadow-lg hover:scale-105 transition transform border-b-4 border-blue-700">
-            JOUER
-        </button>
-        <p class="mt-4 text-gray-400 text-sm">Le jeu de drift Calédonien</p>
+  <!-- Pause Button -->
+  <div id="pause-btn" aria-label="Pause">
+    <div class="pause-icon"></div>
+  </div>
+
+  <!-- Pause Menu -->
+  <div id="pause-menu">
+    <div class="hud-card" style="min-width: 320px; text-align:center;">
+      <h2 class="text-4xl font-black mb-2" style="font-family:Orbitron;">PAUSE</h2>
+      <p class="text-sm opacity-75 mb-6">Reprends la course ou retourne au classement.</p>
+      <button id="resume-btn" class="menu-btn">Reprendre</button>
+      <button id="restart-btn" class="menu-btn">Recommencer</button>
+      <button id="quit-btn" class="menu-btn red">Quitter</button>
+    </div>
+  </div>
+
+  <!-- Welcome Screen -->
+  <div id="welcome-screen">
+    <div class="badge">
+      <span class="badge-dot"></span>
+      <span>Lagoon Edition • Nouvelle-Calédonie</span>
     </div>
 
-    <!-- LEADERBOARD / MENU PRINCIPAL -->
-    <div id="leaderboard-panel">
-        <h1 class="text-3xl font-bold text-yellow-400 mb-1" style="text-shadow: 2px 2px 0 #000;">CLASSEMENT</h1>
-        <p class="text-xs text-gray-400 mb-4">BATTEZ LE FANTÔME DU CHAMPION</p>
+    <h1 class="text-6xl md:text-7xl text-yellow-400 mb-4 title-logo">DRIFT NC</h1>
+    <p class="text-sm opacity-70 mb-5">Le jeu de drift Calédonien</p>
 
-        <div id="scores-list" class="mb-4 text-left bg-gray-800 rounded p-2 max-h-48 overflow-y-auto">
-            <div class="text-center text-gray-500 text-sm py-4">Chargement...</div>
-        </div>
-
-        <button id="start-btn" class="action-btn" style="background: #48bb78; font-size: 1.2rem;">DÉMARRER LA COURSE</button>
-        
-        <div id="name-input-area">
-            <h2 class="text-xl font-bold text-white mb-2">NOUVEAU RECORD !</h2>
-            <div class="text-yellow-300 text-2xl font-mono mb-4" id="final-time-display">00:00.00</div>
-            <input type="text" id="player-name" placeholder="VOTRE PSEUDO" maxlength="15">
-            <button id="submit-score-btn" class="action-btn">ENREGISTRER</button>
-        </div>
+    <div class="poster-wrap">
+      <img id="poster-img" src="https://i.postimg.cc/vB21QZmP/image-drift-nc.png" alt="Drift NC Poster">
     </div>
 
-    <div id="mobile-controls" style="display:none;">
-        <div class="control-group">
-            <div id="btn-left" class="btn">⬅️</div>
-            <div id="btn-right" class="btn">➡️</div>
-        </div>
-        <div class="control-group">
-            <div id="btn-brake" class="btn brake">R</div>
-            <div id="btn-gas" class="btn gas">GO</div>
-        </div>
+    <button id="enter-btn" class="primary-btn">JOUER</button>
+    <p class="mt-4 text-xs opacity-60">Astuce : drift long = fumée + score style (bientôt 😉)</p>
+  </div>
+
+  <!-- Leaderboard -->
+  <div id="leaderboard-panel">
+    <h1 class="text-3xl font-black text-yellow-400 mb-1" style="font-family:Orbitron; text-shadow: 2px 2px 0 #000;">CLASSEMENT</h1>
+    <p class="text-xs opacity-70 mb-3">BATTEZ LE FANTÔME DU CHAMPION</p>
+
+    <div id="scores-list">
+      <div class="text-center text-gray-300 text-sm py-4 opacity-70">Chargement...</div>
     </div>
 
-    <canvas id="gameCanvas"></canvas>
+    <button id="start-btn" class="action-btn" style="margin-top: 14px;">DÉMARRER</button>
 
-    <script>
-        const carSpriteSrc = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 80'%3E%3Cdefs%3E%3ClinearGradient id='bodyGrad' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' style='stop-color:%23c53030' /%3E%3Cstop offset='50%25' style='stop-color:%23e53e3e' /%3E%3Cstop offset='100%25' style='stop-color:%239b2c2c' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='2' y='2' width='40' height='76' rx='8' fill='rgba(0,0,0,0.3)' /%3E%3Cpath d='M6,10 Q2,20 2,40 Q2,60 6,70 L6,76 Q6,78 8,78 L36,78 Q38,78 38,76 L38,70 Q42,60 42,40 Q42,20 38,10 L36,4 Q36,2 34,2 L10,2 Q8,2 8,4 Z' fill='url(%23bodyGrad)' stroke='%23742a2a' stroke-width='1' /%3E%3Cpath d='M8,20 L36,20 L34,32 L10,32 Z' fill='%232d3748' /%3E%3Cpath d='M10,48 L34,48 L36,60 L8,60 Z' fill='%231a202c' /%3E%3Crect x='9' y='33' width='26' height='14' fill='%23e53e3e' /%3E%3Crect x='20' y='2' width='4' height='78' fill='rgba(255,255,255,0.8)' /%3E%3Crect x='4' y='68' width='36' height='8' rx='2' fill='%23742a2a' /%3E%3Crect x='6' y='4' width='6' height='4' fill='%23faf089' /%3E%3Crect x='32' y='4' width='6' height='4' fill='%23faf089' /%3E%3C/svg%3E";
-        const carImage = new Image(); carImage.src = carSpriteSrc;
+    <div id="name-input-area" style="display:none; margin-top: 14px;">
+      <h2 class="text-xl font-black mb-2" style="font-family:Orbitron;">NOUVEAU RECORD !</h2>
+      <div class="text-yellow-300 text-2xl font-mono mb-3" id="final-time-display">00:00.00</div>
+      <input type="text" id="player-name" placeholder="VOTRE PSEUDO" maxlength="15">
+      <button id="submit-score-btn" class="action-btn" style="background: linear-gradient(90deg, #3b82f6, #14b8a6);">ENREGISTRER</button>
+    </div>
+  </div>
 
-        // ==========================================
-        // 1. DATA & CLOUD
-        // ==========================================
-        window.Cloud = {
-            db: null,
-            collectionId: null,
-            worldRecordTime: Infinity,
-            globalGhostData: null,
+  <!-- Mobile controls -->
+  <div id="mobile-controls" style="display:none;">
+    <div class="control-group">
+      <div id="btn-left" class="btn">⬅️</div>
+      <div id="btn-right" class="btn">➡️</div>
+    </div>
+    <div class="control-group">
+      <div id="btn-brake" class="btn brake">R</div>
+      <div id="btn-gas" class="btn gas">GO</div>
+    </div>
+  </div>
 
-            init: function(database, collectionId) {
-                this.db = database;
-                this.collectionId = collectionId;
-                this.listenToLeaderboard();
-            },
+  <canvas id="gameCanvas"></canvas>
 
-            listenToLeaderboard: function() {
-                if(!this.db) return;
-                const { collection, query, orderBy, limit, onSnapshot } = window.fs;
-                const q = query(
-                    collection(this.db, this.collectionId),
-                    orderBy('timeMs', 'asc'),
-                    limit(10)
-                );
+  <script>
+    // Car sprite (same)
+    const carSpriteSrc = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 80'%3E%3Cdefs%3E%3ClinearGradient id='bodyGrad' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' style='stop-color:%23c53030' /%3E%3Cstop offset='50%25' style='stop-color:%23e53e3e' /%3E%3Cstop offset='100%25' style='stop-color:%239b2c2c' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='2' y='2' width='40' height='76' rx='8' fill='rgba(0,0,0,0.3)' /%3E%3Cpath d='M6,10 Q2,20 2,40 Q2,60 6,70 L6,76 Q6,78 8,78 L36,78 Q38,78 38,76 L38,70 Q42,60 42,40 Q42,20 38,10 L36,4 Q36,2 34,2 L10,2 Q8,2 8,4 Z' fill='url(%23bodyGrad)' stroke='%23742a2a' stroke-width='1' /%3E%3Cpath d='M8,20 L36,20 L34,32 L10,32 Z' fill='%232d3748' /%3E%3Cpath d='M10,48 L34,48 L36,60 L8,60 Z' fill='%231a202c' /%3E%3Crect x='9' y='33' width='26' height='14' fill='%23e53e3e' /%3E%3Crect x='20' y='2' width='4' height='78' fill='rgba(255,255,255,0.8)' /%3E%3Crect x='4' y='68' width='36' height='8' rx='2' fill='%23742a2a' /%3E%3Crect x='6' y='4' width='6' height='4' fill='%23faf089' /%3E%3Crect x='32' y='4' width='6' height='4' fill='%23faf089' /%3E%3C/svg%3E";
+    const carImage = new Image(); carImage.src = carSpriteSrc;
 
-                onSnapshot(q, (snapshot) => {
-                    const listEl = document.getElementById('scores-list');
-                    listEl.innerHTML = '';
-                    let rank = 1;
-                    
-                    if(snapshot.empty) {
-                        listEl.innerHTML = '<div class="text-center text-gray-500 text-sm">Aucun record. Soyez le premier !</div>';
-                        this.worldRecordTime = Infinity;
-                        return;
-                    }
+    // ==========================================
+    // 1. CLOUD / LEADERBOARD
+    // ==========================================
+    window.Cloud = {
+      db: null,
+      collectionId: null,
+      worldRecordTime: Infinity,
+      globalGhostData: null,
 
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        if (rank === 1) {
-                            this.worldRecordTime = data.timeMs;
-                            document.getElementById('wr-display').innerText = data.timeStr;
-                            if (data.ghostData) {
-                                try {
-                                    this.globalGhostData = JSON.parse(data.ghostData);
-                                    GhostSystem.setGlobalGhost(this.globalGhostData);
-                                    console.log("Fantôme chargé: " + this.globalGhostData.length + " points");
-                                } catch(e) { console.error("Erreur ghost", e); }
-                            }
-                        }
-                        const row = document.createElement('div');
-                        row.className = 'score-row';
-                        row.innerHTML = `<span>#${rank} ${data.name}</span><span>${data.timeStr}</span>`;
-                        listEl.appendChild(row);
-                        rank++;
-                    });
-                }, (error) => console.error("Erreur scores:", error));
-            },
+      init: function(database, collectionId) {
+        this.db = database;
+        this.collectionId = collectionId;
+        this.listenToLeaderboard();
+      },
 
-            saveScore: async function(name, timeMs, timeStr, ghostData) {
-                if(!this.db) { alert("Pas de connexion."); return false; }
-                const { collection, addDoc } = window.fs;
-                
-                const ghostString = JSON.stringify(ghostData);
-                console.log("Taille Fantôme (chars):", ghostString.length);
-                
-                const safeGhost = ghostString.length < 950000 ? ghostString : null; 
+      listenToLeaderboard: function() {
+        if(!this.db) return;
+        const { collection, query, orderBy, limit, onSnapshot } = window.fs;
+        const q = query(
+          collection(this.db, this.collectionId),
+          orderBy('timeMs', 'asc'),
+          limit(10)
+        );
 
-                if(!safeGhost) console.warn("Fantôme trop volumineux, ignoré.");
+        onSnapshot(q, (snapshot) => {
+          const listEl = document.getElementById('scores-list');
+          listEl.innerHTML = '';
+          let rank = 1;
 
+          if(snapshot.empty) {
+            listEl.innerHTML = '<div class="text-center text-gray-200 text-sm py-4 opacity-70">Aucun record. Soyez le premier !</div>';
+            this.worldRecordTime = Infinity;
+            return;
+          }
+
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            if (rank === 1) {
+              this.worldRecordTime = data.timeMs;
+              document.getElementById('wr-display').innerText = data.timeStr;
+
+              if (data.ghostData) {
                 try {
-                    await addDoc(collection(this.db, this.collectionId), {
-                        name: name.trim(), 
-                        timeMs: timeMs,
-                        timeStr: timeStr,
-                        ghostData: safeGhost,
-                        date: Date.now()
-                    });
-                    return true;
-                } catch(e) {
-                    console.error("Erreur sauvegarde:", e);
-                    alert("Erreur sauvegarde. Vérifiez connexion.");
-                    return false;
-                }
+                  this.globalGhostData = JSON.parse(data.ghostData);
+                  GhostSystem.setGlobalGhost(this.globalGhostData);
+                  console.log("Fantôme chargé:", this.globalGhostData.length, "points");
+                } catch(e) { console.error("Erreur ghost", e); }
+              }
             }
-        };
 
-        // ==========================================
-        // 2. GHOST SYSTEM
-        // ==========================================
-        const GhostSystem = {
-            recording: [],
-            bestRecording: [],
-            globalFrames: null,
-            recordCounter: 0,
-            
-            resetRecording: function() {
-                this.recording = [];
-                this.recordCounter = 0;
-            },
+            const row = document.createElement('div');
+            row.className = 'score-row';
+            row.innerHTML = `<span>#${rank} ${data.name}</span><span>${data.timeStr}</span>`;
+            listEl.appendChild(row);
+            rank++;
+          });
+        }, (error) => console.error("Erreur scores:", error));
+      },
 
-            saveRecordingAsBest: function() {
-                this.bestRecording = [...this.recording];
-            },
+      saveScore: async function(name, timeMs, timeStr, ghostData) {
+        if(!this.db) { alert("Pas de connexion."); return false; }
+        const { collection, addDoc } = window.fs;
 
-            setGlobalGhost: function(data) {
-                this.globalFrames = data;
-            },
+        const ghostString = JSON.stringify(ghostData);
+        const safeGhost = ghostString.length < 950000 ? ghostString : null;
+        if(!safeGhost) console.warn("Fantôme trop volumineux, ignoré.");
 
-            recordFrame: function(time, car) {
-                this.recordCounter++;
-                if (this.recordCounter % 4 !== 0) return;
+        try {
+          await addDoc(collection(this.db, this.collectionId), {
+            name: name.trim(),
+            timeMs,
+            timeStr,
+            ghostData: safeGhost,
+            date: Date.now()
+          });
+          return true;
+        } catch(e) {
+          console.error("Erreur sauvegarde:", e);
+          alert("Erreur sauvegarde. Vérifiez connexion.");
+          return false;
+        }
+      }
+    };
 
-                this.recording.push({
-                    t: Math.round(time),
-                    x: Math.round(car.x),
-                    y: Math.round(car.y),
-                    a: parseFloat(car.angle.toFixed(2))
-                });
-            },
+    // ==========================================
+    // 2. GHOST SYSTEM
+    // ==========================================
+    const GhostSystem = {
+      recording: [],
+      bestRecording: [],
+      globalFrames: null,
+      recordCounter: 0,
 
-            drawGlobalGhost: function(ctx, time) {
-                if (!this.globalFrames || this.globalFrames.length < 2) return;
-                
-                const frames = this.globalFrames;
-                
-                let idx = 0;
-                while(idx < frames.length - 1 && frames[idx+1].t < time) {
-                    idx++;
-                }
-                
-                const curr = frames[idx];
-                const next = frames[idx+1];
-                
-                if (!next) return;
+      resetRecording(){ this.recording = []; this.recordCounter = 0; },
+      saveRecordingAsBest(){ this.bestRecording = [...this.recording]; },
+      setGlobalGhost(data){ this.globalFrames = data; },
 
-                const ratio = (time - curr.t) / (next.t - curr.t);
-                const clampedRatio = Math.max(0, Math.min(1, ratio));
+      recordFrame(time, car){
+        this.recordCounter++;
+        if (this.recordCounter % 4 !== 0) return;
+        this.recording.push({
+          t: Math.round(time),
+          x: Math.round(car.x),
+          y: Math.round(car.y),
+          a: parseFloat(car.angle.toFixed(2))
+        });
+      },
 
-                const x = curr.x + (next.x - curr.x) * clampedRatio;
-                const y = curr.y + (next.y - curr.y) * clampedRatio;
-                const a = curr.a + (next.a - curr.a) * clampedRatio;
+      drawGlobalGhost(ctx, time){
+        if (!this.globalFrames || this.globalFrames.length < 2) return;
 
-                ctx.save();
-                ctx.translate(x, y);
-                ctx.rotate(a + Math.PI/2); 
+        const frames = this.globalFrames;
+        let idx = 0;
+        while(idx < frames.length - 1 && frames[idx+1].t < time) idx++;
 
-                ctx.globalAlpha = 0.5;
-                if(carImage.complete) {
-                    ctx.drawImage(carImage, -22, -40, 44, 80);
-                    ctx.globalCompositeOperation = 'source-atop';
-                    ctx.fillStyle = 'rgba(251, 191, 36, 0.6)'; 
-                    ctx.fillRect(-22, -40, 44, 80);
-                } else {
-                    ctx.fillStyle = '#fbbf24';
-                    ctx.fillRect(-11, -19, 22, 38);
-                }
-                
-                ctx.globalAlpha = 0.8;
-                ctx.globalCompositeOperation = 'source-over';
-                ctx.fillStyle = "#fbbf24";
-                ctx.font = "bold 10px Arial";
-                ctx.textAlign = "center";
-                ctx.fillText("CHAMPION", 0, -45);
+        const curr = frames[idx];
+        const next = frames[idx+1];
+        if (!next) return;
 
-                ctx.restore();
-            }
-        };
+        const ratio = (time - curr.t) / (next.t - curr.t);
+        const r = Math.max(0, Math.min(1, ratio));
 
-        // ==========================================
-        // 3. GAME ENGINE
-        // ==========================================
-        const PHYSICS = { acceleration: 0.22, maxSpeed: 12.5, friction: 0.965, turnSpeed: 0.075, offRoadFriction: 0.8 };
-        const TRACK_CONFIG = { roadColor: '#4a5568', grassColor: '#276749', lineWidth: 160, borderColor: '#e2e8f0', borderWidth: 6 };
+        const x = curr.x + (next.x - curr.x) * r;
+        const y = curr.y + (next.y - curr.y) * r;
+        const a = curr.a + (next.a - curr.a) * r;
 
-        const Track = {
-            collisionCtx: null, mapW: 3000, mapH: 3000,
-            init: function() {
-                const c = document.createElement('canvas'); c.width = this.mapW; c.height = this.mapH;
-                this.collisionCtx = c.getContext('2d', { willReadFrequently: true });
-                this.drawMask();
-            },
-            trace: function(ctx) {
-                ctx.beginPath();
-                ctx.moveTo(-400, -600); ctx.lineTo(400, -600); 
-                ctx.arc(400, -400, 200, -Math.PI/2, Math.PI/2, false);
-                ctx.arc(400, 0, 200, -Math.PI/2, Math.PI/2, false);
-                ctx.lineTo(-100, 200); ctx.arc(-100, 400, 200, -Math.PI/2, Math.PI, false);
-                ctx.lineTo(-600, 400); ctx.arc(-600, -100, 500, Math.PI/2, -Math.PI/2, false);
-                ctx.lineTo(-400, -600);
-            },
-            drawMask: function() {
-                const ctx = this.collisionCtx; ctx.save(); ctx.translate(1500, 1500);
-                ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#FFF'; ctx.lineWidth = TRACK_CONFIG.lineWidth;
-                this.trace(ctx); ctx.stroke(); ctx.restore();
-            },
-            draw: function(ctx) {
-                ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-                ctx.strokeStyle = '#e53e3e'; ctx.lineWidth = 172; this.trace(ctx); ctx.stroke();
-                ctx.strokeStyle = '#FFF'; ctx.lineWidth = 166; this.trace(ctx); ctx.stroke();
-                ctx.strokeStyle = '#4a5568'; ctx.lineWidth = 160; this.trace(ctx); ctx.stroke();
-                ctx.save(); ctx.translate(0, -600); ctx.fillStyle='#FFF'; ctx.fillRect(-12,-80,24,160);
-                ctx.fillStyle='#000'; for(let y=-80;y<80;y+=20){ 
-                    if((y/20)%2==0) ctx.fillRect(-12,y,12,20); else ctx.fillRect(0,y,12,20); 
-                } ctx.restore();
-            },
-            check: function(x,y) {
-                const mx = Math.floor(x+1500); const my = Math.floor(y+1500);
-                if(mx<0||mx>=3000||my<0||my>=3000) return 'grass';
-                return this.collisionCtx.getImageData(mx,my,1,1).data[3]>0 ? 'road':'grass';
-            }
-        };
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(a + Math.PI/2);
 
-        const RaceManager = {
-            totalLaps: 3, currentLap: 1, state: 'menu', // States: menu, racing, paused, finished
-            startTime: 0, lapStartTime: 0, bestLapTime: Infinity, pausedTime: 0,
-            checkpoints: [ {x:500,y:-400,p:false}, {x:400,y:100,p:false}, {x:-200,y:400,p:false}, {x:-900,y:0,p:false} ],
+        // ghost glow
+        ctx.globalAlpha = 0.18;
+        ctx.fillStyle = 'rgba(251,191,36,1)';
+        ctx.beginPath();
+        ctx.ellipse(0, 8, 22, 36, 0, 0, Math.PI*2);
+        ctx.fill();
 
-            startRace: function() {
-                this.state = 'racing';
-                this.startTime = Date.now();
-                this.lapStartTime = this.startTime;
-                this.currentLap = 1;
-                this.bestLapTime = Infinity;
-                this.checkpoints.forEach(cp => cp.p = false);
-                GhostSystem.resetRecording();
-                
-                document.getElementById('leaderboard-panel').style.display = 'none';
-                document.getElementById('pause-menu').style.display = 'none';
-                document.getElementById('pause-btn').style.display = 'flex';
-                document.getElementById('mobile-controls').style.display = 'flex';
-                document.getElementById('lap-display').innerText = `1 / ${this.totalLaps}`;
-            },
-
-            pauseGame: function() {
-                if(this.state === 'racing') {
-                    this.state = 'paused';
-                    this.pausedTime = Date.now();
-                    document.getElementById('pause-menu').style.display = 'flex';
-                    document.getElementById('mobile-controls').style.display = 'none';
-                }
-            },
-
-            resumeGame: function() {
-                if(this.state === 'paused') {
-                    // Adjust start times to account for the pause duration
-                    const pauseDuration = Date.now() - this.pausedTime;
-                    this.startTime += pauseDuration;
-                    this.lapStartTime += pauseDuration;
-                    
-                    this.state = 'racing';
-                    document.getElementById('pause-menu').style.display = 'none';
-                    document.getElementById('mobile-controls').style.display = 'flex';
-                }
-            },
-
-            quitToMenu: function() {
-                this.state = 'menu';
-                document.getElementById('pause-menu').style.display = 'none';
-                document.getElementById('pause-btn').style.display = 'none';
-                document.getElementById('mobile-controls').style.display = 'none';
-                document.getElementById('leaderboard-panel').style.display = 'block';
-                document.getElementById('start-btn').style.display = 'block';
-                document.getElementById('name-input-area').style.display = 'none';
-            },
-
-            update: function(car) {
-                if(this.state !== 'racing') return;
-                
-                const now = Date.now();
-                const lapTime = now - this.lapStartTime;
-                GhostSystem.recordFrame(lapTime, car);
-
-                this.checkpoints.forEach(cp => {
-                    if(!cp.p && Math.sqrt((car.x-cp.x)**2 + (car.y-cp.y)**2) < 300) cp.p = true;
-                });
-
-                if(Math.abs(car.y - (-600)) < 80 && car.x > 0 && car.lastX <= 0) {
-                    if(this.checkpoints.every(cp => cp.p)) {
-                        this.completeLap(now);
-                    }
-                }
-            },
-
-            completeLap: function(now) {
-                const lapTime = now - this.lapStartTime;
-                
-                if(lapTime < this.bestLapTime) {
-                    this.bestLapTime = lapTime;
-                    GhostSystem.saveRecordingAsBest(); 
-                }
-                
-                if(this.currentLap >= this.totalLaps) {
-                    this.finishRace(now);
-                } else {
-                    this.currentLap++;
-                    this.lapStartTime = now;
-                    document.getElementById('lap-display').innerText = `${this.currentLap} / ${this.totalLaps}`;
-                    this.checkpoints.forEach(cp => cp.p = false);
-                    GhostSystem.resetRecording(); 
-                }
-            },
-
-            finishRace: function(now) {
-                this.state = 'finished';
-                const timeToSubmit = this.bestLapTime;
-                const timeStr = this.formatTime(timeToSubmit);
-
-                document.getElementById('pause-btn').style.display = 'none';
-                document.getElementById('leaderboard-panel').style.display = 'block';
-                document.getElementById('start-btn').style.display = 'none'; 
-                document.getElementById('mobile-controls').style.display = 'none';
-                
-                document.getElementById('name-input-area').style.display = 'block';
-                document.getElementById('final-time-display').innerText = timeStr;
-
-                const submitBtn = document.getElementById('submit-score-btn');
-                const newBtn = submitBtn.cloneNode(true);
-                submitBtn.parentNode.replaceChild(newBtn, submitBtn);
-                
-                newBtn.onclick = async () => {
-                    const name = document.getElementById('player-name').value;
-                    if(name.length < 1) return;
-                    
-                    newBtn.innerText = "ENVOI...";
-                    newBtn.disabled = true;
-
-                    const saved = await window.Cloud.saveScore(name, timeToSubmit, timeStr, GhostSystem.bestRecording);
-                    
-                    if (saved) {
-                        document.getElementById('name-input-area').innerHTML = '<div class="text-green-400 font-bold py-4">SCORE ENREGISTRÉ !</div><button class="action-btn" onclick="location.reload()">REJOUER</button>';
-                    } else {
-                        newBtn.innerText = "RÉESSAYER";
-                        newBtn.disabled = false;
-                    }
-                };
-            },
-            
-            formatTime: function(ms) {
-                let m = Math.floor(ms/60000); let s = Math.floor((ms%60000)/1000); let c = Math.floor((ms%1000)/10);
-                return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}.${c.toString().padStart(2,'0')}`;
-            }
-        };
-
-        // ==========================================
-        // 4. CAR PHYSICS
-        // ==========================================
-        class Car {
-            constructor() { 
-                this.x=0; this.y=-600; this.lastX=0; this.angle=0; 
-                this.vx=0; this.vy=0; this.speed=0;
-                this.controls={u:false,d:false,l:false,r:false};
-                this.skids=[];
-            }
-            update() {
-                this.lastX=this.x;
-                if(RaceManager.state !== 'racing') return; // Only update physics if racing
-
-                if(Math.abs(this.speed)>0.1) {
-                    let dir = this.speed>0?1:-1;
-                    if(this.controls.l) this.angle -= PHYSICS.turnSpeed*dir;
-                    if(this.controls.r) this.angle += PHYSICS.turnSpeed*dir;
-                }
-                let f=0;
-                if(this.controls.u) f=PHYSICS.acceleration;
-                if(this.controls.d) f=-PHYSICS.acceleration*0.6;
-                
-                this.vx += Math.cos(this.angle)*f;
-                this.vy += Math.sin(this.angle)*f;
-                
-                let surface = Track.check(this.x, this.y);
-                let fric = surface==='road' ? PHYSICS.friction : PHYSICS.offRoadFriction;
-                
-                this.speed = Math.sqrt(this.vx**2 + this.vy**2);
-                this.vx *= fric; this.vy *= fric;
-                
-                if(this.speed>PHYSICS.maxSpeed) {
-                    let r = PHYSICS.maxSpeed/this.speed; this.vx*=r; this.vy*=r;
-                }
-                
-                this.x+=this.vx; this.y+=this.vy;
-
-                // Skidmarks
-                let moveA = Math.atan2(this.vy, this.vx);
-                let slip = Math.abs(moveA-this.angle);
-                while(slip>Math.PI) slip-=Math.PI*2; while(slip<-Math.PI) slip+=Math.PI*2;
-                if(this.speed>4 && Math.abs(slip)>0.35 && surface==='road') {
-                    let c=Math.cos(this.angle), s=Math.sin(this.angle);
-                    this.skids.push({x:this.x-c*20+s*10, y:this.y-s*20-c*10, l:0.5});
-                    this.skids.push({x:this.x-c*20-s*10, y:this.y-s*20+c*10, l:0.5});
-                }
-            }
-            draw(ctx) {
-                // Skids
-                ctx.save();
-                for(let s of this.skids) {
-                    ctx.fillStyle=`rgba(26,32,44,${s.l})`; ctx.fillRect(s.x,s.y,4,4); s.l-=0.02;
-                }
-                this.skids=this.skids.filter(s=>s.l>0);
-                ctx.restore();
-
-                // Car
-                ctx.save(); ctx.translate(this.x,this.y); ctx.rotate(this.angle+Math.PI/2);
-                if(carImage.complete) ctx.drawImage(carImage,-22,-40,44,80);
-                else { ctx.fillStyle='#e53e3e'; ctx.fillRect(-11,-19,22,38); }
-                ctx.restore();
-            }
+        ctx.globalAlpha = 0.55;
+        if(carImage.complete){
+          ctx.drawImage(carImage, -22, -40, 44, 80);
+          ctx.globalCompositeOperation = 'source-atop';
+          ctx.fillStyle = 'rgba(94,234,212,0.55)';
+          ctx.fillRect(-22, -40, 44, 80);
+          ctx.globalCompositeOperation = 'source-over';
+        }else{
+          ctx.fillStyle='#fbbf24';
+          ctx.fillRect(-11,-19,22,38);
         }
 
-        // ==========================================
-        // 5. MAIN LOOP
-        // ==========================================
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const car = new Car();
+        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = "rgba(251,191,36,0.95)";
+        ctx.font = "900 10px Orbitron, Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("CHAMPION", 0, -48);
 
-        function resize() { canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
-        window.addEventListener('resize', resize); resize();
-        
-        Track.init();
+        ctx.restore();
+      }
+    };
 
-        const keys = {ArrowUp:'u',ArrowDown:'d',ArrowLeft:'l',ArrowRight:'r'};
-        window.onkeydown = e => { if(keys[e.key]) car.controls[keys[e.key]]=true; }
-        window.onkeyup = e => { if(keys[e.key]) car.controls[keys[e.key]]=false; }
-        
-        const bindTouch = (id,k) => {
-            const el=document.getElementById(id);
-            el.ontouchstart=e=>{e.preventDefault();car.controls[k]=true;el.classList.add('active')};
-            el.ontouchend=e=>{e.preventDefault();car.controls[k]=false;el.classList.remove('active')};
-        };
-        bindTouch('btn-left','l'); bindTouch('btn-right','r'); bindTouch('btn-gas','u'); bindTouch('btn-brake','d');
+    // ==========================================
+    // 3. VISUAL HELPERS (noise, vignette, particles)
+    // ==========================================
+    function makeNoisePattern(size=128){
+      const c = document.createElement('canvas');
+      c.width = c.height = size;
+      const nctx = c.getContext('2d');
+      const img = nctx.createImageData(size, size);
+      for(let i=0;i<img.data.length;i+=4){
+        const v = (Math.random()*255)|0;
+        img.data[i] = v;
+        img.data[i+1] = v;
+        img.data[i+2] = v;
+        img.data[i+3] = 20; // low alpha
+      }
+      nctx.putImageData(img,0,0);
+      return { canvas:c, pattern:null };
+    }
 
-        // GESTION DU BOUTON ENTRER (ACCUEIL)
-        document.getElementById('enter-btn').onclick = () => {
-            document.getElementById('welcome-screen').style.display = 'none';
-            document.getElementById('leaderboard-panel').style.display = 'block';
-        };
+    const VIS = {
+      noise: makeNoisePattern(160),
+      vignetteGradient: null,
 
-        // START RACE
-        document.getElementById('start-btn').onclick = () => RaceManager.startRace();
+      ensurePatterns(ctx){
+        if(!this.noise.pattern) this.noise.pattern = ctx.createPattern(this.noise.canvas, 'repeat');
+      },
 
-        // GESTION DU MENU PAUSE
-        document.getElementById('pause-btn').onclick = () => RaceManager.pauseGame();
-        document.getElementById('resume-btn').onclick = () => RaceManager.resumeGame();
-        document.getElementById('restart-btn').onclick = () => RaceManager.startRace();
-        document.getElementById('quit-btn').onclick = () => RaceManager.quitToMenu();
+      drawVignette(ctx, w, h){
+        // draw after scene (screen space)
+        ctx.save();
+        const g = ctx.createRadialGradient(w/2, h/2, Math.min(w,h)*0.20, w/2, h/2, Math.min(w,h)*0.70);
+        g.addColorStop(0, 'rgba(0,0,0,0)');
+        g.addColorStop(1, 'rgba(0,0,0,0.55)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0,0,w,h);
+        ctx.restore();
+      },
 
-        function loop() {
-            // Only update game state if not paused
-            if (RaceManager.state === 'racing') {
-                car.update();
-                RaceManager.update(car);
-            }
-            
-            ctx.fillStyle = TRACK_CONFIG.grassColor; ctx.fillRect(0,0,canvas.width,canvas.height);
-            ctx.save();
-            let camX = canvas.width/2 - car.x;
-            let camY = canvas.height/2 - car.y;
-            
-            // Camera smoothing or lookahead could be disabled when paused to stop jitters, but keeping it simple
-            camX -= car.vx * 10;
-            camY -= car.vy * 10;
-            
-            ctx.translate(camX, camY);
+      drawFilmGrain(ctx, w, h){
+        this.ensurePatterns(ctx);
+        ctx.save();
+        ctx.globalAlpha = 0.08;
+        ctx.fillStyle = this.noise.pattern;
+        ctx.fillRect(0,0,w,h);
+        ctx.restore();
+      }
+    };
 
-            Track.draw(ctx);
-            
-            if(RaceManager.state === 'racing' || RaceManager.state === 'paused') {
-                // If paused, we show the time at the moment of pause
-                const timeBase = RaceManager.state === 'paused' ? RaceManager.pausedTime : Date.now();
-                const time = timeBase - RaceManager.lapStartTime;
-                
-                // Draw ghost only if moving or paused
-                GhostSystem.drawGlobalGhost(ctx, time);
-                document.getElementById('time-display').innerText = RaceManager.formatTime(time);
-            }
-            
-            car.draw(ctx);
-            ctx.restore();
-
-            requestAnimationFrame(loop);
+    // Particles (smoke & dust)
+    const Particles = {
+      list: [],
+      spawn(x,y, vx,vy, kind){
+        this.list.push({
+          x,y, vx,vy,
+          r: kind==='smoke' ? 8+Math.random()*10 : 5+Math.random()*8,
+          a: kind==='smoke' ? 0.30 : 0.25,
+          d: kind==='smoke' ? 0.010 : 0.014,
+          kind
+        });
+      },
+      update(){
+        for(const p of this.list){
+          p.x += p.vx;
+          p.y += p.vy;
+          p.r *= 1.015;
+          p.a -= p.d;
         }
-        loop();
+        this.list = this.list.filter(p => p.a > 0);
+      },
+      draw(ctx){
+        ctx.save();
+        for(const p of this.list){
+          if(p.kind==='smoke'){
+            ctx.fillStyle = `rgba(255,255,255,${p.a})`;
+          }else{
+            ctx.fillStyle = `rgba(190,255,215,${p.a*0.65})`;
+          }
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+    };
 
-    </script>
+    // ==========================================
+    // 4. GAME ENGINE
+    // ==========================================
+    const PHYSICS = { acceleration: 0.22, maxSpeed: 12.5, friction: 0.965, turnSpeed: 0.075, offRoadFriction: 0.8 };
+    const TRACK_CONFIG = {
+      roadColor: '#3f475c',
+      grassColor: '#0b2a22',
+      lineWidth: 160,
+      borderColor: '#e2e8f0',
+      borderWidth: 6
+    };
+
+    const Track = {
+      collisionCtx: null, mapW: 3000, mapH: 3000,
+      init(){
+        const c = document.createElement('canvas'); c.width = this.mapW; c.height = this.mapH;
+        this.collisionCtx = c.getContext('2d', { willReadFrequently: true });
+        this.drawMask();
+      },
+      trace(ctx){
+        ctx.beginPath();
+        ctx.moveTo(-400, -600); ctx.lineTo(400, -600);
+        ctx.arc(400, -400, 200, -Math.PI/2, Math.PI/2, false);
+        ctx.arc(400, 0, 200, -Math.PI/2, Math.PI/2, false);
+        ctx.lineTo(-100, 200); ctx.arc(-100, 400, 200, -Math.PI/2, Math.PI, false);
+        ctx.lineTo(-600, 400); ctx.arc(-600, -100, 500, Math.PI/2, -Math.PI/2, false);
+        ctx.lineTo(-400, -600);
+      },
+      drawMask(){
+        const ctx = this.collisionCtx;
+        ctx.save(); ctx.translate(1500, 1500);
+        ctx.lineCap='round'; ctx.lineJoin='round';
+        ctx.strokeStyle='#FFF'; ctx.lineWidth=TRACK_CONFIG.lineWidth;
+        this.trace(ctx); ctx.stroke();
+        ctx.restore();
+      },
+      draw(ctx){
+        ctx.lineCap='round'; ctx.lineJoin='round';
+
+        // Outer shadow / depth
+        ctx.save();
+        ctx.globalAlpha = 0.18;
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 190;
+        this.trace(ctx); ctx.stroke();
+        ctx.restore();
+
+        // Curbs (red/white)
+        ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 176; this.trace(ctx); ctx.stroke();
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 170; this.trace(ctx); ctx.stroke();
+
+        // Asphalt
+        ctx.strokeStyle = TRACK_CONFIG.roadColor; ctx.lineWidth = 160; this.trace(ctx); ctx.stroke();
+
+        // subtle asphalt texture (overlay)
+        ctx.save();
+        ctx.globalAlpha = 0.10;
+        const pat = VIS.noise.pattern || ctx.createPattern(VIS.noise.canvas, 'repeat');
+        VIS.noise.pattern = pat;
+        ctx.strokeStyle = pat;
+        ctx.lineWidth = 160;
+        this.trace(ctx); ctx.stroke();
+        ctx.restore();
+
+        // Start line
+        ctx.save();
+        ctx.translate(0, -600);
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(-12, -80, 24, 160);
+        ctx.fillStyle = '#000';
+        for(let y=-80;y<80;y+=20){
+          if((y/20)%2===0) ctx.fillRect(-12,y,12,20);
+          else ctx.fillRect(0,y,12,20);
+        }
+        ctx.restore();
+
+        // Center dashed line (simple "racing vibe")
+        ctx.save();
+        ctx.globalAlpha = 0.20;
+        ctx.strokeStyle = '#fff';
+        ctx.setLineDash([40, 30]);
+        ctx.lineWidth = 3;
+        this.trace(ctx); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+      },
+      check(x,y){
+        const mx = Math.floor(x+1500), my = Math.floor(y+1500);
+        if(mx<0||mx>=3000||my<0||my>=3000) return 'grass';
+        return this.collisionCtx.getImageData(mx,my,1,1).data[3]>0 ? 'road':'grass';
+      }
+    };
+
+    const RaceManager = {
+      totalLaps: 3, currentLap: 1, state: 'menu', // menu, racing, paused, finished
+      startTime: 0, lapStartTime: 0, bestLapTime: Infinity, pausedTime: 0,
+      checkpoints: [ {x:500,y:-400,p:false}, {x:400,y:100,p:false}, {x:-200,y:400,p:false}, {x:-900,y:0,p:false} ],
+      startRace(){
+        this.state='racing';
+        this.startTime = Date.now();
+        this.lapStartTime = this.startTime;
+        this.currentLap = 1;
+        this.bestLapTime = Infinity;
+        this.checkpoints.forEach(cp=>cp.p=false);
+        GhostSystem.resetRecording();
+
+        document.getElementById('leaderboard-panel').style.display='none';
+        document.getElementById('pause-menu').style.display='none';
+        document.getElementById('pause-btn').style.display='flex';
+        document.getElementById('mobile-controls').style.display='flex';
+        document.getElementById('lap-display').innerText = `1 / ${this.totalLaps}`;
+      },
+      pauseGame(){
+        if(this.state==='racing'){
+          this.state='paused';
+          this.pausedTime = Date.now();
+          document.getElementById('pause-menu').style.display='flex';
+          document.getElementById('mobile-controls').style.display='none';
+        }
+      },
+      resumeGame(){
+        if(this.state==='paused'){
+          const pauseDuration = Date.now() - this.pausedTime;
+          this.startTime += pauseDuration;
+          this.lapStartTime += pauseDuration;
+          this.state='racing';
+          document.getElementById('pause-menu').style.display='none';
+          document.getElementById('mobile-controls').style.display='flex';
+        }
+      },
+      quitToMenu(){
+        this.state='menu';
+        document.getElementById('pause-menu').style.display='none';
+        document.getElementById('pause-btn').style.display='none';
+        document.getElementById('mobile-controls').style.display='none';
+        document.getElementById('leaderboard-panel').style.display='block';
+        document.getElementById('start-btn').style.display='block';
+        document.getElementById('name-input-area').style.display='none';
+      },
+      update(car){
+        if(this.state!=='racing') return;
+
+        const now = Date.now();
+        const lapTime = now - this.lapStartTime;
+        GhostSystem.recordFrame(lapTime, car);
+
+        this.checkpoints.forEach(cp => {
+          if(!cp.p && Math.hypot(car.x-cp.x, car.y-cp.y) < 300) cp.p = true;
+        });
+
+        if(Math.abs(car.y - (-600)) < 80 && car.x > 0 && car.lastX <= 0){
+          if(this.checkpoints.every(cp => cp.p)){
+            this.completeLap(now);
+          }
+        }
+      },
+      completeLap(now){
+        const lapTime = now - this.lapStartTime;
+        if(lapTime < this.bestLapTime){
+          this.bestLapTime = lapTime;
+          GhostSystem.saveRecordingAsBest();
+
+          // pulse chrono on best
+          const t = document.getElementById('time-display');
+          t.classList.remove('pulse'); void t.offsetWidth; t.classList.add('pulse');
+        }
+
+        if(this.currentLap >= this.totalLaps){
+          this.finishRace(now);
+        }else{
+          this.currentLap++;
+          this.lapStartTime = now;
+          document.getElementById('lap-display').innerText = `${this.currentLap} / ${this.totalLaps}`;
+          this.checkpoints.forEach(cp=>cp.p=false);
+          GhostSystem.resetRecording();
+        }
+      },
+      finishRace(now){
+        this.state='finished';
+        const timeToSubmit = this.bestLapTime;
+        const timeStr = this.formatTime(timeToSubmit);
+
+        document.getElementById('pause-btn').style.display='none';
+        document.getElementById('leaderboard-panel').style.display='block';
+        document.getElementById('start-btn').style.display='none';
+        document.getElementById('mobile-controls').style.display='none';
+
+        document.getElementById('name-input-area').style.display='block';
+        document.getElementById('final-time-display').innerText = timeStr;
+
+        const submitBtn = document.getElementById('submit-score-btn');
+        const newBtn = submitBtn.cloneNode(true);
+        submitBtn.parentNode.replaceChild(newBtn, submitBtn);
+
+        newBtn.onclick = async () => {
+          const name = document.getElementById('player-name').value;
+          if(name.length < 1) return;
+
+          newBtn.innerText = "ENVOI...";
+          newBtn.disabled = true;
+
+          const saved = await window.Cloud.saveScore(name, timeToSubmit, timeStr, GhostSystem.bestRecording);
+
+          if (saved) {
+            document.getElementById('name-input-area').innerHTML =
+              '<div class="text-emerald-300 font-black py-4" style="font-family:Orbitron;">SCORE ENREGISTRÉ !</div>' +
+              '<button class="action-btn" onclick="location.reload()" style="background: linear-gradient(90deg, #3b82f6, #14b8a6);">REJOUER</button>';
+          } else {
+            newBtn.innerText = "RÉESSAYER";
+            newBtn.disabled = false;
+          }
+        };
+      },
+      formatTime(ms){
+        let m = Math.floor(ms/60000);
+        let s = Math.floor((ms%60000)/1000);
+        let c = Math.floor((ms%1000)/10);
+        return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}.${c.toString().padStart(2,'0')}`;
+      }
+    };
+
+    // ==========================================
+    // 5. CAR + VISUAL FX (shadow, smoke, dust, smoother skids)
+    // ==========================================
+    class Car{
+      constructor(){
+        this.x=0; this.y=-600; this.lastX=0; this.angle=0;
+        this.vx=0; this.vy=0; this.speed=0;
+        this.controls={u:false,d:false,l:false,r:false};
+        this.skids=[]; // {x,y,a,w}
+      }
+
+      update(){
+        this.lastX=this.x;
+        if(RaceManager.state!=='racing') return;
+
+        if(Math.abs(this.speed)>0.1){
+          const dir = this.speed>0?1:-1;
+          if(this.controls.l) this.angle -= PHYSICS.turnSpeed*dir;
+          if(this.controls.r) this.angle += PHYSICS.turnSpeed*dir;
+        }
+
+        let f=0;
+        if(this.controls.u) f=PHYSICS.acceleration;
+        if(this.controls.d) f=-PHYSICS.acceleration*0.6;
+
+        this.vx += Math.cos(this.angle)*f;
+        this.vy += Math.sin(this.angle)*f;
+
+        const surface = Track.check(this.x, this.y);
+        const fric = surface==='road' ? PHYSICS.friction : PHYSICS.offRoadFriction;
+
+        this.speed = Math.hypot(this.vx, this.vy);
+        this.vx *= fric; this.vy *= fric;
+
+        if(this.speed>PHYSICS.maxSpeed){
+          const r = PHYSICS.maxSpeed/this.speed;
+          this.vx*=r; this.vy*=r;
+          this.speed = PHYSICS.maxSpeed;
+        }
+
+        this.x += this.vx; this.y += this.vy;
+
+        // Slip angle
+        const moveA = Math.atan2(this.vy, this.vx);
+        let slip = Math.abs(moveA - this.angle);
+        while(slip>Math.PI) slip-=Math.PI*2;
+        while(slip<-Math.PI) slip+=Math.PI*2;
+
+        const drifting = (this.speed>4 && Math.abs(slip)>0.35);
+
+        // Skids (smoother lines)
+        if(drifting && surface==='road'){
+          const c=Math.cos(this.angle), s=Math.sin(this.angle);
+          const rearX = this.x - c*20;
+          const rearY = this.y - s*20;
+
+          const leftX  = rearX + s*11;
+          const leftY  = rearY - c*11;
+          const rightX = rearX - s*11;
+          const rightY = rearY + c*11;
+
+          this.skids.push({x:leftX, y:leftY, a:0.55, w:2.6});
+          this.skids.push({x:rightX, y:rightY, a:0.55, w:2.6});
+
+          // Smoke particles (behind car)
+          if(Math.random() < 0.55){
+            Particles.spawn(rearX, rearY, -this.vx*0.15 + (Math.random()-0.5)*0.6, -this.vy*0.15 + (Math.random()-0.5)*0.6, 'smoke');
+          }
+        }
+
+        // Dust on grass
+        if(surface==='grass' && this.speed>3 && Math.random() < 0.35){
+          Particles.spawn(this.x, this.y, -this.vx*0.05 + (Math.random()-0.5)*0.7, -this.vy*0.05 + (Math.random()-0.5)*0.7, 'dust');
+        }
+
+        // decay skids
+        for(const sk of this.skids) sk.a -= 0.012;
+        this.skids = this.skids.filter(sk => sk.a > 0);
+      }
+
+      draw(ctx){
+        // Skids
+        ctx.save();
+        ctx.lineCap = 'round';
+        for(const sk of this.skids){
+          ctx.strokeStyle = `rgba(0,0,0,${sk.a})`;
+          ctx.lineWidth = sk.w;
+          ctx.beginPath();
+          ctx.moveTo(sk.x, sk.y);
+          // tiny tail for line feel
+          ctx.lineTo(sk.x - this.vx*0.25, sk.y - this.vy*0.25);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // Car shadow
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle+Math.PI/2);
+        ctx.globalAlpha = 0.28;
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.ellipse(0, 10, 16, 26, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+
+        // Car + subtle glow
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle+Math.PI/2);
+
+        ctx.globalAlpha = 0.18;
+        ctx.fillStyle = 'rgba(239,68,68,1)';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 22, 40, 0, 0, Math.PI*2);
+        ctx.fill();
+
+        ctx.globalAlpha = 1;
+        if(carImage.complete) ctx.drawImage(carImage,-22,-40,44,80);
+        else { ctx.fillStyle='#ef4444'; ctx.fillRect(-11,-19,22,38); }
+
+        ctx.restore();
+      }
+    }
+
+    // ==========================================
+    // 6. MAIN LOOP
+    // ==========================================
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const car = new Car();
+
+    function resize(){
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      VIS.ensurePatterns(ctx);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    Track.init();
+
+    const keys = {ArrowUp:'u',ArrowDown:'d',ArrowLeft:'l',ArrowRight:'r'};
+    window.onkeydown = e => { if(keys[e.key]) car.controls[keys[e.key]]=true; };
+    window.onkeyup   = e => { if(keys[e.key]) car.controls[keys[e.key]]=false; };
+
+    const bindTouch = (id,k) => {
+      const el=document.getElementById(id);
+      el.ontouchstart = e => { e.preventDefault(); car.controls[k]=true; el.classList.add('active'); if(navigator.vibrate) navigator.vibrate(12); };
+      el.ontouchend   = e => { e.preventDefault(); car.controls[k]=false; el.classList.remove('active'); };
+      el.onmousedown  = e => { e.preventDefault(); car.controls[k]=true; el.classList.add('active'); };
+      el.onmouseup    = e => { e.preventDefault(); car.controls[k]=false; el.classList.remove('active'); };
+      el.onmouseleave = e => { car.controls[k]=false; el.classList.remove('active'); };
+    };
+    bindTouch('btn-left','l');
+    bindTouch('btn-right','r');
+    bindTouch('btn-gas','u');
+    bindTouch('btn-brake','d');
+
+    document.getElementById('enter-btn').onclick = () => {
+      document.getElementById('welcome-screen').style.display = 'none';
+      document.getElementById('leaderboard-panel').style.display = 'block';
+    };
+
+    document.getElementById('start-btn').onclick = () => RaceManager.startRace();
+    document.getElementById('pause-btn').onclick = () => RaceManager.pauseGame();
+    document.getElementById('resume-btn').onclick = () => RaceManager.resumeGame();
+    document.getElementById('restart-btn').onclick = () => RaceManager.startRace();
+    document.getElementById('quit-btn').onclick = () => RaceManager.quitToMenu();
+
+    function loop(){
+      if (RaceManager.state === 'racing') {
+        car.update();
+        RaceManager.update(car);
+      }
+
+      // Update particles always (so smoke fades even paused)
+      Particles.update();
+
+      // Background grass (screen)
+      ctx.fillStyle = TRACK_CONFIG.grassColor;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+
+      ctx.save();
+
+      // Camera
+      let camX = canvas.width/2 - car.x;
+      let camY = canvas.height/2 - car.y;
+      camX -= car.vx * 10;
+      camY -= car.vy * 10;
+
+      ctx.translate(camX, camY);
+
+      // Track
+      Track.draw(ctx);
+
+      // Ghost + timer
+      if(RaceManager.state === 'racing' || RaceManager.state === 'paused'){
+        const timeBase = RaceManager.state === 'paused' ? RaceManager.pausedTime : Date.now();
+        const time = timeBase - RaceManager.lapStartTime;
+        GhostSystem.drawGlobalGhost(ctx, time);
+        document.getElementById('time-display').innerText = RaceManager.formatTime(time);
+      }
+
+      // particles under car for better look (smoke behind)
+      Particles.draw(ctx);
+
+      // Car
+      car.draw(ctx);
+
+      ctx.restore();
+
+      // Post FX: grain + vignette (screen space)
+      VIS.drawFilmGrain(ctx, canvas.width, canvas.height);
+      VIS.drawVignette(ctx, canvas.width, canvas.height);
+
+      requestAnimationFrame(loop);
+    }
+    loop();
+  </script>
 </body>
 </html>
