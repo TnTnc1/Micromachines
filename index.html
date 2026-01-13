@@ -82,9 +82,9 @@
       white-space: nowrap;
     }
     
-    /* Drift Specific UI */
+    /* Drift Specific UI - Décalé légèrement pour laisser respirer */
     #drift-ui {
-        position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
+        position: absolute; top: 90px; left: 50%; transform: translateX(-50%);
         text-align: center; pointer-events: none; z-index: 15; display: none;
     }
     .combo-box {
@@ -177,8 +177,13 @@
     }
     .action-btn:hover{ transform: translateY(-1px); filter: brightness(1.05); }
 
-    /* Pause UI */
-    #pause-btn{ position:absolute; top:16px; right:16px; width:44px; height:44px; border-radius:999px; display:none; align-items:center; justify-content:center; pointer-events:auto; z-index:50; cursor:pointer; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); backdrop-filter:blur(5px); }
+    /* Pause UI - DÉPLACÉ VERS LE BAS POUR ÉVITER LE HUD */
+    #pause-btn{ 
+        position:absolute; 
+        top:75px; /* Déplacé de 16px à 75px */
+        right:16px; 
+        width:44px; height:44px; border-radius:999px; display:none; align-items:center; justify-content:center; pointer-events:auto; z-index:50; cursor:pointer; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); backdrop-filter:blur(5px); 
+    }
     .pause-icon{ width:16px; height:16px; position:relative; }
     .pause-icon::before, .pause-icon::after{ content:""; position:absolute; top:0; bottom:0; width:5px; border-radius:3px; background:white; }
     .pause-icon::before{ left:0; } .pause-icon::after{ right:0; }
