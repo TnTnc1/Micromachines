@@ -95,6 +95,21 @@
     .pulse{ animation: pulseGlow 0.35s ease-out; }
     @keyframes pulseGlow{ 0%{ transform: scale(1); } 50%{ transform: scale(1.05); } 100%{ transform: scale(1); } }
 
+    /* COUNTDOWN */
+    #countdown-layer{
+      position:absolute; inset:0;
+      display:none; align-items:center; justify-content:center;
+      z-index:90; pointer-events:none;
+      font-family: Orbitron, sans-serif; font-weight:900; font-size: 8rem;
+      color:white; text-shadow:0 0 40px rgba(0,0,0,0.8);
+    }
+    .count-anim{ animation: countPop 0.9s cubic-bezier(0.1, 0.7, 1.0, 0.1) forwards; }
+    @keyframes countPop{ 
+      0%{ transform:scale(0.5); opacity:0; } 
+      30%{ transform:scale(1.2); opacity:1; } 
+      100%{ transform:scale(1); opacity:0; } 
+    }
+
     /* Welcome Screen */
     #welcome-screen{
       position:fixed; inset:0;
@@ -254,6 +269,9 @@
       <div id="btn-gas" class="btn gas">GO</div>
     </div>
   </div>
+
+  <!-- Countdown Element -->
+  <div id="countdown-layer"></div>
 
   <canvas id="gameCanvas"></canvas>
 
@@ -514,11 +532,54 @@
       totalLaps: 3, currentLap: 1, state: 'menu', startTime: 0, lapStartTime: 0, bestLapTime: Infinity, pausedTime: 0,
       checkpoints: [ {x:500,y:-400,p:false}, {x:400,y:100,p:false}, {x:-200,y:400,p:false}, {x:-900,y:0,p:false} ],
       startRace(){
-        this.state='racing'; this.startTime = Date.now(); this.lapStartTime = this.startTime; this.currentLap = 1; this.bestLapTime = Infinity;
+        // Reset game state
+        this.currentLap = 1; this.bestLapTime = Infinity;
         this.checkpoints.forEach(cp=>cp.p=false); GhostSystem.resetRecording(); car.reset();
-        document.getElementById('leaderboard-panel').style.display='none'; document.getElementById('pause-menu').style.display='none';
-        document.getElementById('pause-btn').style.display='flex'; document.getElementById('mobile-controls').style.display='flex';
+        
+        // UI
+        document.getElementById('leaderboard-panel').style.display='none'; 
+        document.getElementById('pause-menu').style.display='none';
+        document.getElementById('pause-btn').style.display='none'; // Hide pause during countdown
+        document.getElementById('mobile-controls').style.display='flex';
         document.getElementById('lap-display').innerText = `1 / ${this.totalLaps}`;
+        document.getElementById('time-display').innerText = "00:00.00";
+
+        this.startCountdown();
+      },
+      startCountdown(){
+        this.state = 'countdown';
+        const cd = document.getElementById('countdown-layer');
+        cd.style.display = 'flex';
+        let count = 3;
+        
+        const tick = () => {
+            if(count > 0) {
+                cd.innerText = count;
+                cd.className = ""; // Reset anim
+                void cd.offsetWidth; // Reflow
+                cd.className = "count-anim";
+                setTimeout(() => {
+                    count--;
+                    tick();
+                }, 1000);
+            } else {
+                cd.innerText = "GO!";
+                cd.className = ""; // Reset anim
+                void cd.offsetWidth;
+                cd.className = "count-anim";
+                setTimeout(() => {
+                    cd.style.display = 'none';
+                    this.beginRacing();
+                }, 500);
+            }
+        };
+        tick();
+      },
+      beginRacing(){
+        this.state='racing'; 
+        this.startTime = Date.now(); 
+        this.lapStartTime = this.startTime;
+        document.getElementById('pause-btn').style.display='flex';
       },
       pauseGame(){ if(this.state==='racing'){ this.state='paused'; this.pausedTime = Date.now(); document.getElementById('pause-menu').style.display='flex'; document.getElementById('mobile-controls').style.display='none'; } },
       resumeGame(){ if(this.state==='paused'){ const d = Date.now() - this.pausedTime; this.startTime += d; this.lapStartTime += d; this.state='racing'; document.getElementById('pause-menu').style.display='none'; document.getElementById('mobile-controls').style.display='flex'; } },
