@@ -106,15 +106,27 @@
     .pulse{ animation: pulseGlow 0.35s ease-out; }
     @keyframes pulseGlow{ 0%{ transform: scale(1); } 50%{ transform: scale(1.05); } 100%{ transform: scale(1); } }
 
-    /* COUNTDOWN */
+    /* COUNTDOWN / MESSAGE OVERLAY */
     #countdown-layer{
       position:absolute; inset:0;
       display:none; align-items:center; justify-content:center;
       z-index:90; pointer-events:none;
-      font-family: Orbitron, sans-serif; font-weight:900; font-size: 8rem;
+      font-family: Orbitron, sans-serif; font-weight:900; 
+      text-align: center;
       color:white; text-shadow:0 0 40px rgba(0,0,0,0.8);
     }
-    .count-anim{ animation: countPop 0.9s cubic-bezier(0.1, 0.7, 1.0, 0.1) forwards; }
+    .rolling-text {
+        font-size: 2.5rem;
+        color: #fbbf24;
+        animation: blink 0.5s infinite alternate;
+    }
+    @keyframes blink { from { opacity: 1; } to { opacity: 0.5; } }
+    
+    .go-text {
+        font-size: 8rem;
+        color: #34d399;
+        animation: countPop 0.8s cubic-bezier(0.1, 0.7, 1.0, 0.1) forwards;
+    }
     @keyframes countPop{ 
       0%{ transform:scale(0.5); opacity:0; } 
       30%{ transform:scale(1.2); opacity:1; } 
@@ -558,61 +570,69 @@
     const RaceManager = {
       totalLaps: 3, currentLap: 1, state: 'menu', startTime: 0, lapStartTime: 0, bestLapTime: Infinity, pausedTime: 0,
       checkpoints: [ {x:500,y:-400,p:false}, {x:400,y:100,p:false}, {x:-200,y:400,p:false}, {x:-900,y:0,p:false} ],
-      startRace(){
-        // Reset game state
-        this.currentLap = 1; this.bestLapTime = Infinity;
-        this.checkpoints.forEach(cp=>cp.p=false); GhostSystem.resetRecording(); car.reset();
+      startRollingStart(){
+        this.state = 'rolling';
         
-        // UI
+        // Place car before start line (on the straight)
+        // Start line is at 0, -600. Straight goes from -400 to 400.
+        // Let's spawn at -600, -600. 
+        car.x = -600;
+        car.y = -600;
+        car.angle = 0; // Facing Right
+        car.speed = PHYSICS.maxSpeed;
+        car.vx = car.speed;
+        car.vy = 0;
+        
+        this.checkpoints.forEach(cp=>cp.p=false); 
+        GhostSystem.resetRecording();
+        
+        // UI Setup
         document.getElementById('leaderboard-panel').style.display='none'; 
         document.getElementById('pause-menu').style.display='none';
-        document.getElementById('pause-btn').style.display='none'; // Hide pause during countdown
+        document.getElementById('pause-btn').style.display='none'; 
         document.getElementById('mobile-controls').style.display='flex';
         document.getElementById('lap-display').innerText = `1 / ${this.totalLaps}`;
         document.getElementById('time-display').innerText = "00:00.00";
-
-        this.startCountdown();
-      },
-      startCountdown(){
-        this.state = 'countdown';
+        
+        // Show "LANCEMENT..." text
         const cd = document.getElementById('countdown-layer');
         cd.style.display = 'flex';
-        let count = 3;
-        
-        const tick = () => {
-            if(count > 0) {
-                cd.innerText = count;
-                cd.className = ""; // Reset anim
-                void cd.offsetWidth; // Reflow
-                cd.className = "count-anim";
-                setTimeout(() => {
-                    count--;
-                    tick();
-                }, 1000);
-            } else {
-                cd.innerText = "GO!";
-                cd.className = ""; // Reset anim
-                void cd.offsetWidth;
-                cd.className = "count-anim";
-                setTimeout(() => {
-                    cd.style.display = 'none';
-                    this.beginRacing();
-                }, 500);
-            }
-        };
-        tick();
+        cd.innerHTML = '<div class="rolling-text">LANCEMENT...</div>';
       },
       beginRacing(){
         this.state='racing'; 
         this.startTime = Date.now(); 
         this.lapStartTime = this.startTime;
+        this.currentLap = 1;
+        this.bestLapTime = Infinity;
+        
         document.getElementById('pause-btn').style.display='flex';
+        
+        // Show "GO!"
+        const cd = document.getElementById('countdown-layer');
+        cd.innerHTML = '<div class="go-text">GO!</div>';
+        setTimeout(() => {
+            if(this.state === 'racing') cd.style.display = 'none';
+        }, 1000);
       },
       pauseGame(){ if(this.state==='racing'){ this.state='paused'; this.pausedTime = Date.now(); document.getElementById('pause-menu').style.display='flex'; document.getElementById('mobile-controls').style.display='none'; } },
       resumeGame(){ if(this.state==='paused'){ const d = Date.now() - this.pausedTime; this.startTime += d; this.lapStartTime += d; this.state='racing'; document.getElementById('pause-menu').style.display='none'; document.getElementById('mobile-controls').style.display='flex'; } },
-      quitToMenu(){ this.state='menu'; document.getElementById('pause-menu').style.display='none'; document.getElementById('pause-btn').style.display='none'; document.getElementById('mobile-controls').style.display='none'; document.getElementById('leaderboard-panel').style.display='block'; document.getElementById('start-btn').style.display='block'; document.getElementById('name-input-area').style.display='none'; },
+      quitToMenu(){ this.state='menu'; document.getElementById('pause-menu').style.display='none'; document.getElementById('pause-btn').style.display='none'; document.getElementById('mobile-controls').style.display='none'; document.getElementById('leaderboard-panel').style.display='block'; document.getElementById('start-btn').style.display='block'; document.getElementById('name-input-area').style.display='none'; document.getElementById('countdown-layer').style.display='none'; },
       update(car){
+        // Rolling Start Logic
+        if (this.state === 'rolling') {
+            // Auto-drive
+            car.controls = { u: true, d: false, l: false, r: false };
+            
+            // Check if crossed start line (x > 0)
+            if (car.x >= 0) {
+                this.beginRacing();
+            }
+            return;
+        }
+
         if(this.state!=='racing') return;
+        
         const now = Date.now(); const lapTime = now - this.lapStartTime;
         GhostSystem.recordFrame(lapTime, car);
         this.checkpoints.forEach(cp => { if(!cp.p && Math.hypot(car.x-cp.x, car.y-cp.y) < 300) cp.p = true; });
@@ -645,7 +665,11 @@
       constructor(){ this.reset(); this.skids=[]; }
       reset(){ this.x=0; this.y=-600; this.lastX=0; this.angle=0; this.vx=0; this.vy=0; this.speed=0; this.controls={u:false,d:false,l:false,r:false}; }
       update(){
-        this.lastX=this.x; if(RaceManager.state!=='racing') return;
+        this.lastX=this.x; 
+        
+        // Physics update allowed in racing AND rolling state
+        if(RaceManager.state!=='racing' && RaceManager.state !== 'rolling') return;
+
         if(Math.abs(this.speed)>0.1){ const dir = this.speed>0?1:-1; if(this.controls.l) this.angle -= PHYSICS.turnSpeed*dir; if(this.controls.r) this.angle += PHYSICS.turnSpeed*dir; }
         let f=0; if(this.controls.u) f=PHYSICS.acceleration; if(this.controls.d) f=-PHYSICS.acceleration*0.6;
         this.vx += Math.cos(this.angle)*f; this.vy += Math.sin(this.angle)*f;
@@ -702,10 +726,10 @@
     bindTouch('btn-left','l'); bindTouch('btn-right','r'); bindTouch('btn-gas','u'); bindTouch('btn-brake','d');
 
     document.getElementById('enter-btn').onclick = () => { document.getElementById('welcome-screen').style.display = 'none'; document.getElementById('leaderboard-panel').style.display = 'block'; };
-    document.getElementById('start-btn').onclick = () => RaceManager.startRace();
+    document.getElementById('start-btn').onclick = () => RaceManager.startRollingStart();
     document.getElementById('pause-btn').onclick = () => RaceManager.pauseGame();
     document.getElementById('resume-btn').onclick = () => RaceManager.resumeGame();
-    document.getElementById('restart-btn').onclick = () => RaceManager.startRace();
+    document.getElementById('restart-btn').onclick = () => RaceManager.startRollingStart();
     document.getElementById('quit-btn').onclick = () => RaceManager.quitToMenu();
 
     let lastFrameTime = 0;
@@ -723,7 +747,12 @@
       accumulator += deltaTime;
 
       while (accumulator >= FIXED_TIME_STEP) {
-        if (RaceManager.state === 'racing') {
+        // Updated loop logic for rolling start state
+        if (RaceManager.state === 'racing' || RaceManager.state === 'rolling') {
+          if (RaceManager.state === 'rolling') {
+             // Force auto drive
+             car.controls = { u: true, d: false, l: false, r: false };
+          }
           car.update();
           RaceManager.update(car);
         }
