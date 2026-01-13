@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Drift NC — Lagoon Edition</title>
+  <title>Drift NC - Lagoon</title>
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- Fonts (look arcade) -->
@@ -49,30 +49,21 @@
 
   <style>
     :root{
-      /* Lagoon palette */
-      --ocean0:#03212a;
-      --ocean1:#06485b;
-      --ocean2:#0ea5b7;
-      --lagoon:#5eead4;
-
-      --sand0:#b8843f;
-      --sand1:#e9d3a6;
-      --sand2:#fff2cc;
-
-      --glass: rgba(255,255,255,0.10);
-      --stroke: rgba(255,255,255,0.18);
-      --shadow: 0 20px 60px rgba(0,0,0,0.65);
-
-      --gold:#ffe08a;
-      --road:#475569;
+      /* Couleurs Lagon */
+      --bg0:#0891b2; /* Cyan profond */
+      --bg1:#0c4a6e; /* Bleu océan */
+      --glass: rgba(255,255,255,0.15);
+      --stroke: rgba(255,255,255,0.3);
+      --gold:#fbbf24;
+      --red:#ef4444;
+      --shadow: 0 20px 60px rgba(0,0,0,0.45);
     }
 
     *{ box-sizing: border-box; }
     body {
       margin:0; overflow:hidden;
-      background: radial-gradient(1200px 800px at 50% 10%, rgba(94,234,212,0.20), transparent 55%),
-                  radial-gradient(1400px 900px at 50% 100%, rgba(14,165,183,0.18), transparent 60%),
-                  linear-gradient(180deg, var(--ocean0), var(--ocean1));
+      /* Dégradé Océanique */
+      background: radial-gradient(circle at center, #22d3ee 0%, #0284c7 60%, #0c4a6e 100%);
       color:white;
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
       touch-action:none; user-select:none; -webkit-user-select:none;
@@ -88,421 +79,171 @@
     }
     .hud-card{
       pointer-events:none;
-      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
+      background: linear-gradient(180deg, rgba(255,255,255,0.25), rgba(255,255,255,0.1));
       border: 1px solid var(--stroke);
       border-radius: 16px;
       padding: 10px 12px;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.35);
-      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      backdrop-filter: blur(8px);
       min-width: 110px;
     }
     .hud-top{ display:flex; align-items:center; gap:8px; opacity:0.95; }
-    .hud-ico{ width:16px; height:16px; opacity:0.95; }
-    .label{
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      opacity: 0.82;
-    }
-    .sub-info{
-      font-family: Orbitron, monospace;
-      font-size: 1.18rem;
-      margin-top: 4px;
-    }
-    .big-time{
-      font-family: Orbitron, monospace;
-      font-weight: 900;
-      font-size: 2.0rem;
-      color: var(--gold);
-      text-shadow: 0 0 18px rgba(255,224,138,0.24);
-      letter-spacing: 0.02em;
-    }
+    .hud-ico{ width:16px; height:16px; opacity:0.9; }
+    .label{ font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.85; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+    .sub-info{ font-family: Orbitron, monospace; font-size: 1.18rem; margin-top: 4px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+    .big-time{ font-family: Orbitron, monospace; font-weight: 900; font-size: 2.0rem; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.3); letter-spacing: 0.02em; }
     .pulse{ animation: pulseGlow 0.35s ease-out; }
-    @keyframes pulseGlow{
-      0%{ transform: scale(1); filter: brightness(1); }
-      50%{ transform: scale(1.03); filter: brightness(1.2); }
-      100%{ transform: scale(1); filter: brightness(1); }
-    }
+    @keyframes pulseGlow{ 0%{ transform: scale(1); } 50%{ transform: scale(1.05); } 100%{ transform: scale(1); } }
 
     /* Welcome Screen */
     #welcome-screen{
       position:fixed; inset:0;
       display:flex; flex-direction:column; align-items:center; justify-content:center;
       z-index:70;
-      background:
-        radial-gradient(1200px 800px at 50% 0%, rgba(94,234,212,0.30), transparent 60%),
-        radial-gradient(900px 700px at 20% 85%, rgba(255,242,204,0.20), transparent 65%),
-        linear-gradient(135deg, rgba(3,33,42,0.96), rgba(2,18,24,0.96));
-      backdrop-filter: blur(10px);
-      overflow-y:auto;
-      padding: 20px;
+      background: linear-gradient(135deg, rgba(6,182,212,0.9), rgba(12,74,110,0.9));
+      backdrop-filter: blur(15px);
+      overflow-y: auto; padding: 20px;
     }
-    @media (max-height: 750px) {
-      #welcome-screen { justify-content:flex-start; padding-top: 40px; }
-    }
+    @media (max-height: 750px) { #welcome-screen { justify-content: flex-start; padding-top: 40px; } }
 
     .title-logo{
       font-family: Orbitron, sans-serif;
       font-weight: 900;
       letter-spacing: -0.06em;
       text-transform: uppercase;
-      text-shadow: 4px 4px 0 rgba(0,0,0,0.90);
+      text-shadow: 4px 4px 0 rgba(0,0,0,0.3);
       font-size: clamp(3rem, 10vw, 5rem);
-      margin-bottom: 0.8rem;
+      margin-bottom: 1rem;
       text-align: center;
       line-height: 1.1;
-      color: #a7f3d0;
+      color: #fff;
     }
     .badge{
-      display:inline-flex; align-items:center; gap:8px;
-      padding: 6px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.22);
-      background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(10px);
-      font-size: 12px;
-      opacity: 0.95;
-      margin-bottom: 14px;
-      flex-shrink: 0;
+      display:inline-flex; align-items:center; gap:8px; padding: 6px 12px;
+      border-radius: 999px; border: 1px solid rgba(255,255,255,0.4);
+      background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
+      font-size: 12px; font-weight: 600; margin-bottom: 14px; flex-shrink: 0;
     }
-    .badge-dot{
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--lagoon);
-      box-shadow: 0 0 14px rgba(94,234,212,0.55);
-    }
+    .badge-dot{ width: 8px; height: 8px; border-radius: 50%; background: #67e8f9; box-shadow: 0 0 10px #67e8f9; }
 
+    /* Poster */
     .poster-wrap{
-      margin-bottom: 24px;
-      padding: 8px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
-      box-shadow: var(--shadow);
-      transform: rotate(-1.5deg);
-      transition: transform 400ms ease;
-      max-width: 100%;
-      flex-shrink: 1;
+      margin-bottom: 24px; padding: 8px; border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.1);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      transform: rotate(-1.5deg); transition: transform 400ms ease;
+      max-width: 100%; flex-shrink: 1;
     }
     .poster-wrap:hover{ transform: rotate(0deg) scale(1.01); }
     #poster-img{
-      border-radius: 12px;
-      display:block;
-      max-width: 480px;
-      width: 86vw;
-      height: auto;
-      max-height: 35vh;
-      object-fit: cover;
-      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px; display:block; max-width: 480px; width: 86vw; height: auto;
+      max-height: 35vh; object-fit: cover;
     }
 
-    .primary-btn{
-      position: relative;
-      padding: 14px 40px;
-      border-radius: 999px;
-      font-weight: 900;
-      font-size: 1.25rem;
-      letter-spacing: 0.02em;
-      color: #05212a;
-      border: 1px solid rgba(255,255,255,0.18);
-      background: linear-gradient(90deg, #5eead4, #38bdf8);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.45);
-      transition: transform 150ms ease, filter 200ms ease;
-      flex-shrink: 0;
-      margin-bottom: 20px;
+    /* Buttons */
+    .primary-btn, .action-btn{
+      position: relative; padding: 14px 40px; border-radius: 999px;
+      font-weight: 800; font-size: 1.25rem; letter-spacing: 0.02em; color: #0f172a;
+      border: none;
+      background: linear-gradient(90deg, #fcd34d, #fbbf24); /* Gold sand */
+      box-shadow: 0 10px 30px rgba(251,191,36,0.4);
+      transform: translateZ(0); transition: transform 150ms ease, filter 200ms ease;
+      flex-shrink: 0; margin-bottom: 20px; cursor: pointer;
     }
-    .primary-btn:hover{ transform: scale(1.04); filter: brightness(1.03); }
-    .primary-btn:active{ transform: scale(0.98); }
-    .primary-btn::after{
-      content:"";
-      position:absolute; inset:0;
-      border-radius: 999px;
-      background: linear-gradient(120deg, transparent 10%, rgba(255,255,255,0.30) 30%, transparent 55%);
-      transform: translateX(-120%);
-      animation: shine 2.4s ease-in-out infinite;
-      pointer-events:none;
-      mix-blend-mode: screen;
-    }
-    @keyframes shine{
-      0%,60% { transform: translateX(-120%); opacity: 0.0; }
-      70%    { opacity: 0.85; }
-      100%   { transform: translateX(120%); opacity: 0.0; }
-    }
+    .primary-btn:hover, .action-btn:hover{ transform: scale(1.04); filter: brightness(1.1); }
+    .primary-btn:active, .action-btn:active{ transform: scale(0.98); }
+    
+    .action-btn { width: 100%; font-size: 1rem; margin-top:12px; padding: 12px; }
 
+    /* Leaderboard */
     #leaderboard-panel{
       position:absolute; top:50%; left:50%; transform: translate(-50%,-50%);
-      width: 92%; max-width: 480px;
-      z-index:60;
-      display:none;
-      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
-      border: 1px solid rgba(255,255,255,0.16);
-      border-radius: 18px;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(12px);
-      padding: 18px;
-      text-align:center;
+      width: 92%; max-width: 480px; z-index:60; display:none;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255,255,255,0.2); border-radius: 18px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+      backdrop-filter: blur(20px); padding: 18px; text-align:center;
     }
+    .score-row{ display:flex; justify-content:space-between; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-family: Orbitron, monospace; font-size: 0.95rem; }
+    #scores-list{ margin-top: 10px; text-align:left; background: rgba(0,0,0,0.3); border-radius: 14px; padding: 8px; max-height: 220px; overflow-y:auto; }
+    input{ background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px; border-radius: 12px; width: 100%; text-align:center; font-size: 1.05rem; outline:none; }
+    input:focus{ border-color: #fbbf24; }
 
-    .score-row{
-      display:flex; justify-content:space-between; padding: 10px 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.10);
-      font-family: Orbitron, monospace;
-      font-size: 0.95rem;
-    }
-    .score-row:nth-child(1){ color: var(--gold); font-weight: 900; }
-    .score-row:nth-child(2){ color: rgba(255,255,255,0.92); }
-    .score-row:nth-child(3){ color: #a7f3d0; }
+    /* Pause UI */
+    #pause-btn{ position:absolute; top:16px; right:16px; width:44px; height:44px; border-radius:999px; display:none; align-items:center; justify-content:center; pointer-events:auto; z-index:50; cursor:pointer; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); backdrop-filter:blur(5px); }
+    .pause-icon{ width:16px; height:16px; position:relative; }
+    .pause-icon::before, .pause-icon::after{ content:""; position:absolute; top:0; bottom:0; width:5px; border-radius:3px; background:white; }
+    .pause-icon::before{ left:0; } .pause-icon::after{ right:0; }
+    
+    #pause-menu{ position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; z-index:80; background:rgba(15,23,42,0.8); backdrop-filter:blur(15px); pointer-events:auto; }
+    .menu-btn{ background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.3); padding:12px 30px; color:white; font-weight:900; border-radius:999px; cursor:pointer; margin:10px; width:220px; text-transform:uppercase; transition:0.2s; pointer-events:auto; }
+    .menu-btn:hover{ background:white; color:#0f172a; }
+    .menu-btn.red{ border-color:#ef4444; color:#ef4444; background:rgba(239,68,68,0.1); }
+    .menu-btn.red:hover{ background:#ef4444; color:white; }
 
-    #scores-list{
-      margin-top: 10px;
-      text-align:left;
-      background: rgba(0,0,0,0.22);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 14px;
-      padding: 8px;
-      max-height: 220px;
-      overflow-y:auto;
-    }
-
-    input{
-      background: rgba(0,0,0,0.22);
-      border: 1px solid rgba(255,255,255,0.18);
-      color: white;
-      padding: 12px;
-      border-radius: 12px;
-      width: 100%;
-      text-align:center;
-      font-size: 1.05rem;
-      outline:none;
-    }
-    input:focus{
-      border-color: rgba(94,234,212,0.55);
-      box-shadow: 0 0 0 4px rgba(94,234,212,0.12);
-    }
-
-    .action-btn{
-      width: 100%;
-      margin-top: 12px;
-      padding: 12px 16px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.18);
-      font-weight: 900;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      background: linear-gradient(90deg, #22c55e, #5eead4);
-      box-shadow: 0 18px 45px rgba(0,0,0,0.35);
-      transition: transform 150ms ease, filter 200ms ease;
-      cursor:pointer;
-      color: #05212a;
-    }
-    .action-btn:hover{ transform: translateY(-1px); filter: brightness(1.05); }
-    .action-btn:active{ transform: translateY(0px) scale(0.99); }
-    .action-btn:disabled{ opacity: 0.55; cursor:not-allowed; filter:none; transform:none; }
-
-    #pause-btn{
-      position:absolute;
-      top: 16px;
-      right: 16px;
-      width: 44px; height: 44px;
-      border-radius: 999px;
-      display:none;
-      align-items:center; justify-content:center;
-      pointer-events:auto;
-      z-index:50;
-      cursor:pointer;
-      background: rgba(255,255,255,0.10);
-      border: 1px solid rgba(255,255,255,0.22);
-      backdrop-filter: blur(12px);
-      box-shadow: 0 14px 45px rgba(0,0,0,0.45);
-      transition: transform 120ms ease, background 200ms ease;
-    }
-    #pause-btn:active{ transform: scale(0.95); background: rgba(255,255,255,0.16); }
-    .pause-icon{
-      width: 16px; height: 16px;
-      position: relative;
-    }
-    .pause-icon::before, .pause-icon::after{
-      content:""; position:absolute; top:0; bottom:0;
-      width: 5px; border-radius: 3px;
-      background: rgba(255,255,255,0.95);
-      box-shadow: 0 0 18px rgba(255,255,255,0.25);
-    }
-    .pause-icon::before{ left:0; }
-    .pause-icon::after{ right:0; }
-
-    #pause-menu{
-      position:absolute; inset:0;
-      display:none;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      z-index:80;
-      background: rgba(0,0,0,0.55);
-      backdrop-filter: blur(10px);
-    }
-    .menu-btn{
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.22);
-      padding: 12px 30px;
-      color: white;
-      font-weight: 900;
-      border-radius: 999px;
-      cursor:pointer;
-      margin: 10px;
-      width: 220px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      transition: transform 150ms ease, background 200ms ease, filter 200ms ease;
-      backdrop-filter: blur(10px);
-    }
-    .menu-btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,0.12); filter: brightness(1.05); }
-    .menu-btn:active{ transform: translateY(0px) scale(0.99); }
-    .menu-btn.red{
-      border-color: rgba(239,68,68,0.6);
-      color: #fecaca;
-      background: rgba(239,68,68,0.10);
-    }
-    .menu-btn.red:hover{ background: rgba(239,68,68,0.18); }
-
-    #mobile-controls{
-      position:absolute;
-      left:0; right:0;
-      bottom: calc(18px + env(safe-area-inset-bottom));
-      height: 150px;
-      display:flex;
-      justify-content:space-between;
-      padding: 0 18px;
-      pointer-events:none;
-      z-index:20;
-    }
-    .control-group{
-      display:flex;
-      gap: 14px;
-      align-items:flex-end;
-      pointer-events:auto;
-    }
-    .btn{
-      width: 78px; height: 78px;
-      border-radius: 999px;
-      display:flex; align-items:center; justify-content:center;
-      font-weight: 900;
-      letter-spacing: 0.02em;
-      color: white;
-      background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.18), rgba(255,255,255,0.08));
-      border: 1px solid rgba(255,255,255,0.18);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 16px 50px rgba(0,0,0,0.45);
-      touch-action:none;
-      user-select:none;
-    }
-    .btn:active, .btn.active{ transform: scale(0.95); filter: brightness(1.1); }
-    .btn.gas{
-      background: radial-gradient(circle at 30% 25%, rgba(94,234,212,0.24), rgba(255,255,255,0.06));
-      border-color: rgba(94,234,212,0.30);
-    }
-    .btn.brake{
-      background: radial-gradient(circle at 30% 25%, rgba(255,242,204,0.22), rgba(255,255,255,0.06));
-      border-color: rgba(255,242,204,0.30);
-      color: #05212a;
-    }
-
-    @media (prefers-reduced-motion: reduce){
-      .primary-btn::after{ animation: none !important; }
-      .poster-wrap{ transition: none !important; }
-    }
+    /* Mobile Controls */
+    #mobile-controls{ position:absolute; left:0; right:0; bottom:calc(18px + env(safe-area-inset-bottom)); height:150px; display:flex; justify-content:space-between; padding:0 18px; pointer-events:none; z-index:20; }
+    .control-group{ display:flex; gap:14px; align-items:flex-end; pointer-events:auto; }
+    .btn{ width:78px; height:78px; border-radius:999px; display:flex; align-items:center; justify-content:center; font-weight:900; color:white; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); backdrop-filter:blur(10px); touch-action:none; user-select:none; }
+    .btn:active, .btn.active{ transform:scale(0.95); background:rgba(255,255,255,0.3); }
+    .btn.gas{ background:rgba(34,197,94,0.3); border-color:rgba(34,197,94,0.5); }
+    .btn.brake{ background:rgba(239,68,68,0.3); border-color:rgba(239,68,68,0.5); }
   </style>
 </head>
 
 <body>
-  <!-- HUD -->
   <div id="hud-layer">
     <div class="hud-card" style="text-align:left;">
-      <div class="hud-top">
-        <svg class="hud-ico" viewBox="0 0 24 24" fill="none">
-          <path d="M4 7h16M4 12h16M4 17h16" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
-        </svg>
-        <div class="label">Tour</div>
-      </div>
+      <div class="hud-top"><div class="label">Tour</div></div>
       <div id="lap-display" class="sub-info">1 / 3</div>
     </div>
-
-    <div class="hud-card" style="text-align:center; min-width: 160px;">
-      <div class="hud-top" style="justify-content:center;">
-        <svg class="hud-ico" viewBox="0 0 24 24" fill="none">
-          <path d="M12 7v5l3 2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
-          <path d="M12 21a9 9 0 1 0-9-9" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
-        </svg>
-        <div class="label">Chrono</div>
-      </div>
+    <div class="hud-card" style="text-align:center;">
+      <div class="hud-top" style="justify-content:center;"><div class="label">Chrono</div></div>
       <div id="time-display" class="big-time">00:00.00</div>
     </div>
-
-    <div class="hud-card" style="text-align:right; min-width: 140px; margin-right: 54px;">
-      <div class="hud-top" style="justify-content:flex-end;">
-        <svg class="hud-ico" viewBox="0 0 24 24" fill="none">
-          <path d="M7 4h10v3H7V4Z" stroke="white" stroke-width="2" opacity="0.75"/>
-          <path d="M9 7v3a3 3 0 0 0 6 0V7" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.75"/>
-          <path d="M8 20h8" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
-        </svg>
-        <div class="label">Record</div>
-      </div>
-      <div id="wr-display" class="sub-info" style="color: var(--gold); text-shadow: 0 0 16px rgba(255,224,138,0.22);">--:--.--</div>
+    <div class="hud-card" style="text-align:right;">
+      <div class="hud-top" style="justify-content:flex-end;"><div class="label">Record</div></div>
+      <div id="wr-display" class="sub-info" style="color:#fbbf24;">--:--.--</div>
     </div>
   </div>
 
-  <!-- Pause Button -->
-  <div id="pause-btn" aria-label="Pause">
-    <div class="pause-icon"></div>
-  </div>
+  <div id="pause-btn"><div class="pause-icon"></div></div>
 
-  <!-- Pause Menu -->
   <div id="pause-menu">
-    <div class="hud-card" style="min-width: 320px; text-align:center; pointer-events:auto;">
-      <h2 class="text-4xl font-black mb-2" style="font-family:Orbitron;">PAUSE</h2>
-      <p class="text-sm opacity-75 mb-6">Reprends la course ou retourne au classement.</p>
+    <div class="hud-card" style="min-width: 320px; text-align:center; pointer-events:auto; background:transparent; border:none; box-shadow:none;">
+      <h2 class="text-4xl font-black mb-6 text-white" style="font-family:Orbitron;">PAUSE</h2>
       <button id="resume-btn" class="menu-btn">Reprendre</button>
       <button id="restart-btn" class="menu-btn">Recommencer</button>
       <button id="quit-btn" class="menu-btn red">Quitter</button>
     </div>
   </div>
 
-  <!-- Welcome Screen -->
   <div id="welcome-screen">
     <div class="badge">
       <span class="badge-dot"></span>
       <span>Lagoon Edition • Nouvelle-Calédonie</span>
     </div>
-
-    <h1 class="mb-4 title-logo">DRIFT NC</h1>
-    <p class="text-sm opacity-80 mb-5">Sable, lagon & palmiers 🌴</p>
-
+    <h1 class="title-logo">DRIFT NC</h1>
     <div class="poster-wrap">
       <img id="poster-img" src="https://i.postimg.cc/vB21QZmP/image-drift-nc.png" alt="Drift NC Poster">
     </div>
-
     <button id="enter-btn" class="primary-btn">JOUER</button>
-    <p class="mt-2 text-xs opacity-70">Astuce : drift long = fumée + score style (bientôt 😉)</p>
   </div>
 
-  <!-- Leaderboard -->
   <div id="leaderboard-panel">
-    <h1 class="text-3xl font-black mb-1" style="font-family:Orbitron; color:#a7f3d0; text-shadow: 2px 2px 0 rgba(0,0,0,0.85);">CLASSEMENT</h1>
-    <p class="text-xs opacity-80 mb-3">BATTEZ LE FANTÔME DU CHAMPION</p>
-
-    <div id="scores-list">
-      <div class="text-center text-gray-200 text-sm py-4 opacity-70">Chargement...</div>
-    </div>
-
-    <button id="start-btn" class="action-btn" style="margin-top: 14px;">DÉMARRER</button>
-
+    <h1 class="text-3xl font-black text-yellow-400 mb-1" style="font-family:Orbitron;">CLASSEMENT</h1>
+    <p class="text-xs text-gray-400 mb-3">BATTEZ LE FANTÔME DU CHAMPION</p>
+    <div id="scores-list"><div class="text-center text-gray-400 text-sm py-4">Chargement...</div></div>
+    <button id="start-btn" class="action-btn">DÉMARRER</button>
     <div id="name-input-area" style="display:none; margin-top: 14px;">
-      <h2 class="text-xl font-black mb-2" style="font-family:Orbitron;">NOUVEAU RECORD !</h2>
-      <div class="text-yellow-100 text-2xl font-mono mb-3" id="final-time-display">00:00.00</div>
+      <h2 class="text-xl font-black mb-2 text-white">NOUVEAU RECORD !</h2>
+      <div class="text-yellow-300 text-2xl font-mono mb-3" id="final-time-display">00:00.00</div>
       <input type="text" id="player-name" placeholder="VOTRE PSEUDO" maxlength="15">
-      <button id="submit-score-btn" class="action-btn" style="background: linear-gradient(90deg, #38bdf8, #5eead4);">ENREGISTRER</button>
+      <button id="submit-score-btn" class="action-btn">ENREGISTRER</button>
     </div>
   </div>
 
-  <!-- Mobile controls -->
   <div id="mobile-controls" style="display:none;">
     <div class="control-group">
       <div id="btn-left" class="btn">⬅️</div>
@@ -517,219 +258,128 @@
   <canvas id="gameCanvas"></canvas>
 
   <script>
-    // Car sprite (same)
     const carSpriteSrc = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 80'%3E%3Cdefs%3E%3ClinearGradient id='bodyGrad' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' style='stop-color:%23c53030' /%3E%3Cstop offset='50%25' style='stop-color:%23e53e3e' /%3E%3Cstop offset='100%25' style='stop-color:%239b2c2c' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='2' y='2' width='40' height='76' rx='8' fill='rgba(0,0,0,0.3)' /%3E%3Cpath d='M6,10 Q2,20 2,40 Q2,60 6,70 L6,76 Q6,78 8,78 L36,78 Q38,78 38,76 L38,70 Q42,60 42,40 Q42,20 38,10 L36,4 Q36,2 34,2 L10,2 Q8,2 8,4 Z' fill='url(%23bodyGrad)' stroke='%23742a2a' stroke-width='1' /%3E%3Cpath d='M8,20 L36,20 L34,32 L10,32 Z' fill='%232d3748' /%3E%3Cpath d='M10,48 L34,48 L36,60 L8,60 Z' fill='%231a202c' /%3E%3Crect x='9' y='33' width='26' height='14' fill='%23e53e3e' /%3E%3Crect x='20' y='2' width='4' height='78' fill='rgba(255,255,255,0.8)' /%3E%3Crect x='4' y='68' width='36' height='8' rx='2' fill='%23742a2a' /%3E%3Crect x='6' y='4' width='6' height='4' fill='%23faf089' /%3E%3Crect x='32' y='4' width='6' height='4' fill='%23faf089' /%3E%3C/svg%3E";
     const carImage = new Image(); carImage.src = carSpriteSrc;
 
-    // ==========================================
-    // 1. CLOUD / LEADERBOARD
-    // ==========================================
     window.Cloud = {
-      db: null,
-      collectionId: null,
-      worldRecordTime: Infinity,
-      globalGhostData: null,
-
-      init: function(database, collectionId) {
-        this.db = database;
-        this.collectionId = collectionId;
-        this.listenToLeaderboard();
-      },
-
+      db: null, collectionId: null, worldRecordTime: Infinity, globalGhostData: null,
+      init: function(database, collectionId) { this.db = database; this.collectionId = collectionId; this.listenToLeaderboard(); },
       listenToLeaderboard: function() {
         if(!this.db) return;
         const { collection, query, orderBy, limit, onSnapshot } = window.fs;
-        const q = query(
-          collection(this.db, this.collectionId),
-          orderBy('timeMs', 'asc'),
-          limit(10)
-        );
-
+        const q = query(collection(this.db, this.collectionId), orderBy('timeMs', 'asc'), limit(10));
         onSnapshot(q, (snapshot) => {
-          const listEl = document.getElementById('scores-list');
-          listEl.innerHTML = '';
-          let rank = 1;
-
-          if(snapshot.empty) {
-            listEl.innerHTML = '<div class="text-center text-gray-200 text-sm py-4 opacity-70">Aucun record. Soyez le premier !</div>';
-            this.worldRecordTime = Infinity;
-            return;
-          }
-
+          const listEl = document.getElementById('scores-list'); listEl.innerHTML = ''; let rank = 1;
+          if(snapshot.empty) { listEl.innerHTML = '<div class="text-center text-gray-400 text-sm">Aucun record.</div>'; this.worldRecordTime = Infinity; return; }
           snapshot.forEach(doc => {
             const data = doc.data();
             if (rank === 1) {
-              this.worldRecordTime = data.timeMs;
-              document.getElementById('wr-display').innerText = data.timeStr;
-
-              if (data.ghostData) {
-                try {
-                  this.globalGhostData = JSON.parse(data.ghostData);
-                  GhostSystem.setGlobalGhost(this.globalGhostData);
-                } catch(e) { console.error("Erreur ghost", e); }
-              }
+              this.worldRecordTime = data.timeMs; document.getElementById('wr-display').innerText = data.timeStr;
+              if (data.ghostData) { try { this.globalGhostData = JSON.parse(data.ghostData); GhostSystem.setGlobalGhost(this.globalGhostData); } catch(e) {} }
             }
-
-            const row = document.createElement('div');
-            row.className = 'score-row';
+            const row = document.createElement('div'); row.className = 'score-row';
             row.innerHTML = `<span>#${rank} ${data.name}</span><span>${data.timeStr}</span>`;
-            listEl.appendChild(row);
-            rank++;
+            listEl.appendChild(row); rank++;
           });
-        }, (error) => console.error("Erreur scores:", error));
+        });
       },
-
       saveScore: async function(name, timeMs, timeStr, ghostData) {
-        if(!this.db) { alert("Pas de connexion."); return false; }
+        if(!this.db) return false;
         const { collection, addDoc } = window.fs;
-
         const ghostString = JSON.stringify(ghostData);
         const safeGhost = ghostString.length < 950000 ? ghostString : null;
-
-        try {
-          await addDoc(collection(this.db, this.collectionId), {
-            name: name.trim(),
-            timeMs,
-            timeStr,
-            ghostData: safeGhost,
-            date: Date.now()
-          });
-          return true;
-        } catch(e) {
-          console.error("Erreur sauvegarde:", e);
-          alert("Erreur sauvegarde. Vérifiez connexion.");
-          return false;
-        }
+        try { await addDoc(collection(this.db, this.collectionId), { name: name.trim(), timeMs, timeStr, ghostData: safeGhost, date: Date.now() }); return true; } 
+        catch(e) { console.error(e); return false; }
       }
     };
 
-    // ==========================================
-    // 2. GHOST SYSTEM
-    // ==========================================
     const GhostSystem = {
-      recording: [],
-      bestRecording: [],
-      globalFrames: null,
-      recordCounter: 0,
-
+      recording: [], bestRecording: [], globalFrames: null, recordCounter: 0,
       resetRecording(){ this.recording = []; this.recordCounter = 0; },
       saveRecordingAsBest(){ this.bestRecording = [...this.recording]; },
       setGlobalGhost(data){ this.globalFrames = data; },
-
       recordFrame(time, car){
-        this.recordCounter++;
-        if (this.recordCounter % 4 !== 0) return;
-        this.recording.push({
-          t: Math.round(time),
-          x: Math.round(car.x),
-          y: Math.round(car.y),
-          a: parseFloat(car.angle.toFixed(2))
-        });
+        this.recordCounter++; if (this.recordCounter % 4 !== 0) return;
+        this.recording.push({ t: Math.round(time), x: Math.round(car.x), y: Math.round(car.y), a: parseFloat(car.angle.toFixed(2)) });
       },
-
       drawGlobalGhost(ctx, time){
         if (!this.globalFrames || this.globalFrames.length < 2) return;
-
         const frames = this.globalFrames;
-        let idx = 0;
-        while(idx < frames.length - 1 && frames[idx+1].t < time) idx++;
-
-        const curr = frames[idx];
-        const next = frames[idx+1];
-        if (!next) return;
-
-        const ratio = (time - curr.t) / (next.t - curr.t);
-        const r = Math.max(0, Math.min(1, ratio));
-
-        const x = curr.x + (next.x - curr.x) * r;
-        const y = curr.y + (next.y - curr.y) * r;
-        const a = curr.a + (next.a - curr.a) * r;
-
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(a + Math.PI/2);
-
-        ctx.globalAlpha = 0.18;
-        ctx.fillStyle = 'rgba(94,234,212,1)';
-        ctx.beginPath();
-        ctx.ellipse(0, 8, 22, 36, 0, 0, Math.PI*2);
-        ctx.fill();
-
-        ctx.globalAlpha = 0.55;
-        if(carImage.complete){
-          ctx.drawImage(carImage, -22, -40, 44, 80);
-          ctx.globalCompositeOperation = 'source-atop';
-          ctx.fillStyle = 'rgba(94,234,212,0.55)';
-          ctx.fillRect(-22, -40, 44, 80);
-          ctx.globalCompositeOperation = 'source-over';
-        }else{
-          ctx.fillStyle='#5eead4';
-          ctx.fillRect(-11,-19,22,38);
-        }
-
-        ctx.globalAlpha = 0.92;
-        ctx.fillStyle = "rgba(167,243,208,0.95)";
-        ctx.font = "900 10px Orbitron, Arial";
-        ctx.textAlign = "center";
-        ctx.fillText("CHAMPION", 0, -48);
-
+        let idx = 0; while(idx < frames.length - 1 && frames[idx+1].t < time) idx++;
+        const curr = frames[idx], next = frames[idx+1]; if (!next) return;
+        const ratio = (time - curr.t) / (next.t - curr.t); const r = Math.max(0, Math.min(1, ratio));
+        const x = curr.x + (next.x - curr.x) * r; const y = curr.y + (next.y - curr.y) * r; const a = curr.a + (next.a - curr.a) * r;
+        ctx.save(); ctx.translate(x, y); ctx.rotate(a + Math.PI/2);
+        ctx.globalAlpha = 0.5;
+        if(carImage.complete){ ctx.drawImage(carImage, -22, -40, 44, 80); ctx.globalCompositeOperation = 'source-atop'; ctx.fillStyle = 'rgba(251,191,36,0.6)'; ctx.fillRect(-22, -40, 44, 80); }
+        ctx.globalAlpha = 0.8; ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = "#fbbf24"; ctx.font = "bold 10px Arial"; ctx.textAlign = "center"; ctx.fillText("CHAMPION", 0, -45);
         ctx.restore();
       }
     };
-
-    // ==========================================
-    // 3. LAGOON WORLD (ocean + sand + foam + palms) + VIS FX
-    // ==========================================
-    function makeNoiseCanvas(size=220, alpha=22, tint=[255,255,255]){
-      const c = document.createElement('canvas');
-      c.width = c.height = size;
-      const nctx = c.getContext('2d');
-      const img = nctx.createImageData(size, size);
-      for(let i=0;i<img.data.length;i+=4){
-        const v = (Math.random()*255)|0;
-        img.data[i] = Math.min(255, (v*0.6 + tint[0]*0.4)|0);
-        img.data[i+1] = Math.min(255, (v*0.6 + tint[1]*0.4)|0);
-        img.data[i+2] = Math.min(255, (v*0.6 + tint[2]*0.4)|0);
-        img.data[i+3] = alpha;
-      }
-      nctx.putImageData(img,0,0);
-      return c;
-    }
 
     const VIS = {
-      film: makeNoiseCanvas(160, 18, [255,255,255]),
-      filmPattern: null,
-
-      ensurePatterns(ctx){
-        if(!this.filmPattern) this.filmPattern = ctx.createPattern(this.film, 'repeat');
-      },
-      drawFilmGrain(ctx,w,h){
-        this.ensurePatterns(ctx);
-        ctx.save();
-        ctx.globalAlpha = 0.08;
-        ctx.fillStyle = this.filmPattern;
-        ctx.fillRect(0,0,w,h);
-        ctx.restore();
-      },
-      drawVignette(ctx,w,h){
-        ctx.save();
-        const g = ctx.createRadialGradient(w/2,h/2, Math.min(w,h)*0.20, w/2,h/2, Math.min(w,h)*0.75);
-        g.addColorStop(0,'rgba(0,0,0,0)');
-        g.addColorStop(1,'rgba(0,0,0,0.45)');
-        ctx.fillStyle=g;
-        ctx.fillRect(0,0,w,h);
-        ctx.restore();
-      }
+        // Simple sparkle particles for water
+        seaParticles: [],
+        initSea(){ for(let i=0; i<50; i++) this.seaParticles.push({x:Math.random()*3000, y:Math.random()*3000, t:Math.random()*Math.PI*2}); },
+        drawSea(ctx){
+            // Gradient Sea
+            const g = ctx.createRadialGradient(1500, 1500, 0, 1500, 1500, 2000);
+            g.addColorStop(0, '#06b6d4'); g.addColorStop(1, '#0c4a6e');
+            ctx.fillStyle = g; ctx.fillRect(0,0,3000,3000);
+            
+            // Sparkles
+            ctx.fillStyle = "rgba(255,255,255,0.3)";
+            for(let p of this.seaParticles){
+                p.t += 0.05;
+                const alpha = (Math.sin(p.t)+1)/2 * 0.5;
+                ctx.globalAlpha = alpha;
+                ctx.beginPath(); ctx.arc(p.x, p.y, 2 + Math.sin(p.t), 0, Math.PI*2); ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+        },
+        // Palm trees logic
+        palms: [],
+        initPalms(track){
+            for(let i=0; i<60; i++){
+                let x,y, safe=false;
+                // Try to find a spot on SAND (not road, not water)
+                // Since our map is sand island, just need to be not on road.
+                // We simulate map box approx 800-2200 range
+                for(let k=0; k<10; k++){
+                    x = 500 + Math.random()*2000; y = 500 + Math.random()*2000;
+                    if(track.check(x-1500, y-1500) === 'sand') { safe=true; break; }
+                }
+                if(safe) this.palms.push({x: x-1500, y: y-1500, s: 0.8+Math.random()*0.5, r: Math.random()*Math.PI});
+            }
+        },
+        drawPalms(ctx){
+            for(let p of this.palms){
+                ctx.save(); ctx.translate(p.x, p.y); ctx.scale(p.s, p.s);
+                // Shadow
+                ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.beginPath(); ctx.ellipse(5, 5, 8, 8, 0, 0, Math.PI*2); ctx.fill();
+                // Trunk (top down dot)
+                ctx.fillStyle = "#5d4037"; ctx.beginPath(); ctx.arc(0,0, 6, 0, Math.PI*2); ctx.fill();
+                // Leaves
+                ctx.fillStyle = "#16a34a";
+                for(let j=0; j<7; j++){
+                    ctx.rotate((Math.PI*2)/7);
+                    ctx.beginPath(); ctx.ellipse(0, -15, 6, 20, 0, 0, Math.PI*2); ctx.fill();
+                    // Detail
+                    ctx.strokeStyle = "#14532d"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(0,-5); ctx.lineTo(0,-30); ctx.stroke();
+                }
+                ctx.restore();
+            }
+        }
     };
 
-    // Particles (smoke & sand dust)
+    // Particles (smoke & dust)
     const Particles = {
       list: [],
       spawn(x,y, vx,vy, kind){
         this.list.push({
           x,y, vx,vy,
-          r: kind==='smoke' ? 8+Math.random()*10 : 5+Math.random()*7,
-          a: kind==='smoke' ? 0.28 : 0.22,
+          r: kind==='smoke' ? 8+Math.random()*10 : 5+Math.random()*8,
+          a: kind==='smoke' ? 0.30 : 0.25,
           d: kind==='smoke' ? 0.010 : 0.014,
           kind
         });
@@ -738,7 +388,7 @@
         for(const p of this.list){
           p.x += p.vx;
           p.y += p.vy;
-          p.r *= 1.016;
+          p.r *= 1.015;
           p.a -= p.d;
         }
         this.list = this.list.filter(p => p.a > 0);
@@ -749,8 +399,7 @@
           if(p.kind==='smoke'){
             ctx.fillStyle = `rgba(255,255,255,${p.a})`;
           }else{
-            // sand dust
-            ctx.fillStyle = `rgba(255,242,204,${p.a})`;
+            ctx.fillStyle = `rgba(190,255,215,${p.a*0.65})`;
           }
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
@@ -760,186 +409,10 @@
       }
     };
 
-    const LagoonWorld = {
-      sandNoise: makeNoiseCanvas(240, 20, [255,242,204]),
-      sandPattern: null,
-      oceanNoise: makeNoiseCanvas(220, 16, [56,189,248]),
-      oceanPattern: null,
-
-      palms: [],
-      time: 0,
-
-      ensurePatterns(ctx){
-        if(!this.sandPattern) this.sandPattern = ctx.createPattern(this.sandNoise, 'repeat');
-        if(!this.oceanPattern) this.oceanPattern = ctx.createPattern(this.oceanNoise, 'repeat');
-      },
-
-      initPalms(){
-        // Placements autour du circuit (à la main, "island vibe")
-        this.palms = [
-          {x:-900,y:-750,s:1.0,r:0.2},
-          {x:-1200,y:-200,s:1.2,r:-0.4},
-          {x:-1050,y:450,s:1.15,r:0.1},
-          {x:-200,y:780,s:1.25,r:-0.2},
-          {x:650,y:520,s:1.1,r:0.3},
-          {x:900,y:-80,s:1.2,r:-0.1},
-          {x:860,y:-720,s:1.05,r:0.2},
-          {x:150,y:-950,s:1.35,r:-0.25},
-          {x:-550,y:950,s:1.1,r:0.15},
-          {x:1200,y:380,s:1.25,r:-0.25}
-        ];
-      },
-
-      drawOceanBackground(ctx, camX, camY, w, h){
-        // world-space ocean with subtle moving waves
-        this.ensurePatterns(ctx);
-        this.time += 0.005;
-
-        ctx.save();
-        // base ocean gradient (screen)
-        ctx.setTransform(1,0,0,1,0,0);
-        const g = ctx.createLinearGradient(0,0,0,h);
-        g.addColorStop(0, '#043546');
-        g.addColorStop(0.55, '#075e73');
-        g.addColorStop(1, '#03212a');
-        ctx.fillStyle = g;
-        ctx.fillRect(0,0,w,h);
-
-        // moving pattern overlay
-        ctx.globalAlpha = 0.16;
-        ctx.translate(-((camX*0.15)%240), -((camY*0.15)%240));
-        ctx.fillStyle = this.oceanPattern;
-        ctx.fillRect(-240,-240,w+480,h+480);
-
-        // wave bands (animated)
-        ctx.globalAlpha = 0.10;
-        ctx.setTransform(1,0,0,1,0,0);
-        ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-        ctx.lineWidth = 2;
-        for(let y=0;y<h;y+=36){
-          const off = Math.sin(this.time + y*0.02)*18;
-          ctx.beginPath();
-          for(let x=0;x<=w;x+=60){
-            const yy = y + Math.sin(this.time*1.6 + x*0.02 + y*0.01)*6 + off*0.1;
-            if(x===0) ctx.moveTo(x,yy);
-            else ctx.quadraticCurveTo(x-30, yy-4, x, yy);
-          }
-          ctx.stroke();
-        }
-
-        ctx.restore();
-      },
-
-      drawSandAroundTrack(ctx){
-        // Draw sand "island" under the track in world space
-        this.ensurePatterns(ctx);
-        ctx.save();
-
-        // big sand base
-        ctx.globalAlpha = 0.95;
-        ctx.fillStyle = '#e9d3a6';
-        ctx.beginPath();
-        ctx.ellipse(-200, -100, 1700, 1400, 0, 0, Math.PI*2);
-        ctx.fill();
-
-        // sand texture overlay
-        ctx.globalAlpha = 0.16;
-        ctx.fillStyle = this.sandPattern;
-        ctx.fillRect(-2200,-2000,4400,4000);
-
-        // darker sand edges (depth)
-        ctx.globalAlpha = 0.18;
-        ctx.strokeStyle = 'rgba(120,75,20,0.55)';
-        ctx.lineWidth = 18;
-        ctx.beginPath();
-        ctx.ellipse(-200, -100, 1700, 1400, 0, 0, Math.PI*2);
-        ctx.stroke();
-
-        ctx.restore();
-      },
-
-      drawFoamEdge(ctx, track){
-        // Soft white foam around the road edges
-        ctx.save();
-        ctx.lineCap='round';
-        ctx.lineJoin='round';
-        ctx.globalAlpha = 0.25;
-        ctx.strokeStyle = 'rgba(255,255,255,0.95)';
-        ctx.lineWidth = 210;
-        track.trace(ctx);
-        ctx.stroke();
-
-        ctx.globalAlpha = 0.18;
-        ctx.strokeStyle = 'rgba(167,243,208,0.55)';
-        ctx.lineWidth = 230;
-        track.trace(ctx);
-        ctx.stroke();
-
-        ctx.restore();
-      },
-
-      drawPalm(ctx, x, y, scale=1, rot=0){
-        ctx.save();
-        ctx.translate(x,y);
-        ctx.rotate(rot);
-
-        // shadow
-        ctx.globalAlpha = 0.22;
-        ctx.fillStyle = '#000';
-        ctx.beginPath();
-        ctx.ellipse(0, 18*scale, 26*scale, 10*scale, 0.4, 0, Math.PI*2);
-        ctx.fill();
-
-        // trunk
-        ctx.globalAlpha = 1;
-        ctx.strokeStyle = 'rgba(120,75,20,0.85)';
-        ctx.lineWidth = 10*scale;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(0, 10*scale);
-        ctx.quadraticCurveTo(8*scale, -25*scale, 3*scale, -70*scale);
-        ctx.stroke();
-
-        // fronds
-        ctx.strokeStyle = 'rgba(34,197,94,0.9)';
-        ctx.lineWidth = 5*scale;
-        const topX = 3*scale, topY = -70*scale;
-        for(let i=0;i<7;i++){
-          const a = (-1.2 + i*0.4);
-          ctx.beginPath();
-          ctx.moveTo(topX, topY);
-          ctx.quadraticCurveTo(
-            topX + Math.cos(a)*35*scale,
-            topY + Math.sin(a)*25*scale,
-            topX + Math.cos(a)*70*scale,
-            topY + Math.sin(a)*40*scale
-          );
-          ctx.stroke();
-        }
-
-        // coconuts (tiny dots)
-        ctx.fillStyle = 'rgba(120,75,20,0.9)';
-        ctx.beginPath(); ctx.arc(topX+2*scale, topY+6*scale, 3.2*scale, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(topX-4*scale, topY+10*scale, 2.8*scale, 0, Math.PI*2); ctx.fill();
-
-        ctx.restore();
-      },
-
-      drawPalms(ctx){
-        for(const p of this.palms){
-          this.drawPalm(ctx, p.x, p.y, p.s, p.r);
-        }
-      }
-    };
-
-    // ==========================================
-    // 4. GAME ENGINE (Track)
-    // ==========================================
-    const PHYSICS = { acceleration: 0.22, maxSpeed: 12.5, friction: 0.965, turnSpeed: 0.075, offRoadFriction: 0.86 };
-
+    const PHYSICS = { acceleration: 0.22, maxSpeed: 12.5, friction: 0.965, turnSpeed: 0.075, offRoadFriction: 0.75 }; // Sand slower
     const TRACK_CONFIG = {
-      roadColor: '#475569',
-      sandColor: '#e9d3a6',
+      roadColor: '#334155', // Dark slate
+      sandColor: '#fcd34d', // Amber 300
       lineWidth: 160
     };
 
@@ -948,7 +421,9 @@
       init(){
         const c = document.createElement('canvas'); c.width = this.mapW; c.height = this.mapH;
         this.collisionCtx = c.getContext('2d', { willReadFrequently: true });
-        this.drawMask();
+        this.drawCollisionMask();
+        VIS.initSea();
+        VIS.initPalms(this);
       },
       trace(ctx){
         ctx.beginPath();
@@ -959,345 +434,188 @@
         ctx.lineTo(-600, 400); ctx.arc(-600, -100, 500, Math.PI/2, -Math.PI/2, false);
         ctx.lineTo(-400, -600);
       },
-      drawMask(){
+      drawCollisionMask(){
         const ctx = this.collisionCtx;
+        // Fill grass/sea check background as transparent (sea)
+        ctx.clearRect(0,0,3000,3000);
         ctx.save(); ctx.translate(1500, 1500);
+        
+        // 1. Draw Sand Island (Thick base)
         ctx.lineCap='round'; ctx.lineJoin='round';
-        ctx.strokeStyle='#FFF'; ctx.lineWidth=TRACK_CONFIG.lineWidth;
+        ctx.strokeStyle = '#FF0000'; // Code Red = Sand in check
+        ctx.lineWidth = 450; // Island width
+        this.trace(ctx); ctx.stroke();
+
+        // 2. Draw Road
+        ctx.strokeStyle = '#FFFFFF'; // White = Road
+        ctx.lineWidth = TRACK_CONFIG.lineWidth;
         this.trace(ctx); ctx.stroke();
         ctx.restore();
       },
       draw(ctx){
+        // 1. Sea Background
+        ctx.save(); ctx.translate(-1500, -1500);
+        VIS.drawSea(ctx);
+        ctx.restore();
+
         ctx.lineCap='round'; ctx.lineJoin='round';
 
-        // Road shadow
+        // 2. Sand Island (Beige)
+        ctx.shadowColor = "rgba(0,0,0,0.2)"; ctx.shadowBlur = 20;
+        ctx.strokeStyle = TRACK_CONFIG.sandColor;
+        ctx.lineWidth = 450;
+        this.trace(ctx); ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Texture on Sand
+        ctx.save(); ctx.globalAlpha = 0.05; ctx.globalCompositeOperation = 'multiply';
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 450; this.trace(ctx); ctx.stroke(); ctx.restore();
+
+        // 3. Foam Edge (Soft White around road/sand interface? No, maybe around the island)
+        // Let's do a faint white wash at the edge of the sand
         ctx.save();
-        ctx.globalAlpha = 0.20;
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 200;
+        ctx.globalCompositeOperation = 'overlay';
+        ctx.strokeStyle = "rgba(255,255,255,0.4)";
+        ctx.lineWidth = 480; // Slightly larger than sand
+        ctx.shadowColor = "#fff"; ctx.shadowBlur = 30;
         this.trace(ctx); ctx.stroke();
         ctx.restore();
 
-        // Foam edge first (island vibe) – drawn by LagoonWorld
-        // Curbs tropical
-        ctx.strokeStyle = '#ffffff';
+        // 4. "Kerbs" = Foam / White Beach Sand
+        ctx.strokeStyle = '#fef3c7'; // Very light yellow/white
         ctx.lineWidth = 176;
         this.trace(ctx); ctx.stroke();
 
-        ctx.strokeStyle = 'rgba(94,234,212,0.85)'; // lagoon curb tint
-        ctx.lineWidth = 170;
-        this.trace(ctx); ctx.stroke();
-
-        // Asphalt
+        // 5. Road
         ctx.strokeStyle = TRACK_CONFIG.roadColor;
         ctx.lineWidth = 160;
         this.trace(ctx); ctx.stroke();
 
-        // Start line
-        ctx.save();
-        ctx.translate(0, -600);
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(-12, -80, 24, 160);
-        ctx.fillStyle = '#000';
-        for(let y=-80;y<80;y+=20){
-          if((y/20)%2===0) ctx.fillRect(-12,y,12,20);
-          else ctx.fillRect(0,y,12,20);
-        }
+        // Dashed Line
+        ctx.save(); ctx.globalAlpha = 0.3; ctx.strokeStyle = '#fff'; ctx.setLineDash([40, 40]); ctx.lineWidth = 4;
+        this.trace(ctx); ctx.stroke(); ctx.restore();
+
+        // Start Line
+        ctx.save(); ctx.translate(0, -600);
+        ctx.fillStyle = '#fff'; ctx.fillRect(-12, -80, 24, 160);
+        ctx.fillStyle = '#000'; for(let y=-80;y<80;y+=20){ if((y/20)%2===0) ctx.fillRect(-12,y,12,20); else ctx.fillRect(0,y,12,20); }
         ctx.restore();
 
-        // Dashed center line
-        ctx.save();
-        ctx.globalAlpha = 0.18;
-        ctx.strokeStyle = '#fff';
-        ctx.setLineDash([40, 30]);
-        ctx.lineWidth = 3;
-        this.trace(ctx); ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.restore();
+        // 6. Decor (Palms)
+        ctx.save(); ctx.translate(-1500, -1500); // Back to map coords for static objects
+        VIS.drawPalms(ctx); // Actually palms are static, so we can draw them here.
+        // Wait, translate context back to 0,0 relative to camera? 
+        // Track.draw is called with camera transform already applied (0,0 is center of track).
+        // My VIS.palms are stored relative to center (0,0). So:
+        ctx.restore(); // Undo the -1500
+        
+        VIS.drawPalms(ctx); // Draw relative to center
       },
       check(x,y){
         const mx = Math.floor(x+1500), my = Math.floor(y+1500);
-        if(mx<0||mx>=3000||my<0||my>=3000) return 'sand';
-        return this.collisionCtx.getImageData(mx,my,1,1).data[3]>0 ? 'road':'sand';
+        if(mx<0||mx>=3000||my<0||my>=3000) return 'sea';
+        const p = this.collisionCtx.getImageData(mx,my,1,1).data;
+        if(p[3]===0) return 'sea'; // Transparent
+        if(p[0]>200 && p[1]<50) return 'sand'; // Red drawn earlier
+        return 'road'; // White
       }
     };
 
-    // ==========================================
-    // 5. RACE MANAGER
-    // ==========================================
     const RaceManager = {
-      totalLaps: 3, currentLap: 1, state: 'menu',
-      startTime: 0, lapStartTime: 0, bestLapTime: Infinity, pausedTime: 0,
+      totalLaps: 3, currentLap: 1, state: 'menu', startTime: 0, lapStartTime: 0, bestLapTime: Infinity, pausedTime: 0,
       checkpoints: [ {x:500,y:-400,p:false}, {x:400,y:100,p:false}, {x:-200,y:400,p:false}, {x:-900,y:0,p:false} ],
-
       startRace(){
-        this.state='racing';
-        this.startTime = Date.now();
-        this.lapStartTime = this.startTime;
-        this.currentLap = 1;
-        this.bestLapTime = Infinity;
-        this.checkpoints.forEach(cp=>cp.p=false);
-        GhostSystem.resetRecording();
-
-        car.reset();
-
-        document.getElementById('leaderboard-panel').style.display='none';
-        document.getElementById('pause-menu').style.display='none';
-        document.getElementById('pause-btn').style.display='flex';
-        document.getElementById('mobile-controls').style.display='flex';
+        this.state='racing'; this.startTime = Date.now(); this.lapStartTime = this.startTime; this.currentLap = 1; this.bestLapTime = Infinity;
+        this.checkpoints.forEach(cp=>cp.p=false); GhostSystem.resetRecording(); car.reset();
+        document.getElementById('leaderboard-panel').style.display='none'; document.getElementById('pause-menu').style.display='none';
+        document.getElementById('pause-btn').style.display='flex'; document.getElementById('mobile-controls').style.display='flex';
         document.getElementById('lap-display').innerText = `1 / ${this.totalLaps}`;
       },
-      pauseGame(){
-        if(this.state==='racing'){
-          this.state='paused';
-          this.pausedTime = Date.now();
-          document.getElementById('pause-menu').style.display='flex';
-          document.getElementById('mobile-controls').style.display='none';
-        }
-      },
-      resumeGame(){
-        if(this.state==='paused'){
-          const pauseDuration = Date.now() - this.pausedTime;
-          this.startTime += pauseDuration;
-          this.lapStartTime += pauseDuration;
-          this.state='racing';
-          document.getElementById('pause-menu').style.display='none';
-          document.getElementById('mobile-controls').style.display='flex';
-        }
-      },
-      quitToMenu(){
-        this.state='menu';
-        document.getElementById('pause-menu').style.display='none';
-        document.getElementById('pause-btn').style.display='none';
-        document.getElementById('mobile-controls').style.display='none';
-        document.getElementById('leaderboard-panel').style.display='block';
-        document.getElementById('start-btn').style.display='block';
-        document.getElementById('name-input-area').style.display='none';
-      },
+      pauseGame(){ if(this.state==='racing'){ this.state='paused'; this.pausedTime = Date.now(); document.getElementById('pause-menu').style.display='flex'; document.getElementById('mobile-controls').style.display='none'; } },
+      resumeGame(){ if(this.state==='paused'){ const d = Date.now() - this.pausedTime; this.startTime += d; this.lapStartTime += d; this.state='racing'; document.getElementById('pause-menu').style.display='none'; document.getElementById('mobile-controls').style.display='flex'; } },
+      quitToMenu(){ this.state='menu'; document.getElementById('pause-menu').style.display='none'; document.getElementById('pause-btn').style.display='none'; document.getElementById('mobile-controls').style.display='none'; document.getElementById('leaderboard-panel').style.display='block'; document.getElementById('start-btn').style.display='block'; document.getElementById('name-input-area').style.display='none'; },
       update(car){
         if(this.state!=='racing') return;
-
-        const now = Date.now();
-        const lapTime = now - this.lapStartTime;
+        const now = Date.now(); const lapTime = now - this.lapStartTime;
         GhostSystem.recordFrame(lapTime, car);
-
-        this.checkpoints.forEach(cp => {
-          if(!cp.p && Math.hypot(car.x-cp.x, car.y-cp.y) < 300) cp.p = true;
-        });
-
-        if(Math.abs(car.y - (-600)) < 80 && car.x > 0 && car.lastX <= 0){
-          if(this.checkpoints.every(cp => cp.p)){
-            this.completeLap(now);
-          }
-        }
+        this.checkpoints.forEach(cp => { if(!cp.p && Math.hypot(car.x-cp.x, car.y-cp.y) < 300) cp.p = true; });
+        if(Math.abs(car.y - (-600)) < 80 && car.x > 0 && car.lastX <= 0 && this.checkpoints.every(cp => cp.p)) this.completeLap(now);
       },
       completeLap(now){
         const lapTime = now - this.lapStartTime;
-        if(lapTime < this.bestLapTime){
-          this.bestLapTime = lapTime;
-          GhostSystem.saveRecordingAsBest();
-          const t = document.getElementById('time-display');
-          t.classList.remove('pulse'); void t.offsetWidth; t.classList.add('pulse');
-        }
-
-        if(this.currentLap >= this.totalLaps){
-          this.finishRace(now);
-        }else{
-          this.currentLap++;
-          this.lapStartTime = now;
-          document.getElementById('lap-display').innerText = `${this.currentLap} / ${this.totalLaps}`;
-          this.checkpoints.forEach(cp=>cp.p=false);
-          GhostSystem.resetRecording();
-        }
+        if(lapTime < this.bestLapTime){ this.bestLapTime = lapTime; GhostSystem.saveRecordingAsBest(); const t = document.getElementById('time-display'); t.classList.remove('pulse'); void t.offsetWidth; t.classList.add('pulse'); }
+        if(this.currentLap >= this.totalLaps) this.finishRace(now);
+        else{ this.currentLap++; this.lapStartTime = now; document.getElementById('lap-display').innerText = `${this.currentLap} / ${this.totalLaps}`; this.checkpoints.forEach(cp=>cp.p=false); GhostSystem.resetRecording(); }
       },
       finishRace(now){
-        this.state='finished';
-        const timeToSubmit = this.bestLapTime;
-        const timeStr = this.formatTime(timeToSubmit);
-
-        document.getElementById('pause-btn').style.display='none';
-        document.getElementById('leaderboard-panel').style.display='block';
-        document.getElementById('start-btn').style.display='none';
-        document.getElementById('mobile-controls').style.display='none';
-
-        document.getElementById('name-input-area').style.display='block';
-        document.getElementById('final-time-display').innerText = timeStr;
-
-        const submitBtn = document.getElementById('submit-score-btn');
-        const newBtn = submitBtn.cloneNode(true);
-        submitBtn.parentNode.replaceChild(newBtn, submitBtn);
-
+        this.state='finished'; const timeToSubmit = this.bestLapTime; const timeStr = this.formatTime(timeToSubmit);
+        document.getElementById('pause-btn').style.display='none'; document.getElementById('leaderboard-panel').style.display='block';
+        document.getElementById('start-btn').style.display='none'; document.getElementById('mobile-controls').style.display='none';
+        document.getElementById('name-input-area').style.display='block'; document.getElementById('final-time-display').innerText = timeStr;
+        const submitBtn = document.getElementById('submit-score-btn'); const newBtn = submitBtn.cloneNode(true); submitBtn.parentNode.replaceChild(newBtn, submitBtn);
         newBtn.onclick = async () => {
-          const name = document.getElementById('player-name').value;
-          if(name.length < 1) return;
-
-          newBtn.innerText = "ENVOI...";
-          newBtn.disabled = true;
-
+          const name = document.getElementById('player-name').value; if(name.length < 1) return;
+          newBtn.innerText = "ENVOI..."; newBtn.disabled = true;
           const saved = await window.Cloud.saveScore(name, timeToSubmit, timeStr, GhostSystem.bestRecording);
-
-          if (saved) {
-            document.getElementById('name-input-area').innerHTML =
-              '<div class="text-emerald-200 font-black py-4" style="font-family:Orbitron;">SCORE ENREGISTRÉ !</div>' +
-              '<button class="action-btn" onclick="location.reload()" style="background: linear-gradient(90deg, #38bdf8, #5eead4);">REJOUER</button>';
-          } else {
-            newBtn.innerText = "RÉESSAYER";
-            newBtn.disabled = false;
-          }
+          if (saved) { document.getElementById('name-input-area').innerHTML = '<div class="text-emerald-300 font-black py-4" style="font-family:Orbitron;">SCORE ENREGISTRÉ !</div><button class="action-btn" onclick="location.reload()" style="background: linear-gradient(90deg, #3b82f6, #14b8a6);">REJOUER</button>'; }
+          else { newBtn.innerText = "RÉESSAYER"; newBtn.disabled = false; }
         };
       },
-      formatTime(ms){
-        let m = Math.floor(ms/60000);
-        let s = Math.floor((ms%60000)/1000);
-        let c = Math.floor((ms%1000)/10);
-        return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}.${c.toString().padStart(2,'0')}`;
-      }
+      formatTime(ms){ let m = Math.floor(ms/60000), s = Math.floor((ms%60000)/1000), c = Math.floor((ms%1000)/10); return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}.${c.toString().padStart(2,'0')}`; }
     };
 
-    // ==========================================
-    // 6. CAR (dust on sand)
-    // ==========================================
     class Car{
-      constructor(){ this.reset(); }
-      reset(){
-        this.x=0; this.y=-600; this.lastX=0; this.angle=0;
-        this.vx=0; this.vy=0; this.speed=0;
-        this.controls={u:false,d:false,l:false,r:false};
-        this.skids=[];
-      }
-
+      constructor(){ this.reset(); this.skids=[]; }
+      reset(){ this.x=0; this.y=-600; this.lastX=0; this.angle=0; this.vx=0; this.vy=0; this.speed=0; this.controls={u:false,d:false,l:false,r:false}; }
       update(){
-        this.lastX=this.x;
-        if(RaceManager.state!=='racing') return;
-
-        if(Math.abs(this.speed)>0.1){
-          const dir = this.speed>0?1:-1;
-          if(this.controls.l) this.angle -= PHYSICS.turnSpeed*dir;
-          if(this.controls.r) this.angle += PHYSICS.turnSpeed*dir;
-        }
-
-        let f=0;
-        if(this.controls.u) f=PHYSICS.acceleration;
-        if(this.controls.d) f=-PHYSICS.acceleration*0.6;
-
-        this.vx += Math.cos(this.angle)*f;
-        this.vy += Math.sin(this.angle)*f;
-
+        this.lastX=this.x; if(RaceManager.state!=='racing') return;
+        if(Math.abs(this.speed)>0.1){ const dir = this.speed>0?1:-1; if(this.controls.l) this.angle -= PHYSICS.turnSpeed*dir; if(this.controls.r) this.angle += PHYSICS.turnSpeed*dir; }
+        let f=0; if(this.controls.u) f=PHYSICS.acceleration; if(this.controls.d) f=-PHYSICS.acceleration*0.6;
+        this.vx += Math.cos(this.angle)*f; this.vy += Math.sin(this.angle)*f;
         const surface = Track.check(this.x, this.y);
-        const fric = surface==='road' ? PHYSICS.friction : PHYSICS.offRoadFriction;
+        // Physics for surfaces: Road = fast, Sand = slow, Sea = very slow (sink)
+        let fric = PHYSICS.friction;
+        if(surface === 'sand') fric = PHYSICS.offRoadFriction;
+        if(surface === 'sea') fric = 0.5; // Water drag
 
-        this.speed = Math.hypot(this.vx, this.vy);
-        this.vx *= fric; this.vy *= fric;
-
-        if(this.speed>PHYSICS.maxSpeed){
-          const r = PHYSICS.maxSpeed/this.speed;
-          this.vx*=r; this.vy*=r;
-          this.speed = PHYSICS.maxSpeed;
-        }
-
+        this.speed = Math.hypot(this.vx, this.vy); this.vx *= fric; this.vy *= fric;
+        if(this.speed>PHYSICS.maxSpeed){ const r = PHYSICS.maxSpeed/this.speed; this.vx*=r; this.vy*=r; this.speed = PHYSICS.maxSpeed; }
         this.x += this.vx; this.y += this.vy;
 
         const moveA = Math.atan2(this.vy, this.vx);
-        let slip = Math.abs(moveA - this.angle);
-        while(slip>Math.PI) slip-=Math.PI*2;
-        while(slip<-Math.PI) slip+=Math.PI*2;
-
+        let slip = Math.abs(moveA - this.angle); while(slip>Math.PI) slip-=Math.PI*2; while(slip<-Math.PI) slip+=Math.PI*2;
         const drifting = (this.speed>4 && Math.abs(slip)>0.35);
-
         if(drifting && surface==='road'){
           const c=Math.cos(this.angle), s=Math.sin(this.angle);
-          const rearX = this.x - c*20;
-          const rearY = this.y - s*20;
-
-          const leftX  = rearX + s*11;
-          const leftY  = rearY - c*11;
-          const rightX = rearX - s*11;
-          const rightY = rearY + c*11;
-
-          this.skids.push({x:leftX, y:leftY, a:0.55, w:2.6});
-          this.skids.push({x:rightX, y:rightY, a:0.55, w:2.6});
-
-          if(Math.random() < 0.55){
-            Particles.spawn(rearX, rearY, -this.vx*0.15 + (Math.random()-0.5)*0.6, -this.vy*0.15 + (Math.random()-0.5)*0.6, 'smoke');
-          }
+          const rearX = this.x - c*20, rearY = this.y - s*20;
+          this.skids.push({x:rearX+s*11, y:rearY-c*11, a:0.55, w:2.6}); this.skids.push({x:rearX-s*11, y:rearY+c*11, a:0.55, w:2.6});
+          if(Math.random()<0.55) Particles.spawn(rearX, rearY, -this.vx*0.15+(Math.random()-0.5)*0.6, -this.vy*0.15+(Math.random()-0.5)*0.6, 'smoke');
         }
-
-        // Sand dust off-road
-        if(surface==='sand' && this.speed>3 && Math.random() < 0.40){
-          Particles.spawn(this.x, this.y, -this.vx*0.05 + (Math.random()-0.5)*0.7, -this.vy*0.05 + (Math.random()-0.5)*0.7, 'dust');
-        }
-
+        // Sand dust
+        if(surface==='sand' && this.speed>3 && Math.random()<0.35) Particles.spawn(this.x, this.y, -this.vx*0.05, -this.vy*0.05, 'dust');
+        
         for(const sk of this.skids) sk.a -= 0.012;
         this.skids = this.skids.filter(sk => sk.a > 0);
       }
-
       draw(ctx){
-        // Skids
-        ctx.save();
-        ctx.lineCap = 'round';
-        for(const sk of this.skids){
-          ctx.strokeStyle = `rgba(0,0,0,${sk.a})`;
-          ctx.lineWidth = sk.w;
-          ctx.beginPath();
-          ctx.moveTo(sk.x, sk.y);
-          ctx.lineTo(sk.x - this.vx*0.25, sk.y - this.vy*0.25);
-          ctx.stroke();
-        }
+        ctx.save(); ctx.lineCap = 'round';
+        for(const sk of this.skids){ ctx.strokeStyle = `rgba(0,0,0,${sk.a})`; ctx.lineWidth = sk.w; ctx.beginPath(); ctx.moveTo(sk.x, sk.y); ctx.lineTo(sk.x-this.vx*0.25, sk.y-this.vy*0.25); ctx.stroke(); }
         ctx.restore();
-
-        // shadow
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.angle+Math.PI/2);
-        ctx.globalAlpha = 0.26;
-        ctx.fillStyle = '#000';
-        ctx.beginPath();
-        ctx.ellipse(0, 10, 16, 26, 0, 0, Math.PI*2);
-        ctx.fill();
-        ctx.restore();
-
-        // car
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.angle+Math.PI/2);
-
-        ctx.globalAlpha = 0.18;
-        ctx.fillStyle = 'rgba(255,224,138,0.55)';
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 22, 40, 0, 0, Math.PI*2);
-        ctx.fill();
-
-        ctx.globalAlpha = 1;
-        if(carImage.complete) ctx.drawImage(carImage,-22,-40,44,80);
-        else { ctx.fillStyle='#ef4444'; ctx.fillRect(-11,-19,22,38); }
-
+        ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle+Math.PI/2);
+        ctx.globalAlpha = 0.28; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.ellipse(0, 10, 16, 26, 0, 0, Math.PI*2); ctx.fill(); // Shadow
+        ctx.globalAlpha = 1; if(carImage.complete) ctx.drawImage(carImage,-22,-40,44,80); else { ctx.fillStyle='#ef4444'; ctx.fillRect(-11,-19,22,38); }
         ctx.restore();
       }
     }
 
-    // ==========================================
-    // 7. MAIN LOOP (Lagoon world render)
-    // ==========================================
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const car = new Car();
-
-    function resize(){
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      VIS.ensurePatterns(ctx);
-      LagoonWorld.ensurePatterns(ctx);
-    }
-    window.addEventListener('resize', resize);
-    resize();
-
+    const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d'); const car = new Car();
+    function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resize); resize();
     Track.init();
-    LagoonWorld.initPalms();
 
     const keys = {ArrowUp:'u',ArrowDown:'d',ArrowLeft:'l',ArrowRight:'r'};
     window.onkeydown = e => { if(keys[e.key]) car.controls[keys[e.key]]=true; };
     window.onkeyup   = e => { if(keys[e.key]) car.controls[keys[e.key]]=false; };
-
     const bindTouch = (id,k) => {
       const el=document.getElementById(id);
       el.ontouchstart = e => { e.preventDefault(); car.controls[k]=true; el.classList.add('active'); if(navigator.vibrate) navigator.vibrate(12); };
@@ -1306,15 +624,9 @@
       el.onmouseup    = e => { e.preventDefault(); car.controls[k]=false; el.classList.remove('active'); };
       el.onmouseleave = e => { car.controls[k]=false; el.classList.remove('active'); };
     };
-    bindTouch('btn-left','l');
-    bindTouch('btn-right','r');
-    bindTouch('btn-gas','u');
-    bindTouch('btn-brake','d');
+    bindTouch('btn-left','l'); bindTouch('btn-right','r'); bindTouch('btn-gas','u'); bindTouch('btn-brake','d');
 
-    document.getElementById('enter-btn').onclick = () => {
-      document.getElementById('welcome-screen').style.display = 'none';
-      document.getElementById('leaderboard-panel').style.display = 'block';
-    };
+    document.getElementById('enter-btn').onclick = () => { document.getElementById('welcome-screen').style.display = 'none'; document.getElementById('leaderboard-panel').style.display = 'block'; };
     document.getElementById('start-btn').onclick = () => RaceManager.startRace();
     document.getElementById('pause-btn').onclick = () => RaceManager.pauseGame();
     document.getElementById('resume-btn').onclick = () => RaceManager.resumeGame();
@@ -1322,56 +634,23 @@
     document.getElementById('quit-btn').onclick = () => RaceManager.quitToMenu();
 
     function loop(){
-      if (RaceManager.state === 'racing') {
-        car.update();
-        RaceManager.update(car);
-      }
-
+      if (RaceManager.state === 'racing') { car.update(); RaceManager.update(car); }
       Particles.update();
-
-      // Camera
-      let camX = canvas.width/2 - car.x - car.vx*10;
-      let camY = canvas.height/2 - car.y - car.vy*10;
-
-      // 1) Draw ocean background (screen-space + a bit of cam parallax)
-      LagoonWorld.drawOceanBackground(ctx, camX, camY, canvas.width, canvas.height);
-
-      // 2) World space
+      ctx.clearRect(0,0,canvas.width,canvas.height); // Clear completely for sea redraw
       ctx.save();
+      let camX = canvas.width/2 - car.x; let camY = canvas.height/2 - car.y;
+      camX -= car.vx * 10; camY -= car.vy * 10;
       ctx.translate(camX, camY);
-
-      // Sand island under track
-      LagoonWorld.drawSandAroundTrack(ctx);
-
-      // Foam edge around road
-      LagoonWorld.drawFoamEdge(ctx, Track);
-
-      // Palms (behind road)
-      LagoonWorld.drawPalms(ctx);
-
-      // Track
       Track.draw(ctx);
-
-      // Ghost + timer
       if(RaceManager.state === 'racing' || RaceManager.state === 'paused'){
         const timeBase = RaceManager.state === 'paused' ? RaceManager.pausedTime : Date.now();
         const time = timeBase - RaceManager.lapStartTime;
         GhostSystem.drawGlobalGhost(ctx, time);
         document.getElementById('time-display').innerText = RaceManager.formatTime(time);
       }
-
-      // particles
       Particles.draw(ctx);
-
-      // Car
       car.draw(ctx);
-
       ctx.restore();
-
-      // Post FX
-      VIS.drawFilmGrain(ctx, canvas.width, canvas.height);
-      VIS.drawVignette(ctx, canvas.width, canvas.height);
-
       requestAnimationFrame(loop);
     }
     loop();
