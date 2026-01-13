@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Drift NC</title>
+  <title>Drift NC — Lagoon Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- Fonts (look arcade) -->
@@ -49,44 +49,35 @@
 
   <style>
     :root{
-      --bg0:#0b1020;
-      --bg1:#0f1a2e;
-      --glass: rgba(255,255,255,0.08);
-      --glass2: rgba(255,255,255,0.12);
-      --stroke: rgba(255,255,255,0.16);
-      --stroke2: rgba(255,255,255,0.22);
-      --gold:#fbbf24;
-      --neon:#5eead4;
-      --red:#ef4444;
+      /* Lagoon palette */
+      --ocean0:#03212a;
+      --ocean1:#06485b;
+      --ocean2:#0ea5b7;
+      --lagoon:#5eead4;
+
+      --sand0:#b8843f;
+      --sand1:#e9d3a6;
+      --sand2:#fff2cc;
+
+      --glass: rgba(255,255,255,0.10);
+      --stroke: rgba(255,255,255,0.18);
       --shadow: 0 20px 60px rgba(0,0,0,0.65);
+
+      --gold:#ffe08a;
+      --road:#475569;
     }
 
     *{ box-sizing: border-box; }
     body {
       margin:0; overflow:hidden;
-      background: radial-gradient(1200px 800px at 50% 30%, #172554 0%, var(--bg0) 55%, #050814 100%);
+      background: radial-gradient(1200px 800px at 50% 10%, rgba(94,234,212,0.20), transparent 55%),
+                  radial-gradient(1400px 900px at 50% 100%, rgba(14,165,183,0.18), transparent 60%),
+                  linear-gradient(180deg, var(--ocean0), var(--ocean1));
       color:white;
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
       touch-action:none; user-select:none; -webkit-user-select:none;
     }
     canvas{ display:block; }
-
-    /* Subtle animated background glow (slow) */
-    body::before{
-      content:"";
-      position:fixed; inset:-30%;
-      background:
-        radial-gradient(700px 500px at 20% 20%, rgba(94,234,212,0.10), transparent 60%),
-        radial-gradient(700px 500px at 80% 30%, rgba(251,191,36,0.10), transparent 60%),
-        radial-gradient(800px 600px at 60% 80%, rgba(239,68,68,0.08), transparent 65%);
-      filter: blur(2px);
-      animation: floatGlow 14s ease-in-out infinite alternate;
-      pointer-events:none;
-    }
-    @keyframes floatGlow{
-      from{ transform: translate3d(-1.5%, -1%, 0) scale(1); }
-      to  { transform: translate3d(1.5%, 1%, 0) scale(1.02); }
-    }
 
     /* HUD */
     #hud-layer{
@@ -97,21 +88,21 @@
     }
     .hud-card{
       pointer-events:none;
-      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.05));
+      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
       border: 1px solid var(--stroke);
       border-radius: 16px;
       padding: 10px 12px;
       box-shadow: 0 12px 40px rgba(0,0,0,0.35);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
       min-width: 110px;
     }
     .hud-top{ display:flex; align-items:center; gap:8px; opacity:0.95; }
-    .hud-ico{ width:16px; height:16px; opacity:0.9; }
+    .hud-ico{ width:16px; height:16px; opacity:0.95; }
     .label{
       font-size: 0.72rem;
       text-transform: uppercase;
       letter-spacing: 0.12em;
-      opacity: 0.75;
+      opacity: 0.82;
     }
     .sub-info{
       font-family: Orbitron, monospace;
@@ -123,39 +114,31 @@
       font-weight: 900;
       font-size: 2.0rem;
       color: var(--gold);
-      text-shadow: 0 0 18px rgba(251,191,36,0.25);
+      text-shadow: 0 0 18px rgba(255,224,138,0.24);
       letter-spacing: 0.02em;
     }
-    .pulse{
-      animation: pulseGlow 0.35s ease-out;
-    }
+    .pulse{ animation: pulseGlow 0.35s ease-out; }
     @keyframes pulseGlow{
       0%{ transform: scale(1); filter: brightness(1); }
-      50%{ transform: scale(1.03); filter: brightness(1.25); }
+      50%{ transform: scale(1.03); filter: brightness(1.2); }
       100%{ transform: scale(1); filter: brightness(1); }
     }
 
-    /* Welcome Screen - CORRECTION LAYOUT */
+    /* Welcome Screen */
     #welcome-screen{
-      position:fixed; inset:0; /* Fixed pour overlay stable */
-      display:flex; flex-direction:column; align-items:center; 
-      justify-content:center;
+      position:fixed; inset:0;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
       z-index:70;
       background:
-        radial-gradient(900px 600px at 50% 15%, rgba(94,234,212,0.16), transparent 60%),
-        radial-gradient(900px 600px at 30% 70%, rgba(251,191,36,0.14), transparent 60%),
-        linear-gradient(135deg, rgba(11,16,32,0.96), rgba(6,8,20,0.96));
+        radial-gradient(1200px 800px at 50% 0%, rgba(94,234,212,0.30), transparent 60%),
+        radial-gradient(900px 700px at 20% 85%, rgba(255,242,204,0.20), transparent 65%),
+        linear-gradient(135deg, rgba(3,33,42,0.96), rgba(2,18,24,0.96));
       backdrop-filter: blur(10px);
-      overflow-y: auto; /* Active le scroll si écran trop petit */
-      padding: 20px; /* Marges de sécurité */
+      overflow-y:auto;
+      padding: 20px;
     }
-    
-    /* Si l'écran est petit en hauteur, on aligne en haut pour pouvoir scroller */
     @media (max-height: 750px) {
-        #welcome-screen {
-            justify-content: flex-start;
-            padding-top: 40px;
-        }
+      #welcome-screen { justify-content:flex-start; padding-top: 40px; }
     }
 
     .title-logo{
@@ -163,42 +146,42 @@
       font-weight: 900;
       letter-spacing: -0.06em;
       text-transform: uppercase;
-      text-shadow: 4px 4px 0 #000;
-      font-size: clamp(3rem, 10vw, 5rem); /* Taille adaptative */
-      margin-bottom: 1rem;
+      text-shadow: 4px 4px 0 rgba(0,0,0,0.90);
+      font-size: clamp(3rem, 10vw, 5rem);
+      margin-bottom: 0.8rem;
       text-align: center;
       line-height: 1.1;
+      color: #a7f3d0;
     }
     .badge{
       display:inline-flex; align-items:center; gap:8px;
       padding: 6px 12px;
       border-radius: 999px;
-      border: 1px solid var(--stroke);
-      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.22);
+      background: rgba(255,255,255,0.08);
       backdrop-filter: blur(10px);
       font-size: 12px;
-      opacity: 0.9;
+      opacity: 0.95;
       margin-bottom: 14px;
       flex-shrink: 0;
     }
     .badge-dot{
       width: 8px; height: 8px; border-radius: 50%;
-      background: var(--neon);
-      box-shadow: 0 0 14px rgba(94,234,212,0.45);
+      background: var(--lagoon);
+      box-shadow: 0 0 14px rgba(94,234,212,0.55);
     }
 
-    /* Poster - CORRECTION TAILLE IMAGE */
     .poster-wrap{
       margin-bottom: 24px;
       padding: 8px;
       border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03));
+      border: 1px solid rgba(255,255,255,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
       box-shadow: var(--shadow);
       transform: rotate(-1.5deg);
       transition: transform 400ms ease;
       max-width: 100%;
-      flex-shrink: 1; /* Permet de réduire si manque de place */
+      flex-shrink: 1;
     }
     .poster-wrap:hover{ transform: rotate(0deg) scale(1.01); }
     #poster-img{
@@ -207,35 +190,33 @@
       max-width: 480px;
       width: 86vw;
       height: auto;
-      max-height: 35vh; /* Limite la hauteur à 35% de l'écran pour garder de la place */
+      max-height: 35vh;
       object-fit: cover;
-      border: 1px solid rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.12);
     }
 
-    /* Primary button */
     .primary-btn{
       position: relative;
       padding: 14px 40px;
       border-radius: 999px;
-      font-weight: 800;
+      font-weight: 900;
       font-size: 1.25rem;
       letter-spacing: 0.02em;
-      color: white;
+      color: #05212a;
       border: 1px solid rgba(255,255,255,0.18);
-      background: linear-gradient(90deg, #3b82f6, #14b8a6);
+      background: linear-gradient(90deg, #5eead4, #38bdf8);
       box-shadow: 0 20px 50px rgba(0,0,0,0.45);
-      transform: translateZ(0);
       transition: transform 150ms ease, filter 200ms ease;
       flex-shrink: 0;
       margin-bottom: 20px;
     }
-    .primary-btn:hover{ transform: scale(1.04); filter: brightness(1.05); }
+    .primary-btn:hover{ transform: scale(1.04); filter: brightness(1.03); }
     .primary-btn:active{ transform: scale(0.98); }
     .primary-btn::after{
       content:"";
       position:absolute; inset:0;
       border-radius: 999px;
-      background: linear-gradient(120deg, transparent 10%, rgba(255,255,255,0.26) 30%, transparent 55%);
+      background: linear-gradient(120deg, transparent 10%, rgba(255,255,255,0.30) 30%, transparent 55%);
       transform: translateX(-120%);
       animation: shine 2.4s ease-in-out infinite;
       pointer-events:none;
@@ -247,34 +228,35 @@
       100%   { transform: translateX(120%); opacity: 0.0; }
     }
 
-    /* Leaderboard */
     #leaderboard-panel{
       position:absolute; top:50%; left:50%; transform: translate(-50%,-50%);
       width: 92%; max-width: 480px;
       z-index:60;
       display:none;
-      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.05));
-      border: 1px solid rgba(255,255,255,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
+      border: 1px solid rgba(255,255,255,0.16);
       border-radius: 18px;
       box-shadow: var(--shadow);
       backdrop-filter: blur(12px);
       padding: 18px;
       text-align:center;
     }
+
     .score-row{
       display:flex; justify-content:space-between; padding: 10px 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+      border-bottom: 1px solid rgba(255,255,255,0.10);
       font-family: Orbitron, monospace;
       font-size: 0.95rem;
     }
     .score-row:nth-child(1){ color: var(--gold); font-weight: 900; }
-    .score-row:nth-child(2){ color: rgba(255,255,255,0.9); }
-    .score-row:nth-child(3){ color: #c4b5fd; }
+    .score-row:nth-child(2){ color: rgba(255,255,255,0.92); }
+    .score-row:nth-child(3){ color: #a7f3d0; }
+
     #scores-list{
       margin-top: 10px;
       text-align:left;
-      background: rgba(0,0,0,0.25);
-      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.22);
+      border: 1px solid rgba(255,255,255,0.12);
       border-radius: 14px;
       padding: 8px;
       max-height: 220px;
@@ -282,8 +264,8 @@
     }
 
     input{
-      background: rgba(0,0,0,0.25);
-      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(0,0,0,0.22);
+      border: 1px solid rgba(255,255,255,0.18);
       color: white;
       padding: 12px;
       border-radius: 12px;
@@ -306,16 +288,16 @@
       font-weight: 900;
       letter-spacing: 0.04em;
       text-transform: uppercase;
-      background: linear-gradient(90deg, rgba(72,187,120,1), rgba(34,197,94,0.85));
+      background: linear-gradient(90deg, #22c55e, #5eead4);
       box-shadow: 0 18px 45px rgba(0,0,0,0.35);
       transition: transform 150ms ease, filter 200ms ease;
       cursor:pointer;
+      color: #05212a;
     }
     .action-btn:hover{ transform: translateY(-1px); filter: brightness(1.05); }
     .action-btn:active{ transform: translateY(0px) scale(0.99); }
     .action-btn:disabled{ opacity: 0.55; cursor:not-allowed; filter:none; transform:none; }
 
-    /* Pause button */
     #pause-btn{
       position:absolute;
       top: 16px;
@@ -328,12 +310,12 @@
       z-index:50;
       cursor:pointer;
       background: rgba(255,255,255,0.10);
-      border: 1px solid rgba(255,255,255,0.20);
-      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.22);
+      backdrop-filter: blur(12px);
       box-shadow: 0 14px 45px rgba(0,0,0,0.45);
       transition: transform 120ms ease, background 200ms ease;
     }
-    #pause-btn:active{ transform: scale(0.95); background: rgba(255,255,255,0.18); }
+    #pause-btn:active{ transform: scale(0.95); background: rgba(255,255,255,0.16); }
     .pause-icon{
       width: 16px; height: 16px;
       position: relative;
@@ -347,7 +329,6 @@
     .pause-icon::before{ left:0; }
     .pause-icon::after{ right:0; }
 
-    /* Pause Menu */
     #pause-menu{
       position:absolute; inset:0;
       display:none;
@@ -355,12 +336,12 @@
       align-items:center;
       justify-content:center;
       z-index:80;
-      background: rgba(0,0,0,0.65);
+      background: rgba(0,0,0,0.55);
       backdrop-filter: blur(10px);
     }
     .menu-btn{
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.20);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.22);
       padding: 12px 30px;
       color: white;
       font-weight: 900;
@@ -373,7 +354,7 @@
       transition: transform 150ms ease, background 200ms ease, filter 200ms ease;
       backdrop-filter: blur(10px);
     }
-    .menu-btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,0.10); filter: brightness(1.05); }
+    .menu-btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,0.12); filter: brightness(1.05); }
     .menu-btn:active{ transform: translateY(0px) scale(0.99); }
     .menu-btn.red{
       border-color: rgba(239,68,68,0.6);
@@ -382,7 +363,6 @@
     }
     .menu-btn.red:hover{ background: rgba(239,68,68,0.18); }
 
-    /* Mobile controls */
     #mobile-controls{
       position:absolute;
       left:0; right:0;
@@ -417,16 +397,16 @@
     .btn:active, .btn.active{ transform: scale(0.95); filter: brightness(1.1); }
     .btn.gas{
       background: radial-gradient(circle at 30% 25%, rgba(94,234,212,0.24), rgba(255,255,255,0.06));
-      border-color: rgba(94,234,212,0.28);
+      border-color: rgba(94,234,212,0.30);
     }
     .btn.brake{
-      background: radial-gradient(circle at 30% 25%, rgba(239,68,68,0.22), rgba(255,255,255,0.06));
-      border-color: rgba(239,68,68,0.28);
+      background: radial-gradient(circle at 30% 25%, rgba(255,242,204,0.22), rgba(255,255,255,0.06));
+      border-color: rgba(255,242,204,0.30);
+      color: #05212a;
     }
 
-    /* Reduce motion accessibility */
     @media (prefers-reduced-motion: reduce){
-      body::before, .primary-btn::after{ animation: none !important; }
+      .primary-btn::after{ animation: none !important; }
       .poster-wrap{ transition: none !important; }
     }
   </style>
@@ -465,7 +445,7 @@
         </svg>
         <div class="label">Record</div>
       </div>
-      <div id="wr-display" class="sub-info" style="color: var(--gold); text-shadow: 0 0 16px rgba(251,191,36,0.22);">--:--.--</div>
+      <div id="wr-display" class="sub-info" style="color: var(--gold); text-shadow: 0 0 16px rgba(255,224,138,0.22);">--:--.--</div>
     </div>
   </div>
 
@@ -492,33 +472,33 @@
       <span>Lagoon Edition • Nouvelle-Calédonie</span>
     </div>
 
-    <h1 class="text-yellow-400 mb-4 title-logo">DRIFT NC</h1>
-    <p class="text-sm opacity-70 mb-5">Le jeu de drift Calédonien</p>
+    <h1 class="mb-4 title-logo">DRIFT NC</h1>
+    <p class="text-sm opacity-80 mb-5">Sable, lagon & palmiers 🌴</p>
 
     <div class="poster-wrap">
       <img id="poster-img" src="https://i.postimg.cc/vB21QZmP/image-drift-nc.png" alt="Drift NC Poster">
     </div>
 
     <button id="enter-btn" class="primary-btn">JOUER</button>
-    <p class="mt-4 text-xs opacity-60">Astuce : drift long = fumée + score style (bientôt 😉)</p>
+    <p class="mt-2 text-xs opacity-70">Astuce : drift long = fumée + score style (bientôt 😉)</p>
   </div>
 
   <!-- Leaderboard -->
   <div id="leaderboard-panel">
-    <h1 class="text-3xl font-black text-yellow-400 mb-1" style="font-family:Orbitron; text-shadow: 2px 2px 0 #000;">CLASSEMENT</h1>
-    <p class="text-xs opacity-70 mb-3">BATTEZ LE FANTÔME DU CHAMPION</p>
+    <h1 class="text-3xl font-black mb-1" style="font-family:Orbitron; color:#a7f3d0; text-shadow: 2px 2px 0 rgba(0,0,0,0.85);">CLASSEMENT</h1>
+    <p class="text-xs opacity-80 mb-3">BATTEZ LE FANTÔME DU CHAMPION</p>
 
     <div id="scores-list">
-      <div class="text-center text-gray-300 text-sm py-4 opacity-70">Chargement...</div>
+      <div class="text-center text-gray-200 text-sm py-4 opacity-70">Chargement...</div>
     </div>
 
     <button id="start-btn" class="action-btn" style="margin-top: 14px;">DÉMARRER</button>
 
     <div id="name-input-area" style="display:none; margin-top: 14px;">
       <h2 class="text-xl font-black mb-2" style="font-family:Orbitron;">NOUVEAU RECORD !</h2>
-      <div class="text-yellow-300 text-2xl font-mono mb-3" id="final-time-display">00:00.00</div>
+      <div class="text-yellow-100 text-2xl font-mono mb-3" id="final-time-display">00:00.00</div>
       <input type="text" id="player-name" placeholder="VOTRE PSEUDO" maxlength="15">
-      <button id="submit-score-btn" class="action-btn" style="background: linear-gradient(90deg, #3b82f6, #14b8a6);">ENREGISTRER</button>
+      <button id="submit-score-btn" class="action-btn" style="background: linear-gradient(90deg, #38bdf8, #5eead4);">ENREGISTRER</button>
     </div>
   </div>
 
@@ -586,7 +566,6 @@
                 try {
                   this.globalGhostData = JSON.parse(data.ghostData);
                   GhostSystem.setGlobalGhost(this.globalGhostData);
-                  console.log("Fantôme chargé:", this.globalGhostData.length, "points");
                 } catch(e) { console.error("Erreur ghost", e); }
               }
             }
@@ -606,7 +585,6 @@
 
         const ghostString = JSON.stringify(ghostData);
         const safeGhost = ghostString.length < 950000 ? ghostString : null;
-        if(!safeGhost) console.warn("Fantôme trop volumineux, ignoré.");
 
         try {
           await addDoc(collection(this.db, this.collectionId), {
@@ -671,9 +649,8 @@
         ctx.translate(x, y);
         ctx.rotate(a + Math.PI/2);
 
-        // ghost glow
         ctx.globalAlpha = 0.18;
-        ctx.fillStyle = 'rgba(251,191,36,1)';
+        ctx.fillStyle = 'rgba(94,234,212,1)';
         ctx.beginPath();
         ctx.ellipse(0, 8, 22, 36, 0, 0, Math.PI*2);
         ctx.fill();
@@ -686,12 +663,12 @@
           ctx.fillRect(-22, -40, 44, 80);
           ctx.globalCompositeOperation = 'source-over';
         }else{
-          ctx.fillStyle='#fbbf24';
+          ctx.fillStyle='#5eead4';
           ctx.fillRect(-11,-19,22,38);
         }
 
-        ctx.globalAlpha = 0.9;
-        ctx.fillStyle = "rgba(251,191,36,0.95)";
+        ctx.globalAlpha = 0.92;
+        ctx.fillStyle = "rgba(167,243,208,0.95)";
         ctx.font = "900 10px Orbitron, Arial";
         ctx.textAlign = "center";
         ctx.fillText("CHAMPION", 0, -48);
@@ -701,61 +678,58 @@
     };
 
     // ==========================================
-    // 3. VISUAL HELPERS (noise, vignette, particles)
+    // 3. LAGOON WORLD (ocean + sand + foam + palms) + VIS FX
     // ==========================================
-    function makeNoisePattern(size=128){
+    function makeNoiseCanvas(size=220, alpha=22, tint=[255,255,255]){
       const c = document.createElement('canvas');
       c.width = c.height = size;
       const nctx = c.getContext('2d');
       const img = nctx.createImageData(size, size);
       for(let i=0;i<img.data.length;i+=4){
         const v = (Math.random()*255)|0;
-        img.data[i] = v;
-        img.data[i+1] = v;
-        img.data[i+2] = v;
-        img.data[i+3] = 20; // low alpha
+        img.data[i] = Math.min(255, (v*0.6 + tint[0]*0.4)|0);
+        img.data[i+1] = Math.min(255, (v*0.6 + tint[1]*0.4)|0);
+        img.data[i+2] = Math.min(255, (v*0.6 + tint[2]*0.4)|0);
+        img.data[i+3] = alpha;
       }
       nctx.putImageData(img,0,0);
-      return { canvas:c, pattern:null };
+      return c;
     }
 
     const VIS = {
-      noise: makeNoisePattern(160),
-      vignetteGradient: null,
+      film: makeNoiseCanvas(160, 18, [255,255,255]),
+      filmPattern: null,
 
       ensurePatterns(ctx){
-        if(!this.noise.pattern) this.noise.pattern = ctx.createPattern(this.noise.canvas, 'repeat');
+        if(!this.filmPattern) this.filmPattern = ctx.createPattern(this.film, 'repeat');
       },
-
-      drawVignette(ctx, w, h){
-        // draw after scene (screen space)
-        ctx.save();
-        const g = ctx.createRadialGradient(w/2, h/2, Math.min(w,h)*0.20, w/2, h/2, Math.min(w,h)*0.70);
-        g.addColorStop(0, 'rgba(0,0,0,0)');
-        g.addColorStop(1, 'rgba(0,0,0,0.55)');
-        ctx.fillStyle = g;
-        ctx.fillRect(0,0,w,h);
-        ctx.restore();
-      },
-
-      drawFilmGrain(ctx, w, h){
+      drawFilmGrain(ctx,w,h){
         this.ensurePatterns(ctx);
         ctx.save();
         ctx.globalAlpha = 0.08;
-        ctx.fillStyle = this.noise.pattern;
+        ctx.fillStyle = this.filmPattern;
+        ctx.fillRect(0,0,w,h);
+        ctx.restore();
+      },
+      drawVignette(ctx,w,h){
+        ctx.save();
+        const g = ctx.createRadialGradient(w/2,h/2, Math.min(w,h)*0.20, w/2,h/2, Math.min(w,h)*0.75);
+        g.addColorStop(0,'rgba(0,0,0,0)');
+        g.addColorStop(1,'rgba(0,0,0,0.45)');
+        ctx.fillStyle=g;
         ctx.fillRect(0,0,w,h);
         ctx.restore();
       }
     };
 
-    // Particles (smoke & dust)
+    // Particles (smoke & sand dust)
     const Particles = {
       list: [],
       spawn(x,y, vx,vy, kind){
         this.list.push({
           x,y, vx,vy,
-          r: kind==='smoke' ? 8+Math.random()*10 : 5+Math.random()*8,
-          a: kind==='smoke' ? 0.30 : 0.25,
+          r: kind==='smoke' ? 8+Math.random()*10 : 5+Math.random()*7,
+          a: kind==='smoke' ? 0.28 : 0.22,
           d: kind==='smoke' ? 0.010 : 0.014,
           kind
         });
@@ -764,7 +738,7 @@
         for(const p of this.list){
           p.x += p.vx;
           p.y += p.vy;
-          p.r *= 1.015;
+          p.r *= 1.016;
           p.a -= p.d;
         }
         this.list = this.list.filter(p => p.a > 0);
@@ -775,7 +749,8 @@
           if(p.kind==='smoke'){
             ctx.fillStyle = `rgba(255,255,255,${p.a})`;
           }else{
-            ctx.fillStyle = `rgba(190,255,215,${p.a*0.65})`;
+            // sand dust
+            ctx.fillStyle = `rgba(255,242,204,${p.a})`;
           }
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
@@ -785,16 +760,187 @@
       }
     };
 
+    const LagoonWorld = {
+      sandNoise: makeNoiseCanvas(240, 20, [255,242,204]),
+      sandPattern: null,
+      oceanNoise: makeNoiseCanvas(220, 16, [56,189,248]),
+      oceanPattern: null,
+
+      palms: [],
+      time: 0,
+
+      ensurePatterns(ctx){
+        if(!this.sandPattern) this.sandPattern = ctx.createPattern(this.sandNoise, 'repeat');
+        if(!this.oceanPattern) this.oceanPattern = ctx.createPattern(this.oceanNoise, 'repeat');
+      },
+
+      initPalms(){
+        // Placements autour du circuit (à la main, "island vibe")
+        this.palms = [
+          {x:-900,y:-750,s:1.0,r:0.2},
+          {x:-1200,y:-200,s:1.2,r:-0.4},
+          {x:-1050,y:450,s:1.15,r:0.1},
+          {x:-200,y:780,s:1.25,r:-0.2},
+          {x:650,y:520,s:1.1,r:0.3},
+          {x:900,y:-80,s:1.2,r:-0.1},
+          {x:860,y:-720,s:1.05,r:0.2},
+          {x:150,y:-950,s:1.35,r:-0.25},
+          {x:-550,y:950,s:1.1,r:0.15},
+          {x:1200,y:380,s:1.25,r:-0.25}
+        ];
+      },
+
+      drawOceanBackground(ctx, camX, camY, w, h){
+        // world-space ocean with subtle moving waves
+        this.ensurePatterns(ctx);
+        this.time += 0.005;
+
+        ctx.save();
+        // base ocean gradient (screen)
+        ctx.setTransform(1,0,0,1,0,0);
+        const g = ctx.createLinearGradient(0,0,0,h);
+        g.addColorStop(0, '#043546');
+        g.addColorStop(0.55, '#075e73');
+        g.addColorStop(1, '#03212a');
+        ctx.fillStyle = g;
+        ctx.fillRect(0,0,w,h);
+
+        // moving pattern overlay
+        ctx.globalAlpha = 0.16;
+        ctx.translate(-((camX*0.15)%240), -((camY*0.15)%240));
+        ctx.fillStyle = this.oceanPattern;
+        ctx.fillRect(-240,-240,w+480,h+480);
+
+        // wave bands (animated)
+        ctx.globalAlpha = 0.10;
+        ctx.setTransform(1,0,0,1,0,0);
+        ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+        ctx.lineWidth = 2;
+        for(let y=0;y<h;y+=36){
+          const off = Math.sin(this.time + y*0.02)*18;
+          ctx.beginPath();
+          for(let x=0;x<=w;x+=60){
+            const yy = y + Math.sin(this.time*1.6 + x*0.02 + y*0.01)*6 + off*0.1;
+            if(x===0) ctx.moveTo(x,yy);
+            else ctx.quadraticCurveTo(x-30, yy-4, x, yy);
+          }
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      },
+
+      drawSandAroundTrack(ctx){
+        // Draw sand "island" under the track in world space
+        this.ensurePatterns(ctx);
+        ctx.save();
+
+        // big sand base
+        ctx.globalAlpha = 0.95;
+        ctx.fillStyle = '#e9d3a6';
+        ctx.beginPath();
+        ctx.ellipse(-200, -100, 1700, 1400, 0, 0, Math.PI*2);
+        ctx.fill();
+
+        // sand texture overlay
+        ctx.globalAlpha = 0.16;
+        ctx.fillStyle = this.sandPattern;
+        ctx.fillRect(-2200,-2000,4400,4000);
+
+        // darker sand edges (depth)
+        ctx.globalAlpha = 0.18;
+        ctx.strokeStyle = 'rgba(120,75,20,0.55)';
+        ctx.lineWidth = 18;
+        ctx.beginPath();
+        ctx.ellipse(-200, -100, 1700, 1400, 0, 0, Math.PI*2);
+        ctx.stroke();
+
+        ctx.restore();
+      },
+
+      drawFoamEdge(ctx, track){
+        // Soft white foam around the road edges
+        ctx.save();
+        ctx.lineCap='round';
+        ctx.lineJoin='round';
+        ctx.globalAlpha = 0.25;
+        ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+        ctx.lineWidth = 210;
+        track.trace(ctx);
+        ctx.stroke();
+
+        ctx.globalAlpha = 0.18;
+        ctx.strokeStyle = 'rgba(167,243,208,0.55)';
+        ctx.lineWidth = 230;
+        track.trace(ctx);
+        ctx.stroke();
+
+        ctx.restore();
+      },
+
+      drawPalm(ctx, x, y, scale=1, rot=0){
+        ctx.save();
+        ctx.translate(x,y);
+        ctx.rotate(rot);
+
+        // shadow
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.ellipse(0, 18*scale, 26*scale, 10*scale, 0.4, 0, Math.PI*2);
+        ctx.fill();
+
+        // trunk
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = 'rgba(120,75,20,0.85)';
+        ctx.lineWidth = 10*scale;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(0, 10*scale);
+        ctx.quadraticCurveTo(8*scale, -25*scale, 3*scale, -70*scale);
+        ctx.stroke();
+
+        // fronds
+        ctx.strokeStyle = 'rgba(34,197,94,0.9)';
+        ctx.lineWidth = 5*scale;
+        const topX = 3*scale, topY = -70*scale;
+        for(let i=0;i<7;i++){
+          const a = (-1.2 + i*0.4);
+          ctx.beginPath();
+          ctx.moveTo(topX, topY);
+          ctx.quadraticCurveTo(
+            topX + Math.cos(a)*35*scale,
+            topY + Math.sin(a)*25*scale,
+            topX + Math.cos(a)*70*scale,
+            topY + Math.sin(a)*40*scale
+          );
+          ctx.stroke();
+        }
+
+        // coconuts (tiny dots)
+        ctx.fillStyle = 'rgba(120,75,20,0.9)';
+        ctx.beginPath(); ctx.arc(topX+2*scale, topY+6*scale, 3.2*scale, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(topX-4*scale, topY+10*scale, 2.8*scale, 0, Math.PI*2); ctx.fill();
+
+        ctx.restore();
+      },
+
+      drawPalms(ctx){
+        for(const p of this.palms){
+          this.drawPalm(ctx, p.x, p.y, p.s, p.r);
+        }
+      }
+    };
+
     // ==========================================
-    // 4. GAME ENGINE
+    // 4. GAME ENGINE (Track)
     // ==========================================
-    const PHYSICS = { acceleration: 0.22, maxSpeed: 12.5, friction: 0.965, turnSpeed: 0.075, offRoadFriction: 0.8 };
+    const PHYSICS = { acceleration: 0.22, maxSpeed: 12.5, friction: 0.965, turnSpeed: 0.075, offRoadFriction: 0.86 };
+
     const TRACK_CONFIG = {
-      roadColor: '#3f475c',
-      grassColor: '#0b2a22',
-      lineWidth: 160,
-      borderColor: '#e2e8f0',
-      borderWidth: 6
+      roadColor: '#475569',
+      sandColor: '#e9d3a6',
+      lineWidth: 160
     };
 
     const Track = {
@@ -824,30 +970,28 @@
       draw(ctx){
         ctx.lineCap='round'; ctx.lineJoin='round';
 
-        // Outer shadow / depth
+        // Road shadow
         ctx.save();
-        ctx.globalAlpha = 0.18;
+        ctx.globalAlpha = 0.20;
         ctx.strokeStyle = '#000';
-        ctx.lineWidth = 190;
+        ctx.lineWidth = 200;
         this.trace(ctx); ctx.stroke();
         ctx.restore();
 
-        // Curbs (red/white)
-        ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 176; this.trace(ctx); ctx.stroke();
-        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 170; this.trace(ctx); ctx.stroke();
+        // Foam edge first (island vibe) – drawn by LagoonWorld
+        // Curbs tropical
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 176;
+        this.trace(ctx); ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(94,234,212,0.85)'; // lagoon curb tint
+        ctx.lineWidth = 170;
+        this.trace(ctx); ctx.stroke();
 
         // Asphalt
-        ctx.strokeStyle = TRACK_CONFIG.roadColor; ctx.lineWidth = 160; this.trace(ctx); ctx.stroke();
-
-        // subtle asphalt texture (overlay)
-        ctx.save();
-        ctx.globalAlpha = 0.10;
-        const pat = VIS.noise.pattern || ctx.createPattern(VIS.noise.canvas, 'repeat');
-        VIS.noise.pattern = pat;
-        ctx.strokeStyle = pat;
+        ctx.strokeStyle = TRACK_CONFIG.roadColor;
         ctx.lineWidth = 160;
         this.trace(ctx); ctx.stroke();
-        ctx.restore();
 
         // Start line
         ctx.save();
@@ -861,9 +1005,9 @@
         }
         ctx.restore();
 
-        // Center dashed line (simple "racing vibe")
+        // Dashed center line
         ctx.save();
-        ctx.globalAlpha = 0.20;
+        ctx.globalAlpha = 0.18;
         ctx.strokeStyle = '#fff';
         ctx.setLineDash([40, 30]);
         ctx.lineWidth = 3;
@@ -873,15 +1017,19 @@
       },
       check(x,y){
         const mx = Math.floor(x+1500), my = Math.floor(y+1500);
-        if(mx<0||mx>=3000||my<0||my>=3000) return 'grass';
-        return this.collisionCtx.getImageData(mx,my,1,1).data[3]>0 ? 'road':'grass';
+        if(mx<0||mx>=3000||my<0||my>=3000) return 'sand';
+        return this.collisionCtx.getImageData(mx,my,1,1).data[3]>0 ? 'road':'sand';
       }
     };
 
+    // ==========================================
+    // 5. RACE MANAGER
+    // ==========================================
     const RaceManager = {
-      totalLaps: 3, currentLap: 1, state: 'menu', // menu, racing, paused, finished
+      totalLaps: 3, currentLap: 1, state: 'menu',
       startTime: 0, lapStartTime: 0, bestLapTime: Infinity, pausedTime: 0,
       checkpoints: [ {x:500,y:-400,p:false}, {x:400,y:100,p:false}, {x:-200,y:400,p:false}, {x:-900,y:0,p:false} ],
+
       startRace(){
         this.state='racing';
         this.startTime = Date.now();
@@ -891,7 +1039,6 @@
         this.checkpoints.forEach(cp=>cp.p=false);
         GhostSystem.resetRecording();
 
-        // RESET CAR
         car.reset();
 
         document.getElementById('leaderboard-panel').style.display='none';
@@ -949,8 +1096,6 @@
         if(lapTime < this.bestLapTime){
           this.bestLapTime = lapTime;
           GhostSystem.saveRecordingAsBest();
-
-          // pulse chrono on best
           const t = document.getElementById('time-display');
           t.classList.remove('pulse'); void t.offsetWidth; t.classList.add('pulse');
         }
@@ -993,8 +1138,8 @@
 
           if (saved) {
             document.getElementById('name-input-area').innerHTML =
-              '<div class="text-emerald-300 font-black py-4" style="font-family:Orbitron;">SCORE ENREGISTRÉ !</div>' +
-              '<button class="action-btn" onclick="location.reload()" style="background: linear-gradient(90deg, #3b82f6, #14b8a6);">REJOUER</button>';
+              '<div class="text-emerald-200 font-black py-4" style="font-family:Orbitron;">SCORE ENREGISTRÉ !</div>' +
+              '<button class="action-btn" onclick="location.reload()" style="background: linear-gradient(90deg, #38bdf8, #5eead4);">REJOUER</button>';
           } else {
             newBtn.innerText = "RÉESSAYER";
             newBtn.disabled = false;
@@ -1010,18 +1155,15 @@
     };
 
     // ==========================================
-    // 5. CAR + VISUAL FX (shadow, smoke, dust, smoother skids)
+    // 6. CAR (dust on sand)
     // ==========================================
     class Car{
-      constructor(){
-        this.reset();
-      }
-
+      constructor(){ this.reset(); }
       reset(){
         this.x=0; this.y=-600; this.lastX=0; this.angle=0;
         this.vx=0; this.vy=0; this.speed=0;
         this.controls={u:false,d:false,l:false,r:false};
-        this.skids=[]; 
+        this.skids=[];
       }
 
       update(){
@@ -1055,7 +1197,6 @@
 
         this.x += this.vx; this.y += this.vy;
 
-        // Slip angle
         const moveA = Math.atan2(this.vy, this.vx);
         let slip = Math.abs(moveA - this.angle);
         while(slip>Math.PI) slip-=Math.PI*2;
@@ -1063,7 +1204,6 @@
 
         const drifting = (this.speed>4 && Math.abs(slip)>0.35);
 
-        // Skids (smoother lines)
         if(drifting && surface==='road'){
           const c=Math.cos(this.angle), s=Math.sin(this.angle);
           const rearX = this.x - c*20;
@@ -1077,18 +1217,16 @@
           this.skids.push({x:leftX, y:leftY, a:0.55, w:2.6});
           this.skids.push({x:rightX, y:rightY, a:0.55, w:2.6});
 
-          // Smoke particles (behind car)
           if(Math.random() < 0.55){
             Particles.spawn(rearX, rearY, -this.vx*0.15 + (Math.random()-0.5)*0.6, -this.vy*0.15 + (Math.random()-0.5)*0.6, 'smoke');
           }
         }
 
-        // Dust on grass
-        if(surface==='grass' && this.speed>3 && Math.random() < 0.35){
+        // Sand dust off-road
+        if(surface==='sand' && this.speed>3 && Math.random() < 0.40){
           Particles.spawn(this.x, this.y, -this.vx*0.05 + (Math.random()-0.5)*0.7, -this.vy*0.05 + (Math.random()-0.5)*0.7, 'dust');
         }
 
-        // decay skids
         for(const sk of this.skids) sk.a -= 0.012;
         this.skids = this.skids.filter(sk => sk.a > 0);
       }
@@ -1102,30 +1240,29 @@
           ctx.lineWidth = sk.w;
           ctx.beginPath();
           ctx.moveTo(sk.x, sk.y);
-          // tiny tail for line feel
           ctx.lineTo(sk.x - this.vx*0.25, sk.y - this.vy*0.25);
           ctx.stroke();
         }
         ctx.restore();
 
-        // Car shadow
+        // shadow
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle+Math.PI/2);
-        ctx.globalAlpha = 0.28;
+        ctx.globalAlpha = 0.26;
         ctx.fillStyle = '#000';
         ctx.beginPath();
         ctx.ellipse(0, 10, 16, 26, 0, 0, Math.PI*2);
         ctx.fill();
         ctx.restore();
 
-        // Car + subtle glow
+        // car
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle+Math.PI/2);
 
         ctx.globalAlpha = 0.18;
-        ctx.fillStyle = 'rgba(239,68,68,1)';
+        ctx.fillStyle = 'rgba(255,224,138,0.55)';
         ctx.beginPath();
         ctx.ellipse(0, 0, 22, 40, 0, 0, Math.PI*2);
         ctx.fill();
@@ -1139,7 +1276,7 @@
     }
 
     // ==========================================
-    // 6. MAIN LOOP
+    // 7. MAIN LOOP (Lagoon world render)
     // ==========================================
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -1149,11 +1286,13 @@
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       VIS.ensurePatterns(ctx);
+      LagoonWorld.ensurePatterns(ctx);
     }
     window.addEventListener('resize', resize);
     resize();
 
     Track.init();
+    LagoonWorld.initPalms();
 
     const keys = {ArrowUp:'u',ArrowDown:'d',ArrowLeft:'l',ArrowRight:'r'};
     window.onkeydown = e => { if(keys[e.key]) car.controls[keys[e.key]]=true; };
@@ -1176,7 +1315,6 @@
       document.getElementById('welcome-screen').style.display = 'none';
       document.getElementById('leaderboard-panel').style.display = 'block';
     };
-
     document.getElementById('start-btn').onclick = () => RaceManager.startRace();
     document.getElementById('pause-btn').onclick = () => RaceManager.pauseGame();
     document.getElementById('resume-btn').onclick = () => RaceManager.resumeGame();
@@ -1189,22 +1327,27 @@
         RaceManager.update(car);
       }
 
-      // Update particles always (so smoke fades even paused)
       Particles.update();
 
-      // Background grass (screen)
-      ctx.fillStyle = TRACK_CONFIG.grassColor;
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-
-      ctx.save();
-
       // Camera
-      let camX = canvas.width/2 - car.x;
-      let camY = canvas.height/2 - car.y;
-      camX -= car.vx * 10;
-      camY -= car.vy * 10;
+      let camX = canvas.width/2 - car.x - car.vx*10;
+      let camY = canvas.height/2 - car.y - car.vy*10;
 
+      // 1) Draw ocean background (screen-space + a bit of cam parallax)
+      LagoonWorld.drawOceanBackground(ctx, camX, camY, canvas.width, canvas.height);
+
+      // 2) World space
+      ctx.save();
       ctx.translate(camX, camY);
+
+      // Sand island under track
+      LagoonWorld.drawSandAroundTrack(ctx);
+
+      // Foam edge around road
+      LagoonWorld.drawFoamEdge(ctx, Track);
+
+      // Palms (behind road)
+      LagoonWorld.drawPalms(ctx);
 
       // Track
       Track.draw(ctx);
@@ -1217,7 +1360,7 @@
         document.getElementById('time-display').innerText = RaceManager.formatTime(time);
       }
 
-      // particles under car for better look (smoke behind)
+      // particles
       Particles.draw(ctx);
 
       // Car
@@ -1225,7 +1368,7 @@
 
       ctx.restore();
 
-      // Post FX: grain + vignette (screen space)
+      // Post FX
       VIS.drawFilmGrain(ctx, canvas.width, canvas.height);
       VIS.drawVignette(ctx, canvas.width, canvas.height);
 
