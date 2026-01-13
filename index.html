@@ -77,6 +77,30 @@
             width: 90%; max-width: 450px; z-index: 60; text-align: center;
             display: none; /* Caché au début, affiché après l'écran d'accueil */
         }
+
+        /* Menu Pause */
+        #pause-menu {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: none; /* Caché par défaut */
+            flex-direction: column; align-items: center; justify-content: center;
+            z-index: 80;
+        }
+
+        /* Bouton Pause (Engrenage/Menu) */
+        #pause-btn {
+            position: absolute; top: 15px; right: 15px;
+            width: 40px; height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; pointer-events: auto; z-index: 50;
+            font-weight: bold; border: 2px solid rgba(255,255,255,0.5);
+            transition: transform 0.1s, background 0.2s;
+            display: none; /* Caché hors course */
+        }
+        #pause-btn:active { transform: scale(0.9); background: rgba(255, 255, 255, 0.4); }
         
         .score-row {
             display: flex; justify-content: space-between; padding: 8px 10px;
@@ -100,6 +124,16 @@
         }
         .action-btn:hover { background: #3182ce; }
         .action-btn:disabled { background: #718096; cursor: not-allowed; }
+
+        .menu-btn {
+            background: transparent; border: 2px solid #fff; padding: 12px 30px;
+            color: white; font-weight: bold; border-radius: 50px; cursor: pointer;
+            margin: 10px; width: 200px; text-transform: uppercase;
+            transition: all 0.2s;
+        }
+        .menu-btn:hover { background: white; color: #1a202c; }
+        .menu-btn.red { border-color: #fc8181; color: #fc8181; }
+        .menu-btn.red:hover { background: #fc8181; color: white; }
 
         #mobile-controls {
             position: absolute; bottom: 20px; left: 0; width: 100%; height: 140px;
@@ -127,10 +161,21 @@
             <div class="label">Chrono</div>
             <div id="time-display" class="big-time">00:00.00</div>
         </div>
-        <div class="hud-box" style="text-align: right;">
-            <div class="label">Record du Monde</div>
+        <div class="hud-box" style="text-align: right; padding-right: 50px;"> <!-- Padding pour laisser place au bouton pause -->
+            <div class="label">Record</div>
             <div id="wr-display" class="sub-info" style="color: #fbbf24;">--:--.--</div>
         </div>
+    </div>
+
+    <!-- BOUTON PAUSE -->
+    <div id="pause-btn">||</div>
+
+    <!-- MENU PAUSE -->
+    <div id="pause-menu">
+        <h2 class="text-4xl font-bold text-white mb-8">PAUSE</h2>
+        <button id="resume-btn" class="menu-btn">Reprendre</button>
+        <button id="restart-btn" class="menu-btn">Recommencer</button>
+        <button id="quit-btn" class="menu-btn red">Quitter</button>
     </div>
 
     <!-- ÉCRAN D'ACCUEIL DRIFT NC -->
@@ -397,8 +442,8 @@
         };
 
         const RaceManager = {
-            totalLaps: 3, currentLap: 1, state: 'menu', 
-            startTime: 0, lapStartTime: 0, bestLapTime: Infinity,
+            totalLaps: 3, currentLap: 1, state: 'menu', // States: menu, racing, paused, finished
+            startTime: 0, lapStartTime: 0, bestLapTime: Infinity, pausedTime: 0,
             checkpoints: [ {x:500,y:-400,p:false}, {x:400,y:100,p:false}, {x:-200,y:400,p:false}, {x:-900,y:0,p:false} ],
 
             startRace: function() {
@@ -411,8 +456,42 @@
                 GhostSystem.resetRecording();
                 
                 document.getElementById('leaderboard-panel').style.display = 'none';
+                document.getElementById('pause-menu').style.display = 'none';
+                document.getElementById('pause-btn').style.display = 'flex';
                 document.getElementById('mobile-controls').style.display = 'flex';
                 document.getElementById('lap-display').innerText = `1 / ${this.totalLaps}`;
+            },
+
+            pauseGame: function() {
+                if(this.state === 'racing') {
+                    this.state = 'paused';
+                    this.pausedTime = Date.now();
+                    document.getElementById('pause-menu').style.display = 'flex';
+                    document.getElementById('mobile-controls').style.display = 'none';
+                }
+            },
+
+            resumeGame: function() {
+                if(this.state === 'paused') {
+                    // Adjust start times to account for the pause duration
+                    const pauseDuration = Date.now() - this.pausedTime;
+                    this.startTime += pauseDuration;
+                    this.lapStartTime += pauseDuration;
+                    
+                    this.state = 'racing';
+                    document.getElementById('pause-menu').style.display = 'none';
+                    document.getElementById('mobile-controls').style.display = 'flex';
+                }
+            },
+
+            quitToMenu: function() {
+                this.state = 'menu';
+                document.getElementById('pause-menu').style.display = 'none';
+                document.getElementById('pause-btn').style.display = 'none';
+                document.getElementById('mobile-controls').style.display = 'none';
+                document.getElementById('leaderboard-panel').style.display = 'block';
+                document.getElementById('start-btn').style.display = 'block';
+                document.getElementById('name-input-area').style.display = 'none';
             },
 
             update: function(car) {
@@ -457,6 +536,7 @@
                 const timeToSubmit = this.bestLapTime;
                 const timeStr = this.formatTime(timeToSubmit);
 
+                document.getElementById('pause-btn').style.display = 'none';
                 document.getElementById('leaderboard-panel').style.display = 'block';
                 document.getElementById('start-btn').style.display = 'none'; 
                 document.getElementById('mobile-controls').style.display = 'none';
@@ -504,7 +584,7 @@
             }
             update() {
                 this.lastX=this.x;
-                if(RaceManager.state === 'menu') return;
+                if(RaceManager.state !== 'racing') return; // Only update physics if racing
 
                 if(Math.abs(this.speed)>0.1) {
                     let dir = this.speed>0?1:-1;
@@ -589,22 +669,38 @@
         // START RACE
         document.getElementById('start-btn').onclick = () => RaceManager.startRace();
 
+        // GESTION DU MENU PAUSE
+        document.getElementById('pause-btn').onclick = () => RaceManager.pauseGame();
+        document.getElementById('resume-btn').onclick = () => RaceManager.resumeGame();
+        document.getElementById('restart-btn').onclick = () => RaceManager.startRace();
+        document.getElementById('quit-btn').onclick = () => RaceManager.quitToMenu();
+
         function loop() {
-            car.update();
-            RaceManager.update(car);
+            // Only update game state if not paused
+            if (RaceManager.state === 'racing') {
+                car.update();
+                RaceManager.update(car);
+            }
             
             ctx.fillStyle = TRACK_CONFIG.grassColor; ctx.fillRect(0,0,canvas.width,canvas.height);
             ctx.save();
             let camX = canvas.width/2 - car.x;
             let camY = canvas.height/2 - car.y;
+            
+            // Camera smoothing or lookahead could be disabled when paused to stop jitters, but keeping it simple
             camX -= car.vx * 10;
             camY -= car.vy * 10;
+            
             ctx.translate(camX, camY);
 
             Track.draw(ctx);
             
-            if(RaceManager.state === 'racing') {
-                const time = Date.now() - RaceManager.lapStartTime;
+            if(RaceManager.state === 'racing' || RaceManager.state === 'paused') {
+                // If paused, we show the time at the moment of pause
+                const timeBase = RaceManager.state === 'paused' ? RaceManager.pausedTime : Date.now();
+                const time = timeBase - RaceManager.lapStartTime;
+                
+                // Draw ghost only if moving or paused
                 GhostSystem.drawGlobalGhost(ctx, time);
                 document.getElementById('time-display').innerText = RaceManager.formatTime(time);
             }
