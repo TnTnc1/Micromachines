@@ -29,7 +29,6 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Nouvelle collection pour repartir proprement avec les noms longs
         const GAME_COLLECTION_ID = "world_tour_records_v3"; 
 
         signInAnonymously(auth)
@@ -138,7 +137,6 @@
         <div id="name-input-area">
             <h2 class="text-xl font-bold text-white mb-2">NOUVEAU RECORD !</h2>
             <div class="text-yellow-300 text-2xl font-mono mb-4" id="final-time-display">00:00.00</div>
-            <!-- Maxlength passé à 15 pour accepter les prénoms entiers -->
             <input type="text" id="player-name" placeholder="VOTRE PSEUDO" maxlength="15">
             <button id="submit-score-btn" class="action-btn">ENREGISTRER</button>
         </div>
@@ -225,7 +223,6 @@
                 const ghostString = JSON.stringify(ghostData);
                 console.log("Taille Fantôme (chars):", ghostString.length);
                 
-                // Limite Firestore ~1MB (1,048,576 bytes). On garde une marge.
                 const safeGhost = ghostString.length < 950000 ? ghostString : null; 
 
                 if(!safeGhost) console.warn("Fantôme trop volumineux, ignoré.");
@@ -248,10 +245,11 @@
         };
 
         // ==========================================
-        // 2. GHOST SYSTEM (OPTIMISÉ POUR RÉSEAU)
+        // 2. GHOST SYSTEM (OPTIMISÉ & FIXÉ)
         // ==========================================
         const GhostSystem = {
-            recording: [],
+            recording: [],       // Données du tour en cours
+            bestRecording: [],   // BUG FIX: On stocke ici le tracé du meilleur tour
             globalFrames: null,
             recordCounter: 0,
             
@@ -260,13 +258,17 @@
                 this.recordCounter = 0;
             },
 
+            // BUG FIX: Fonction pour sauvegarder le tour actuel comme étant le meilleur
+            saveRecordingAsBest: function() {
+                this.bestRecording = [...this.recording];
+            },
+
             setGlobalGhost: function(data) {
                 this.globalFrames = data;
             },
 
             recordFrame: function(time, car) {
-                // OPTIMISATION : Enregistre 1 frame sur 4 (15 FPS)
-                // Cela réduit la taille du fichier par 4 pour passer sur le réseau
+                // OPTIMISATION 15 FPS
                 this.recordCounter++;
                 if (this.recordCounter % 4 !== 0) return;
 
@@ -298,7 +300,6 @@
 
                 const x = curr.x + (next.x - curr.x) * clampedRatio;
                 const y = curr.y + (next.y - curr.y) * clampedRatio;
-                // Interpolation basique de l'angle
                 const a = curr.a + (next.a - curr.a) * clampedRatio;
 
                 ctx.save();
@@ -410,8 +411,11 @@
 
             completeLap: function(now) {
                 const lapTime = now - this.lapStartTime;
+                
+                // BUG FIX: Si c'est le meilleur tour, on sauvegarde le fantôme actuel
                 if(lapTime < this.bestLapTime) {
                     this.bestLapTime = lapTime;
+                    GhostSystem.saveRecordingAsBest(); // <-- C'est ici que la magie opère
                 }
                 
                 if(this.currentLap >= this.totalLaps) {
@@ -448,7 +452,8 @@
                     newBtn.innerText = "ENVOI...";
                     newBtn.disabled = true;
 
-                    const saved = await window.Cloud.saveScore(name, timeToSubmit, timeStr, GhostSystem.recording);
+                    // BUG FIX: On envoie bien GhostSystem.bestRecording, le meilleur tracé
+                    const saved = await window.Cloud.saveScore(name, timeToSubmit, timeStr, GhostSystem.bestRecording);
                     
                     if (saved) {
                         document.getElementById('name-input-area').innerHTML = '<div class="text-green-400 font-bold py-4">SCORE ENREGISTRÉ !</div><button class="action-btn" onclick="location.reload()">REJOUER</button>';
