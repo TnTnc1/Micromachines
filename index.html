@@ -476,7 +476,7 @@
 
   <!-- Pause Menu -->
   <div id="pause-menu">
-    <div class="hud-card" style="min-width: 320px; text-align:center;">
+    <div class="hud-card" style="min-width: 320px; text-align:center; pointer-events:auto;">
       <h2 class="text-4xl font-black mb-2" style="font-family:Orbitron;">PAUSE</h2>
       <p class="text-sm opacity-75 mb-6">Reprends la course ou retourne au classement.</p>
       <button id="resume-btn" class="menu-btn">Reprendre</button>
@@ -891,6 +891,9 @@
         this.checkpoints.forEach(cp=>cp.p=false);
         GhostSystem.resetRecording();
 
+        // RESET CAR
+        car.reset();
+
         document.getElementById('leaderboard-panel').style.display='none';
         document.getElementById('pause-menu').style.display='none';
         document.getElementById('pause-btn').style.display='flex';
@@ -1011,10 +1014,14 @@
     // ==========================================
     class Car{
       constructor(){
+        this.reset();
+      }
+
+      reset(){
         this.x=0; this.y=-600; this.lastX=0; this.angle=0;
         this.vx=0; this.vy=0; this.speed=0;
         this.controls={u:false,d:false,l:false,r:false};
-        this.skids=[]; // {x,y,a,w}
+        this.skids=[]; 
       }
 
       update(){
