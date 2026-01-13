@@ -12,7 +12,6 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-analytics.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
     import { getFirestore, collection, addDoc, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
@@ -27,7 +26,6 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
@@ -297,10 +295,8 @@
         },
         drift: {
             id: 'drift', type: 'drift', name: 'DRIFT KING',
-            // Physique plus "glissante" et direction vive pour aider au dérapage
             physics: { acceleration: 0.25, maxSpeed: 14.0, friction: 0.98, turnSpeed: 0.09, offRoadFriction: 0.5 },
             collection: 'world_tour_records_v3_drift',
-            // Violet Néon / Cyberpunk
             colors: { body1: '#701a75', body2: '#d946ef', body3: '#f0abfc', wing: '#4a044e' }
         }
     };
@@ -321,21 +317,14 @@
       loadLeaderboard: function(modeConfig) {
         if(!this.db) return;
         if(this.unsubscribe) this.unsubscribe();
-        
-        this.bestScore = modeConfig.type === 'race' ? Infinity : 0; // Temps min ou Score max
+        this.bestScore = modeConfig.type === 'race' ? Infinity : 0;
         this.globalGhostData = null;
         GhostSystem.setGlobalGhost(null);
         document.getElementById('wr-display').innerText = "--:--.---";
 
         const { collection, query, orderBy, limit, onSnapshot } = window.fs;
-        // Si c'est un mode COURSE, on trie par temps (croissant). Si DRIFT, par score (décroissant, stocké en négatif ou autre astuce, ici on suppose un champ 'score')
-        let sortField = 'timeMs';
-        let sortDir = 'asc';
-        
-        if (modeConfig.type === 'drift') {
-            sortField = 'score';
-            sortDir = 'desc';
-        }
+        let sortField = 'timeMs'; let sortDir = 'asc';
+        if (modeConfig.type === 'drift') { sortField = 'score'; sortDir = 'desc'; }
 
         const q = query(collection(this.db, modeConfig.collection), orderBy(sortField, sortDir), limit(10));
         
@@ -344,8 +333,6 @@
           if(snapshot.empty) { listEl.innerHTML = '<div class="text-center text-gray-400 text-sm">Aucun record pour ce mode.</div>'; return; }
           snapshot.forEach(doc => {
             const data = doc.data();
-            
-            // Gestion Record Affiché
             if (rank === 1) {
               if (modeConfig.type === 'race') {
                   this.bestScore = data.timeMs; 
@@ -356,7 +343,6 @@
               }
               if (data.ghostData) { try { this.globalGhostData = JSON.parse(data.ghostData); GhostSystem.setGlobalGhost(this.globalGhostData); } catch(e) {} }
             }
-            
             const row = document.createElement('div'); row.className = 'score-row';
             const displayValue = modeConfig.type === 'race' ? data.timeStr : `${data.score} pts`;
             row.innerHTML = `<span>#${rank} ${data.name}</span><span>${displayValue}</span>`;
@@ -369,22 +355,9 @@
         const { collection, addDoc } = window.fs;
         const ghostString = JSON.stringify(ghostData);
         const safeGhost = ghostString.length < 950000 ? ghostString : null;
-        
-        const payload = { 
-            name: name.trim(), 
-            ghostData: safeGhost, 
-            date: Date.now() 
-        };
-        
-        // Champs différents selon le mode
-        if (currentMode.type === 'race') {
-            payload.timeMs = value;
-            payload.timeStr = displayStr;
-        } else {
-            payload.score = value; // Integer
-            payload.timeStr = displayStr; // On garde timeStr pour compatibilité affichage ou durée de la session
-        }
-
+        const payload = { name: name.trim(), ghostData: safeGhost, date: Date.now() };
+        if (currentMode.type === 'race') { payload.timeMs = value; payload.timeStr = displayStr; } 
+        else { payload.score = value; payload.timeStr = displayStr; }
         try { await addDoc(collection(this.db, currentMode.collection), payload); return true; } 
         catch(e) { console.error(e); return false; }
       }
@@ -416,90 +389,42 @@
 
     // --- SYSTÈME DE DRIFT ---
     const DriftSystem = {
-        totalScore: 0,
-        currentComboScore: 0,
-        multiplier: 1,
-        isDrifting: false,
-        driftTime: 0,
-        
-        reset() {
-            this.totalScore = 0;
-            this.currentComboScore = 0;
-            this.multiplier = 1;
-            this.driftTime = 0;
-            this.updateUI();
-        },
-        
+        totalScore: 0, currentComboScore: 0, multiplier: 1, isDrifting: false, driftTime: 0,
+        reset() { this.totalScore = 0; this.currentComboScore = 0; this.multiplier = 1; this.driftTime = 0; this.updateUI(); },
         update(car, surface) {
             if (currentMode.type !== 'drift') return;
-
-            // Détection du drift (vitesse min + angle de glisse)
             const moveA = Math.atan2(car.vy, car.vx);
-            let slip = Math.abs(moveA - car.angle);
-            while(slip>Math.PI) slip-=Math.PI*2; while(slip<-Math.PI) slip+=Math.PI*2;
+            let slip = Math.abs(moveA - car.angle); while(slip>Math.PI) slip-=Math.PI*2; while(slip<-Math.PI) slip+=Math.PI*2;
             const isSliding = (car.speed > 5 && Math.abs(slip) > 0.3);
 
             if (surface === 'road' && isSliding) {
-                this.isDrifting = true;
-                this.driftTime += 1;
-                
-                // Calcul des points: Vitesse * Angle
+                this.isDrifting = true; this.driftTime += 1;
                 const framePoints = (car.speed * Math.abs(slip) * 2.5);
                 this.currentComboScore += framePoints;
-
-                // Augmentation du multiplicateur toutes les 60 frames (approx 1 sec de drift continu)
                 if (this.driftTime > 60 && this.multiplier < 5) { this.multiplier = 2; }
                 if (this.driftTime > 120 && this.multiplier < 10) { this.multiplier = 3; }
                 if (this.driftTime > 240) { this.multiplier = 4; }
-
                 document.getElementById('drift-ui').style.display = 'block';
             } else {
-                // Si on arrête de glisser (ligne droite)
                 if (this.currentComboScore > 0) {
-                    // Si on est toujours sur la route, on valide les points
-                    if (surface === 'road') {
-                        // Petite tolérance pour enchainer les virages (cooldown)
-                        if (this.driftTime > 0) this.driftTime -= 2; // Décrémente doucement
-                        else this.bankPoints();
-                    } else {
-                        // Hors piste = PERDU !
-                        this.failCombo();
-                    }
-                } else {
-                     document.getElementById('drift-ui').style.display = 'none';
-                }
+                    if (surface === 'road') { if (this.driftTime > 0) this.driftTime -= 2; else this.bankPoints(); } 
+                    else { this.failCombo(); }
+                } else { document.getElementById('drift-ui').style.display = 'none'; }
             }
             this.updateUI();
         },
-
         bankPoints() {
             this.totalScore += Math.floor(this.currentComboScore * this.multiplier);
-            this.currentComboScore = 0;
-            this.multiplier = 1;
-            this.driftTime = 0;
-            // Petit flash UI
-            const el = document.getElementById('main-stat-display');
-            el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse');
+            this.currentComboScore = 0; this.multiplier = 1; this.driftTime = 0;
+            const el = document.getElementById('main-stat-display'); el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse');
         },
-
         failCombo() {
-            // Combo Breaker visuel
-            if (this.currentComboScore > 100) {
-                // Jouer un son ou effet visuel rouge
-                document.getElementById('drift-current-points').style.color = 'red';
-            }
-            this.currentComboScore = 0;
-            this.multiplier = 1;
-            this.driftTime = 0;
+            if (this.currentComboScore > 100) document.getElementById('drift-current-points').style.color = 'red';
+            this.currentComboScore = 0; this.multiplier = 1; this.driftTime = 0;
         },
-
         updateUI() {
             if (currentMode.type !== 'drift') return;
-            
-            // Score principal (Total)
             document.getElementById('main-stat-display').innerText = Math.floor(this.totalScore).toLocaleString();
-
-            // UI Drift temporaire
             if (this.currentComboScore > 0) {
                 document.getElementById('drift-multiplier').innerText = "x" + this.multiplier;
                 document.getElementById('drift-current-points').innerText = "+" + Math.floor(this.currentComboScore * this.multiplier).toLocaleString();
@@ -509,12 +434,30 @@
     };
 
     const VIS = {
-        noise: null, seaParticles: [], tires: [], palms: [],
+        noise: null, seaParticles: [], tires: [], palms: [], palmCache: null,
         init(ctx){
+            // Noise Cache
             this.noise = document.createElement('canvas'); this.noise.width=128; this.noise.height=128;
             const nctx=this.noise.getContext('2d'); const id=nctx.createImageData(128,128);
             for(let i=0;i<id.data.length;i+=4){ const v=(Math.random()*255)|0; id.data[i]=v; id.data[i+1]=v; id.data[i+2]=v; id.data[i+3]=20; }
             nctx.putImageData(id,0,0);
+            
+            // Palm Cache (Optimisation majeure)
+            this.palmCache = document.createElement('canvas');
+            this.palmCache.width = 64; this.palmCache.height = 64;
+            const pctx = this.palmCache.getContext('2d');
+            pctx.translate(32, 32);
+            // Ombre
+            pctx.fillStyle = "rgba(0,0,0,0.15)"; pctx.beginPath(); pctx.arc(6, 6, 12, 0, Math.PI * 2); pctx.fill();
+            // Feuilles
+            pctx.fillStyle = "#16a34a"; pctx.strokeStyle = "#14532d"; pctx.lineWidth = 1;
+            for (let i = 0; i < 7; i++) {
+                pctx.save(); pctx.rotate(i * (Math.PI * 2 / 7)); pctx.beginPath();
+                pctx.ellipse(0, -14, 4, 16, 0, 0, Math.PI * 2); pctx.fill(); pctx.stroke(); pctx.restore();
+            }
+            // Coeur
+            pctx.fillStyle = "#5d4037"; pctx.beginPath(); pctx.arc(0, 0, 4, 0, Math.PI * 2); pctx.fill();
+
             this.initSea(); this.initTires();
         },
         drawVignette(ctx,w,h){
@@ -529,58 +472,25 @@
             for(let i=0; i<60; i++){
                 let x, y, safe = false;
                 for(let k=0; k<15; k++){
-                    x = 500 + Math.random()*2000;
-                    y = 500 + Math.random()*2000;
-                    // Vérification plus stricte : on vérifie le point ET un peu autour pour ne pas être collé à la route
-                    if(track.check(x-1500, y-1500) === 'sand' && 
-                       track.check(x-1500+25, y-1500) === 'sand' &&
-                       track.check(x-1500-25, y-1500) === 'sand') { 
-                        safe = true; 
-                        break; 
+                    x = 500 + Math.random()*2000; y = 500 + Math.random()*2000;
+                    if(track.check(x-1500, y-1500) === 'sand' && track.check(x-1500+25, y-1500) === 'sand' && track.check(x-1500-25, y-1500) === 'sand') { 
+                        safe = true; break; 
                     }
                 }
-                if(safe) this.palms.push({x: x-1500, y: y-1500, s: 0.8+Math.random()*0.5, r: Math.random()*Math.PI});
+                if(safe) this.palms.push({x: x-1500, y: y-1500, s: 0.8+Math.random()*0.5});
             }
         },
         drawEnv(ctx){
             // Pneus
             for(let t of this.tires){ctx.save();ctx.translate(t.x,t.y);ctx.shadowColor="rgba(0,0,0,0.5)";ctx.shadowBlur=5;ctx.fillStyle="#1a1a1a";ctx.beginPath();ctx.arc(0,0,12,0,6.28);ctx.fill();ctx.strokeStyle=t.c;ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,6,0,6.28);ctx.stroke();ctx.restore();}
             
-            // Palmiers corrigés
-            for(let p of this.palms){
-                ctx.save();
-                ctx.translate(p.x, p.y);
-                ctx.scale(p.s, p.s);
-
-                // Ombre (Cercle simple)
-                ctx.fillStyle = "rgba(0,0,0,0.15)";
-                ctx.beginPath();
-                ctx.arc(10, 10, 12, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Feuilles (Motif étoile)
-                ctx.fillStyle = "#16a34a"; // Vert nature
-                ctx.strokeStyle = "#14532d"; // Vert foncé
-                ctx.lineWidth = 1;
-                
-                for (let i = 0; i < 7; i++) {
-                    ctx.save();
-                    ctx.rotate(i * (Math.PI * 2 / 7));
-                    ctx.beginPath();
-                    // Une forme de feuille allongée, plus fine
-                    ctx.ellipse(0, -18, 5, 20, 0, 0, Math.PI * 2); 
-                    ctx.fill();
-                    ctx.stroke();
-                    ctx.restore();
+            // Palmiers Optimisés (Pre-rendered)
+            if (this.palmCache) {
+                for(let p of this.palms){
+                    // Dessin d'image beaucoup plus rapide que vectoriel
+                    const size = 64 * p.s;
+                    ctx.drawImage(this.palmCache, p.x - size/2, p.y - size/2, size, size);
                 }
-
-                // Cœur (Tronc vu du dessus)
-                ctx.fillStyle = "#5d4037"; // Marron
-                ctx.beginPath();
-                ctx.arc(0, 0, 5, 0, Math.PI * 2);
-                ctx.fill();
-
-                ctx.restore();
             }
         },
         drawSea(ctx){
@@ -598,9 +508,8 @@
       draw(ctx){
         ctx.save();
         for(let p of this.list){
-          // Fumée violette en mode drift si combo élevé ?
           if (p.kind === 'smoke' && currentMode.type === 'drift' && DriftSystem.multiplier > 2) {
-             ctx.fillStyle = `rgba(217, 70, 239, ${p.a})`; // Rose/Violet
+             ctx.fillStyle = `rgba(217, 70, 239, ${p.a})`; 
           } else {
              ctx.fillStyle = p.kind==='smoke'?`rgba(255,255,255,${p.a})`:`rgba(190,255,215,${p.a*0.6})`;
           }
@@ -658,20 +567,15 @@
         document.getElementById('leaderboard-panel').style.display = 'block';
         document.getElementById('mode-title').innerText = currentMode.name;
         
-        // Customisation UI selon le mode
         const label = document.getElementById('main-stat-label');
         const subtitle = document.getElementById('lb-subtitle');
-        
         if (currentMode.type === 'drift') {
-            label.innerText = "SCORE";
-            subtitle.innerText = "MAXIMISEZ VOS POINTS DE DÉRAPAGE";
+            label.innerText = "SCORE"; subtitle.innerText = "MAXIMISEZ VOS POINTS DE DÉRAPAGE";
             document.getElementById('main-stat-display').innerText = "0";
         } else {
-            label.innerText = "CHRONO";
-            subtitle.innerText = "BATTEZ LE FANTÔME DU CHAMPION";
+            label.innerText = "CHRONO"; subtitle.innerText = "BATTEZ LE FANTÔME DU CHAMPION";
             document.getElementById('main-stat-display').innerText = "00:00.000";
         }
-
         carImage.src = getCarSpriteUrl(currentMode.colors);
         window.Cloud.loadLeaderboard(currentMode);
       },
@@ -682,16 +586,13 @@
         car.x = -1200; car.y = -600; car.angle = 0; 
         car.speed = currentMode.physics.maxSpeed; car.vx = car.speed;
         this.checkpoints.forEach(cp=>cp.p=false); 
-        GhostSystem.resetRecording();
-        DriftSystem.reset(); // Reset Drift
+        GhostSystem.resetRecording(); DriftSystem.reset(); 
 
         document.getElementById('leaderboard-panel').style.display='none'; 
         document.getElementById('pause-menu').style.display='none';
         document.getElementById('pause-btn').style.display='none'; 
         document.getElementById('mobile-controls').style.display='flex';
         document.getElementById('lap-display').innerText = `1 / ${this.totalLaps}`;
-        
-        // Reset Display
         if(currentMode.type === 'drift') document.getElementById('main-stat-display').innerText = "0";
         else document.getElementById('main-stat-display').innerText = "00:00.000";
 
@@ -716,51 +617,30 @@
         }
         if(this.state!=='racing') return;
         const now = Date.now(); const lapTime = now - this.lapStartTime;
-        GhostSystem.recordFrame(lapTime, car); // On enregistre tout le temps pour le replay
-        
-        // Checkpoints
+        GhostSystem.recordFrame(lapTime, car);
         this.checkpoints.forEach(cp => { if(!cp.p && Math.hypot(car.x-cp.x, car.y-cp.y) < 300) cp.p = true; });
-        
-        // Ligne d'arrivée
         if(Math.abs(car.y - (-600)) < 80 && car.x > 0 && car.lastX <= 0 && this.checkpoints.every(cp => cp.p)) this.completeLap(now);
       },
       completeLap(now){
-        // Valider les points restants du drift
         DriftSystem.bankPoints();
-
         const lapTime = now - this.lapStartTime;
-        // En mode course, on regarde le meilleur tour. En drift, on s'en fiche un peu du temps au tour, on veut le total.
         if(currentMode.type === 'race' && lapTime < this.bestLapTime){ 
-            this.bestLapTime = lapTime; 
-            GhostSystem.saveRecordingAsBest(); 
-        } else if (currentMode.type === 'drift') {
-            // En drift, on sauvegarde le replay si le score total est bon (on le fera à la fin)
-            GhostSystem.saveRecordingAsBest(); // On garde la session courante
-        }
+            this.bestLapTime = lapTime; GhostSystem.saveRecordingAsBest(); 
+        } else if (currentMode.type === 'drift') { GhostSystem.saveRecordingAsBest(); }
 
         if(this.currentLap >= this.totalLaps) this.finishRace(now);
         else{ 
             this.currentLap++; this.lapStartTime = now; 
             document.getElementById('lap-display').innerText = `${this.currentLap} / ${this.totalLaps}`; 
             this.checkpoints.forEach(cp=>cp.p=false); 
-            // En drift on ne reset pas l'enregistrement fantome entre les tours pour avoir la session complète, 
-            // mais ici simplifions : on reset pour éviter surcharge mémoire, tant pis pour le fantome multituor parfait.
             if(currentMode.type === 'race') GhostSystem.resetRecording(); 
         }
       },
       finishRace(now){
         this.state='finished'; 
-        
         let valueToSubmit, strToSubmit;
-
-        if (currentMode.type === 'drift') {
-            valueToSubmit = DriftSystem.totalScore;
-            strToSubmit = valueToSubmit.toLocaleString() + " pts";
-        } else {
-            // En mode course, on prend le meilleur tour
-            valueToSubmit = this.bestLapTime;
-            strToSubmit = this.formatTime(valueToSubmit);
-        }
+        if (currentMode.type === 'drift') { valueToSubmit = DriftSystem.totalScore; strToSubmit = valueToSubmit.toLocaleString() + " pts"; } 
+        else { valueToSubmit = this.bestLapTime; strToSubmit = this.formatTime(valueToSubmit); }
 
         document.getElementById('pause-btn').style.display='none'; 
         document.getElementById('leaderboard-panel').style.display='block';
@@ -781,7 +661,6 @@
         };
       },
       formatTime(ms){ let m = Math.floor(ms/60000), s = Math.floor((ms%60000)/1000), c = Math.floor((ms%1000)/10); return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}.${c.toString().padStart(2,'0')}`; },
-      
       pauseGame(){ if(this.state==='racing'){ this.state='paused'; this.pausedTime = Date.now(); document.getElementById('pause-menu').style.display='flex'; document.getElementById('mobile-controls').style.display='none'; } },
       resumeGame(){ if(this.state==='paused'){ const d = Date.now() - this.pausedTime; this.startTime += d; this.lapStartTime += d; this.state='racing'; document.getElementById('pause-menu').style.display='none'; document.getElementById('mobile-controls').style.display='flex'; } },
       quitToMenu(){ location.reload(); }
@@ -815,8 +694,6 @@
         const moveA = Math.atan2(this.vy, this.vx);
         let slip = Math.abs(moveA - this.angle); while(slip>Math.PI) slip-=Math.PI*2; while(slip<-Math.PI) slip+=Math.PI*2;
         const drifting = (this.speed>4 && Math.abs(slip)>0.30);
-        
-        // Feed Drift System
         DriftSystem.update(this, surface);
 
         if(drifting && surface==='road'){
@@ -866,14 +743,28 @@
     document.getElementById('restart-btn').onclick = () => RaceManager.startRollingStart();
     document.getElementById('quit-btn').onclick = () => RaceManager.quitToMenu();
 
+    // GAME LOOP OPTIMISÉE (Fixed Time Step)
     let lastTime = 0;
+    let accumulator = 0;
+    const FIXED_STEP = 1000 / 60; // 60 FPS physiques constants
+
     function loop(t) {
-      const dt = Math.min(t - lastTime, 50); lastTime = t;
-      if (RaceManager.state === 'racing' || RaceManager.state === 'rolling') {
-        car.update(); RaceManager.update(car);
+      if (!lastTime) lastTime = t;
+      let dt = t - lastTime;
+      lastTime = t;
+      if (dt > 100) dt = 100; // Empêcher la spirale de la mort si l'onglet est inactif
+      accumulator += dt;
+
+      while (accumulator >= FIXED_STEP) {
+        if (RaceManager.state === 'racing' || RaceManager.state === 'rolling') {
+            car.update(); 
+            RaceManager.update(car);
+        }
+        Particles.update();
+        accumulator -= FIXED_STEP;
       }
-      Particles.update();
       
+      // Rendu
       ctx.clearRect(0,0,canvas.width,canvas.height); ctx.save();
       let camX = canvas.width/2 - car.x - car.vx*10; let camY = canvas.height/2 - car.y - car.vy*10;
       ctx.translate(camX, camY);
@@ -882,7 +773,6 @@
       if(RaceManager.state === 'racing' || RaceManager.state === 'paused'){
         const time = (RaceManager.state==='paused'?RaceManager.pausedTime:Date.now()) - RaceManager.lapStartTime;
         GhostSystem.drawGlobalGhost(ctx, time);
-        // Si on est en mode drift, le timer ne s'affiche pas dans la case centrale (c'est le score), mais on le garde en logique
         if(currentMode.type === 'race') document.getElementById('main-stat-display').innerText = RaceManager.formatTime(time);
       }
       
