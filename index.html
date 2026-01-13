@@ -33,12 +33,12 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    const GAME_COLLECTION_ID = "world_tour_records_v3";
-
+    // Initialisation globale
     signInAnonymously(auth)
       .then((userCredential) => {
         console.log("Connecté ID:", userCredential.user.uid);
-        window.Cloud.init(db, GAME_COLLECTION_ID);
+        window.Cloud.db = db;
+        // On attend que le joueur choisisse un mode pour charger le leaderboard
       })
       .catch((error) => {
         console.error("Erreur Auth:", error);
@@ -62,7 +62,6 @@
     *{ box-sizing: border-box; }
     body {
       margin:0; overflow:hidden;
-      /* Dégradé Océanique */
       background: radial-gradient(circle at center, #22d3ee 0%, #0284c7 60%, #0c4a6e 100%);
       color:white;
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
@@ -73,40 +72,32 @@
     /* HUD */
     #hud-layer{
       position:absolute; top:0; left:0; width:100%;
-      padding: 10px; /* Reduced padding for mobile */
-      pointer-events:none; z-index:10;
-      display:flex; justify-content:space-between; gap:6px; /* Reduced gap */
+      padding: 10px; pointer-events:none; z-index:10;
+      display:flex; justify-content:space-between; gap:6px;
     }
     .hud-card{
       pointer-events:none;
       background: linear-gradient(180deg, rgba(255,255,255,0.25), rgba(255,255,255,0.1));
       border: 1px solid var(--stroke);
-      border-radius: 12px; /* Slightly smaller radius */
+      border-radius: 12px;
       padding: 8px 10px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.2);
       backdrop-filter: blur(8px);
-      min-width: 80px; /* Reduced min-width to prevent overflow */
-      flex-shrink: 1; /* Allow shrinking */
+      min-width: 80px; flex-shrink: 1;
     }
     .hud-top{ display:flex; align-items:center; gap:6px; opacity:0.95; }
-    .hud-ico{ width:14px; height:14px; opacity:0.9; }
     .label{ font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.85; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
     .sub-info{ font-family: Orbitron, monospace; font-size: 1rem; margin-top: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-    
-    /* Responsive font size for timer to prevent overflow */
     .big-time{ 
-      font-family: Orbitron, monospace; 
-      font-weight: 900; 
-      font-size: clamp(1.2rem, 5vw, 2.0rem); /* Dynamic font size */
-      color: #fff; 
-      text-shadow: 0 2px 10px rgba(0,0,0,0.3); 
-      letter-spacing: 0.02em; 
-      white-space: nowrap; /* Prevent wrapping */
+      font-family: Orbitron, monospace; font-weight: 900; 
+      font-size: clamp(1.2rem, 5vw, 2.0rem); color: #fff; 
+      text-shadow: 0 2px 10px rgba(0,0,0,0.3); letter-spacing: 0.02em; 
+      white-space: nowrap;
     }
     .pulse{ animation: pulseGlow 0.35s ease-out; }
     @keyframes pulseGlow{ 0%{ transform: scale(1); } 50%{ transform: scale(1.05); } 100%{ transform: scale(1); } }
 
-    /* COUNTDOWN / MESSAGE OVERLAY */
+    /* COUNTDOWN */
     #countdown-layer{
       position:absolute; inset:0;
       display:none; align-items:center; justify-content:center;
@@ -115,32 +106,19 @@
       text-align: center;
       color:white; text-shadow:0 0 40px rgba(0,0,0,0.8);
     }
-    .rolling-text {
-        font-size: 2.5rem;
-        color: #fbbf24;
-        animation: blink 0.5s infinite alternate;
-    }
+    .rolling-text { font-size: 2.5rem; color: #fbbf24; animation: blink 0.5s infinite alternate; }
     @keyframes blink { from { opacity: 1; } to { opacity: 0.5; } }
-    
-    .go-text {
-        font-size: 8rem;
-        color: #34d399;
-        animation: countPop 0.8s cubic-bezier(0.1, 0.7, 1.0, 0.1) forwards;
-    }
-    @keyframes countPop{ 
-      0%{ transform:scale(0.5); opacity:0; } 
-      30%{ transform:scale(1.2); opacity:1; } 
-      100%{ transform:scale(1); opacity:0; } 
-    }
+    .go-text { font-size: 8rem; color: #34d399; animation: countPop 0.8s cubic-bezier(0.1, 0.7, 1.0, 0.1) forwards; }
+    @keyframes countPop{ 0%{ transform:scale(0.5); opacity:0; } 30%{ transform:scale(1.2); opacity:1; } 100%{ transform:scale(1); opacity:0; } }
 
     /* Welcome Screen */
     #welcome-screen{
       position:fixed; inset:0;
       display:flex; flex-direction:column; align-items:center; justify-content:center;
       z-index:70;
-      background: linear-gradient(135deg, rgba(6,182,212,0.9), rgba(12,74,110,0.9));
+      background: linear-gradient(135deg, rgba(6,182,212,0.95), rgba(12,74,110,0.95));
       backdrop-filter: blur(15px);
-      overflow-y: auto; padding: 15px; /* Reduced padding */
+      overflow-y: auto; padding: 15px;
     }
     @media (max-height: 750px) { #welcome-screen { justify-content: center; padding-top: 20px; } }
 
@@ -152,52 +130,40 @@
     }
     .badge-dot{ width: 8px; height: 8px; border-radius: 50%; background: #67e8f9; box-shadow: 0 0 10px #67e8f9; }
 
-    /* Poster - FIXED CENTERING - SHRINK WRAP - MAXIMIZED */
     .poster-wrap{
-      margin-bottom: 20px; 
-      padding: 10px; /* Cadre blanc uniforme */
-      border-radius: 18px;
+      margin-bottom: 20px; padding: 10px; border-radius: 18px;
       border: 1px solid rgba(255,255,255,0.3);
       background: rgba(255,255,255,0.15);
       box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-      transform: rotate(-1.5deg); 
-      transition: transform 400ms ease;
-      
-      /* C'est ici que la magie opère pour le centrage */
-      display: inline-block; /* Le cadre s'adapte au contenu */
-      width: auto;
-      max-width: 90vw; /* Utilise presque toute la largeur si besoin */
+      transform: rotate(-1.5deg); transition: transform 400ms ease;
+      display: inline-block; width: auto; max-width: 90vw;
     }
     .poster-wrap:hover{ transform: rotate(0deg) scale(1.01); }
-    #poster-img{
-      display: block; 
-      width: 100%; 
-      height: auto;
-      max-height: 55vh; /* Augmenté de 35vh à 55vh pour prendre plus de place */
-      border-radius: 10px; /* Rayon un peu plus petit que le wrapper */
-      object-fit: contain;
-    }
+    #poster-img{ display: block; width: 100%; height: auto; max-height: 45vh; border-radius: 10px; object-fit: contain; }
 
-    /* Buttons */
-    .primary-btn, .action-btn{
-      position: relative; padding: 14px 40px; border-radius: 999px;
-      font-weight: 800; font-size: 1.25rem; letter-spacing: 0.02em; color: #0f172a;
-      border: none;
-      background: linear-gradient(90deg, #fcd34d, #fbbf24); /* Gold sand */
-      box-shadow: 0 10px 30px rgba(251,191,36,0.4);
-      transform: translateZ(0); transition: transform 150ms ease, filter 200ms ease;
-      flex-shrink: 0; margin-bottom: 20px; cursor: pointer;
+    /* Mode Selection Buttons */
+    .mode-container {
+        display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 600px;
     }
-    .primary-btn:hover, .action-btn:hover{ transform: scale(1.04); filter: brightness(1.1); }
-    .primary-btn:active, .action-btn:active{ transform: scale(0.98); }
-    
-    .action-btn { width: 100%; font-size: 1rem; margin-top:12px; padding: 12px; }
+    .mode-btn {
+        flex: 1; min-width: 120px; padding: 15px 10px; border-radius: 12px;
+        font-weight: 800; font-size: 1rem; text-transform: uppercase;
+        border: 2px solid rgba(255,255,255,0.2);
+        color: #fff; cursor: pointer; transition: transform 0.2s, filter 0.2s;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    .mode-btn:hover { transform: scale(1.05); filter: brightness(1.2); }
+    .mode-btn:active { transform: scale(0.95); }
+
+    .btn-beginner { background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%); border-color: #fde047; }
+    .btn-normal { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); border-color: #fca5a5; }
+    .btn-expert { background: linear-gradient(135deg, #1f2937 0%, #000000 100%); border-color: #9ca3af; }
 
     /* Leaderboard */
     #leaderboard-panel{
       position:absolute; top:50%; left:50%; transform: translate(-50%,-50%);
       width: 92%; max-width: 480px; z-index:60; display:none;
-      background: rgba(15, 23, 42, 0.85);
+      background: rgba(15, 23, 42, 0.9);
       border: 1px solid rgba(255,255,255,0.2); border-radius: 18px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.6);
       backdrop-filter: blur(20px); padding: 18px; text-align:center;
@@ -206,6 +172,16 @@
     #scores-list{ margin-top: 10px; text-align:left; background: rgba(0,0,0,0.3); border-radius: 14px; padding: 8px; max-height: 220px; overflow-y:auto; }
     input{ background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px; border-radius: 12px; width: 100%; text-align:center; font-size: 1.05rem; outline:none; }
     input:focus{ border-color: #fbbf24; }
+
+    .action-btn{
+      width: 100%; margin-top: 12px; padding: 12px 16px; border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.18); font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase;
+      background: linear-gradient(90deg, rgba(72,187,120,1), rgba(34,197,94,0.85));
+      box-shadow: 0 18px 45px rgba(0,0,0,0.35); transition: transform 150ms ease, filter 200ms ease; cursor:pointer;
+    }
+    .action-btn:hover{ transform: translateY(-1px); filter: brightness(1.05); }
+    .action-btn:active{ transform: translateY(0px) scale(0.99); }
+    .action-btn:disabled{ opacity: 0.55; cursor:not-allowed; filter:none; transform:none; }
 
     /* Pause UI */
     #pause-btn{ position:absolute; top:16px; right:16px; width:44px; height:44px; border-radius:999px; display:none; align-items:center; justify-content:center; pointer-events:auto; z-index:50; cursor:pointer; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); backdrop-filter:blur(5px); }
@@ -235,14 +211,13 @@
       <div class="hud-top"><div class="label">Tour</div></div>
       <div id="lap-display" class="sub-info">1 / 3</div>
     </div>
-    <!-- Reduced min-width and added centering logic for better mobile fit -->
     <div class="hud-card" style="text-align:center; min-width: 110px; flex: 1; max-width: 200px;">
       <div class="hud-top" style="justify-content:center;"><div class="label">Chrono</div></div>
-      <div id="time-display" class="big-time">00:00.00</div>
+      <div id="time-display" class="big-time">00:00.000</div>
     </div>
     <div class="hud-card" style="text-align:right;">
       <div class="hud-top" style="justify-content:flex-end;"><div class="label">Record</div></div>
-      <div id="wr-display" class="sub-info" style="color:#fbbf24;">--:--.--</div>
+      <div id="wr-display" class="sub-info" style="color:#fbbf24;">--:--.---</div>
     </div>
   </div>
 
@@ -262,15 +237,20 @@
       <span class="badge-dot"></span>
       <span>Lagoon Edition • Nouvelle-Calédonie</span>
     </div>
-    <!-- Removed Title, now inside image or assumed -->
     <div class="poster-wrap">
       <img id="poster-img" src="https://i.postimg.cc/vB21QZmP/image-drift-nc.png" alt="Drift NC Poster">
     </div>
-    <button id="enter-btn" class="primary-btn">JOUER</button>
+    
+    <div class="mb-2 text-sm text-gray-200 font-bold tracking-widest uppercase">Choisis ta catégorie</div>
+    <div class="mode-container">
+        <button id="btn-mode-beginner" class="mode-btn btn-beginner">DÉBUTANT</button>
+        <button id="btn-mode-normal" class="mode-btn btn-normal">NORMAL</button>
+        <button id="btn-mode-expert" class="mode-btn btn-expert">EXPERT</button>
+    </div>
   </div>
 
   <div id="leaderboard-panel">
-    <h1 class="text-3xl font-black text-yellow-400 mb-1" style="font-family:Orbitron;">CLASSEMENT</h1>
+    <h1 class="text-2xl font-black text-yellow-400 mb-1" style="font-family:Orbitron;">CLASSEMENT <span id="mode-title" class="text-white text-lg ml-2">NORMAL</span></h1>
     <p class="text-xs text-gray-400 mb-3">BATTEZ LE FANTÔME DU CHAMPION</p>
     <div id="scores-list"><div class="text-center text-gray-400 text-sm py-4">Chargement...</div></div>
     <button id="start-btn" class="action-btn">DÉMARRER</button>
@@ -299,20 +279,67 @@
   <canvas id="gameCanvas"></canvas>
 
   <script>
-    // Updated Car Sprite: Removed white stripe, now full red
-    const carSpriteSrc = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 80'%3E%3Cdefs%3E%3ClinearGradient id='bodyGrad' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' style='stop-color:%23c53030' /%3E%3Cstop offset='50%25' style='stop-color:%23e53e3e' /%3E%3Cstop offset='100%25' style='stop-color:%239b2c2c' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='2' y='2' width='40' height='76' rx='8' fill='rgba(0,0,0,0.3)' /%3E%3Cpath d='M6,10 Q2,20 2,40 Q2,60 6,70 L6,76 Q6,78 8,78 L36,78 Q38,78 38,76 L38,70 Q42,60 42,40 Q42,20 38,10 L36,4 Q36,2 34,2 L10,2 Q8,2 8,4 Z' fill='url(%23bodyGrad)' stroke='%23742a2a' stroke-width='1' /%3E%3Cpath d='M8,20 L36,20 L34,32 L10,32 Z' fill='%232d3748' /%3E%3Cpath d='M10,48 L34,48 L36,60 L8,60 Z' fill='%231a202c' /%3E%3Crect x='9' y='33' width='26' height='14' fill='%23e53e3e' /%3E%3Crect x='4' y='68' width='36' height='8' rx='2' fill='%23742a2a' /%3E%3Crect x='6' y='4' width='6' height='4' fill='%23faf089' /%3E%3Crect x='32' y='4' width='6' height='4' fill='%23faf089' /%3E%3C/svg%3E";
-    const carImage = new Image(); carImage.src = carSpriteSrc;
+    // --- 1. CONFIGURATION DES MODES ---
+    const MODES = {
+        beginner: {
+            id: 'beginner',
+            name: 'DÉBUTANT',
+            // Vitesse encore réduite : 9.0 -> 6.5
+            physics: { acceleration: 0.15, maxSpeed: 6.5, friction: 0.98, turnSpeed: 0.065, offRoadFriction: 0.8 },
+            collection: 'world_tour_records_v3_beginner',
+            // Jaune/Or pour débutant
+            colors: { body1: '#d97706', body2: '#fbbf24', body3: '#fcd34d', wing: '#92400e' }
+        },
+        normal: {
+            id: 'normal',
+            name: 'NORMAL',
+            physics: { acceleration: 0.22, maxSpeed: 12.5, friction: 0.965, turnSpeed: 0.075, offRoadFriction: 0.75 },
+            collection: 'world_tour_records_v3_normal',
+            // Rouge (Style original)
+            colors: { body1: '#c53030', body2: '#e53e3e', body3: '#fc8181', wing: '#742a2a' }
+        },
+        expert: {
+            id: 'expert',
+            name: 'EXPERT',
+            physics: { acceleration: 0.35, maxSpeed: 22.0, friction: 0.96, turnSpeed: 0.085, offRoadFriction: 0.6 },
+            collection: 'world_tour_records_v3_expert',
+            // Noir / Gris foncé (Style Tueur)
+            colors: { body1: '#111827', body2: '#1f2937', body3: '#374151', wing: '#000000' }
+        }
+    };
 
+    let currentMode = MODES.normal; // Défaut
+
+    // Générateur de voiture dynamique
+    function getCarSpriteUrl(colors) {
+        // On remplace les couleurs dans le SVG template
+        return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 80'%3E%3Cdefs%3E%3ClinearGradient id='bodyGrad' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' style='stop-color:${encodeURIComponent(colors.body1)}' /%3E%3Cstop offset='50%25' style='stop-color:${encodeURIComponent(colors.body2)}' /%3E%3Cstop offset='100%25' style='stop-color:${encodeURIComponent(colors.body1)}' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='2' y='2' width='40' height='76' rx='8' fill='rgba(0,0,0,0.3)' /%3E%3Cpath d='M6,10 Q2,20 2,40 Q2,60 6,70 L6,76 Q6,78 8,78 L36,78 Q38,78 38,76 L38,70 Q42,60 42,40 Q42,20 38,10 L36,4 Q36,2 34,2 L10,2 Q8,2 8,4 Z' fill='url(%23bodyGrad)' stroke='${encodeURIComponent(colors.wing)}' stroke-width='1' /%3E%3Cpath d='M8,20 L36,20 L34,32 L10,32 Z' fill='%232d3748' /%3E%3Cpath d='M10,48 L34,48 L36,60 L8,60 Z' fill='%231a202c' /%3E%3Crect x='9' y='33' width='26' height='14' fill='${encodeURIComponent(colors.body2)}' /%3E%3Crect x='4' y='68' width='36' height='8' rx='2' fill='${encodeURIComponent(colors.wing)}' /%3E%3Crect x='6' y='4' width='6' height='4' fill='%23faf089' /%3E%3Crect x='32' y='4' width='6' height='4' fill='%23faf089' /%3E%3C/svg%3E`;
+    }
+
+    const carImage = new Image(); 
+    // Chargement initial
+    carImage.src = getCarSpriteUrl(currentMode.colors);
+
+    // --- 2. GESTION CLOUD ---
     window.Cloud = {
-      db: null, collectionId: null, worldRecordTime: Infinity, globalGhostData: null,
-      init: function(database, collectionId) { this.db = database; this.collectionId = collectionId; this.listenToLeaderboard(); },
-      listenToLeaderboard: function() {
+      db: null, worldRecordTime: Infinity, globalGhostData: null, unsubscribe: null,
+      init: function(database) { this.db = database; }, // Just store DB ref, don't listen yet
+      loadLeaderboard: function(modeConfig) {
         if(!this.db) return;
+        if(this.unsubscribe) this.unsubscribe(); // Stop listening to previous mode
+        
+        // Reset local ghost
+        this.worldRecordTime = Infinity;
+        this.globalGhostData = null;
+        GhostSystem.setGlobalGhost(null);
+        document.getElementById('wr-display').innerText = "--:--.---";
+
         const { collection, query, orderBy, limit, onSnapshot } = window.fs;
-        const q = query(collection(this.db, this.collectionId), orderBy('timeMs', 'asc'), limit(10));
-        onSnapshot(q, (snapshot) => {
+        const q = query(collection(this.db, modeConfig.collection), orderBy('timeMs', 'asc'), limit(10));
+        
+        this.unsubscribe = onSnapshot(q, (snapshot) => {
           const listEl = document.getElementById('scores-list'); listEl.innerHTML = ''; let rank = 1;
-          if(snapshot.empty) { listEl.innerHTML = '<div class="text-center text-gray-400 text-sm">Aucun record.</div>'; this.worldRecordTime = Infinity; return; }
+          if(snapshot.empty) { listEl.innerHTML = '<div class="text-center text-gray-400 text-sm">Aucun record pour ce mode.</div>'; return; }
           snapshot.forEach(doc => {
             const data = doc.data();
             if (rank === 1) {
@@ -330,7 +357,7 @@
         const { collection, addDoc } = window.fs;
         const ghostString = JSON.stringify(ghostData);
         const safeGhost = ghostString.length < 950000 ? ghostString : null;
-        try { await addDoc(collection(this.db, this.collectionId), { name: name.trim(), timeMs, timeStr, ghostData: safeGhost, date: Date.now() }); return true; } 
+        try { await addDoc(collection(this.db, currentMode.collection), { name: name.trim(), timeMs, timeStr, ghostData: safeGhost, date: Date.now() }); return true; } 
         catch(e) { console.error(e); return false; }
       }
     };
@@ -359,7 +386,6 @@
       }
     };
 
-    // VISUAL HELPERS - RE-ADDED NOISE GENERATION
     function makeNoisePattern(size=128){
       const c = document.createElement('canvas'); c.width = c.height = size;
       const nctx = c.getContext('2d');
@@ -373,10 +399,7 @@
     }
 
     const VIS = {
-        noise: makeNoisePattern(160),
-        seaParticles: [],
-        tires: [],
-        palms: [],
+        noise: makeNoisePattern(160), seaParticles: [], tires: [], palms: [],
         ensurePatterns(ctx){ if(!this.noise.pattern) this.noise.pattern = ctx.createPattern(this.noise.canvas, 'repeat'); },
         drawVignette(ctx, w, h){
             ctx.save(); const g = ctx.createRadialGradient(w/2, h/2, Math.min(w,h)*0.20, w/2, h/2, Math.min(w,h)*0.70);
@@ -388,78 +411,37 @@
         },
         initSea(){ for(let i=0; i<50; i++) this.seaParticles.push({x:Math.random()*3000, y:Math.random()*3000, t:Math.random()*Math.PI*2}); },
         initTires(){
-            const addStack = (x,y) => {
-                for(let i=0;i<3;i++) this.tires.push({x:x+(Math.random()-0.5)*20, y:y+(Math.random()-0.5)*20, c:Math.random()>0.5?'#ef4444':'#ffffff'});
-            };
-            addStack(400 - 100, -400); addStack(400 - 90, -380); 
-            addStack(400 - 100, 0); 
-            addStack(-100 + 80, 400); 
-            addStack(-550, 450); 
+            const addStack = (x,y) => { for(let i=0;i<3;i++) this.tires.push({x:x+(Math.random()-0.5)*20, y:y+(Math.random()-0.5)*20, c:Math.random()>0.5?'#ef4444':'#ffffff'}); };
+            addStack(400 - 100, -400); addStack(400 - 90, -380); addStack(400 - 100, 0); addStack(-100 + 80, 400); addStack(-550, 450); 
         },
         initPalms(track){
             for(let i=0; i<60; i++){
                 let x,y, safe=false;
-                for(let k=0; k<10; k++){
-                    x = 500 + Math.random()*2000; y = 500 + Math.random()*2000;
-                    if(track.check(x-1500, y-1500) === 'sand') { safe=true; break; }
-                }
+                for(let k=0; k<10; k++){ x = 500 + Math.random()*2000; y = 500 + Math.random()*2000; if(track.check(x-1500, y-1500) === 'sand') { safe=true; break; } }
                 if(safe) this.palms.push({x: x-1500, y: y-1500, s: 0.8+Math.random()*0.5, r: Math.random()*Math.PI});
             }
         },
-        drawTires(ctx){
-            for(let t of this.tires){
-                ctx.save(); ctx.translate(t.x, t.y);
-                ctx.shadowColor="rgba(0,0,0,0.5)"; ctx.shadowBlur=5;
-                ctx.fillStyle="#1a1a1a"; ctx.beginPath(); ctx.arc(0,0,12,0,Math.PI*2); ctx.fill();
-                ctx.shadowBlur=0;
-                ctx.strokeStyle=t.c; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0,0,6,0,Math.PI*2); ctx.stroke();
-                ctx.restore();
-            }
-        },
+        drawTires(ctx){ for(let t of this.tires){ ctx.save(); ctx.translate(t.x, t.y); ctx.shadowColor="rgba(0,0,0,0.5)"; ctx.shadowBlur=5; ctx.fillStyle="#1a1a1a"; ctx.beginPath(); ctx.arc(0,0,12,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0; ctx.strokeStyle=t.c; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0,0,6,0,Math.PI*2); ctx.stroke(); ctx.restore(); } },
         drawSea(ctx){
-            const g = ctx.createRadialGradient(1500, 1500, 0, 1500, 1500, 2000);
-            g.addColorStop(0, '#06b6d4'); g.addColorStop(1, '#0c4a6e');
-            ctx.fillStyle = g; ctx.fillRect(0,0,3000,3000);
-            ctx.fillStyle = "rgba(255,255,255,0.3)";
-            for(let p of this.seaParticles){
-                p.t += 0.05;
-                const alpha = (Math.sin(p.t)+1)/2 * 0.5;
-                ctx.globalAlpha = alpha;
-                ctx.beginPath(); ctx.arc(p.x, p.y, 2 + Math.sin(p.t), 0, Math.PI*2); ctx.fill();
-            }
-            ctx.globalAlpha = 1;
+            const g = ctx.createRadialGradient(1500, 1500, 0, 1500, 1500, 2000); g.addColorStop(0, '#06b6d4'); g.addColorStop(1, '#0c4a6e'); ctx.fillStyle = g; ctx.fillRect(0,0,3000,3000);
+            ctx.fillStyle = "rgba(255,255,255,0.3)"; for(let p of this.seaParticles){ p.t += 0.05; ctx.globalAlpha = (Math.sin(p.t)+1)/2 * 0.5; ctx.beginPath(); ctx.arc(p.x, p.y, 2 + Math.sin(p.t), 0, Math.PI*2); ctx.fill(); } ctx.globalAlpha = 1;
         },
         drawPalms(ctx){
             for(let p of this.palms){
                 ctx.save(); ctx.translate(p.x, p.y); ctx.scale(p.s, p.s);
                 ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.beginPath(); ctx.ellipse(5, 5, 8, 8, 0, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = "#5d4037"; ctx.beginPath(); ctx.arc(0,0, 6, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = "#16a34a";
-                for(let j=0; j<7; j++){
-                    ctx.rotate((Math.PI*2)/7);
-                    ctx.beginPath(); ctx.ellipse(0, -15, 6, 20, 0, 0, Math.PI*2); ctx.fill();
-                    ctx.strokeStyle = "#14532d"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(0,-5); ctx.lineTo(0,-30); ctx.stroke();
-                }
-                ctx.restore();
+                ctx.fillStyle = "#5d4037"; ctx.beginPath(); ctx.arc(0,0, 6, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#16a34a";
+                for(let j=0; j<7; j++){ ctx.rotate((Math.PI*2)/7); ctx.beginPath(); ctx.ellipse(0, -15, 6, 20, 0, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = "#14532d"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(0,-5); ctx.lineTo(0,-30); ctx.stroke(); } ctx.restore();
             }
         },
         drawFinishArch(ctx){
             ctx.save(); ctx.translate(0, -600);
             ctx.fillStyle = "#374151"; ctx.fillRect(-120, -100, 10, 100); ctx.fillRect(110, -100, 10, 100);
-            ctx.fillStyle = "#1f2937"; ctx.fillRect(-120, -100, 240, 20);
-            ctx.fillStyle = "#fbbf24"; ctx.fillRect(-60, -115, 120, 30);
+            ctx.fillStyle = "#1f2937"; ctx.fillRect(-120, -100, 240, 20); ctx.fillStyle = "#fbbf24"; ctx.fillRect(-60, -115, 120, 30);
             ctx.fillStyle = "#000"; ctx.font = "bold 16px Orbitron"; ctx.textAlign = "center"; ctx.fillText("DRIFT NC", 0, -95);
             const t = Date.now() / 200; const wave = Math.sin(t) * 10;
-            ctx.save(); ctx.translate(-120, -100); ctx.rotate(-0.2);
-            ctx.fillStyle="#fff"; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(40, 10+wave); ctx.lineTo(40, 40+wave); ctx.lineTo(0, 30); ctx.fill();
-            ctx.fillStyle="#000"; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(20, 5+wave/2); ctx.lineTo(20, 20+wave/2); ctx.lineTo(0, 15); ctx.fill();
-            ctx.beginPath(); ctx.moveTo(20, 20+wave/2); ctx.lineTo(40, 25+wave); ctx.lineTo(40, 40+wave); ctx.lineTo(20, 35+wave/2); ctx.fill();
-            ctx.restore();
-            ctx.save(); ctx.translate(110, -100); ctx.rotate(0.2);
-            ctx.fillStyle="#fff"; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(40, 10-wave); ctx.lineTo(40, 40-wave); ctx.lineTo(0, 30); ctx.fill();
-            ctx.fillStyle="#000"; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(20, 5-wave/2); ctx.lineTo(20, 20-wave/2); ctx.lineTo(0, 15); ctx.fill();
-            ctx.beginPath(); ctx.moveTo(20, 20-wave/2); ctx.lineTo(40, 25-wave); ctx.lineTo(40, 40-wave); ctx.lineTo(20, 35-wave/2); ctx.fill();
-            ctx.restore();
+            ctx.save(); ctx.translate(-120, -100); ctx.rotate(-0.2); ctx.fillStyle="#fff"; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(40, 10+wave); ctx.lineTo(40, 40+wave); ctx.lineTo(0, 30); ctx.fill(); ctx.fillStyle="#000"; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(20, 5+wave/2); ctx.lineTo(20, 20+wave/2); ctx.lineTo(0, 15); ctx.fill(); ctx.beginPath(); ctx.moveTo(20, 20+wave/2); ctx.lineTo(40, 25+wave); ctx.lineTo(40, 40+wave); ctx.lineTo(20, 35+wave/2); ctx.fill(); ctx.restore();
+            ctx.save(); ctx.translate(110, -100); ctx.rotate(0.2); ctx.fillStyle="#fff"; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(40, 10-wave); ctx.lineTo(40, 40-wave); ctx.lineTo(0, 30); ctx.fill(); ctx.fillStyle="#000"; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(20, 5-wave/2); ctx.lineTo(20, 20-wave/2); ctx.lineTo(0, 15); ctx.fill(); ctx.beginPath(); ctx.moveTo(20, 20-wave/2); ctx.lineTo(40, 25-wave); ctx.lineTo(40, 40-wave); ctx.lineTo(20, 35-wave/2); ctx.fill(); ctx.restore();
             ctx.restore();
         }
     };
@@ -555,22 +537,27 @@
     const RaceManager = {
       totalLaps: 3, currentLap: 1, state: 'menu', startTime: 0, lapStartTime: 0, bestLapTime: Infinity, pausedTime: 0,
       checkpoints: [ {x:500,y:-400,p:false}, {x:400,y:100,p:false}, {x:-200,y:400,p:false}, {x:-900,y:0,p:false} ],
+      
+      selectMode(modeKey) {
+        currentMode = MODES[modeKey];
+        // Mettre à jour l'interface
+        document.getElementById('welcome-screen').style.display = 'none';
+        document.getElementById('leaderboard-panel').style.display = 'block';
+        document.getElementById('mode-title').innerText = currentMode.name;
+        // Changer la couleur de la voiture
+        carImage.src = getCarSpriteUrl(currentMode.colors);
+        // Charger le classement correspondant
+        window.Cloud.loadLeaderboard(currentMode);
+      },
+
       startRollingStart(){
         this.state = 'rolling';
+        car.x = -1200; car.y = -600; car.angle = 0; 
+        // UTILISATION DE LA PHYSIQUE DU MODE
+        car.speed = currentMode.physics.maxSpeed; 
+        car.vx = car.speed; car.vy = 0;
+        this.checkpoints.forEach(cp=>cp.p=false); GhostSystem.resetRecording();
         
-        // Place car much further back for extended rolling start
-        // Start line is at 0, -600.
-        car.x = -1200; // Increased distance
-        car.y = -600;
-        car.angle = 0; // Facing Right
-        car.speed = PHYSICS.maxSpeed;
-        car.vx = car.speed;
-        car.vy = 0;
-        
-        this.checkpoints.forEach(cp=>cp.p=false); 
-        GhostSystem.resetRecording();
-        
-        // UI Setup
         document.getElementById('leaderboard-panel').style.display='none'; 
         document.getElementById('pause-menu').style.display='none';
         document.getElementById('pause-btn').style.display='none'; 
@@ -578,7 +565,6 @@
         document.getElementById('lap-display').innerText = `1 / ${this.totalLaps}`;
         document.getElementById('time-display').innerText = "00:00.000";
         
-        // Show "LANCEMENT..." text
         const cd = document.getElementById('countdown-layer');
         cd.style.display = 'flex';
         cd.innerHTML = '<div class="rolling-text">LANCEMENT...</div>';
@@ -601,22 +587,24 @@
       },
       pauseGame(){ if(this.state==='racing'){ this.state='paused'; this.pausedTime = Date.now(); document.getElementById('pause-menu').style.display='flex'; document.getElementById('mobile-controls').style.display='none'; } },
       resumeGame(){ if(this.state==='paused'){ const d = Date.now() - this.pausedTime; this.startTime += d; this.lapStartTime += d; this.state='racing'; document.getElementById('pause-menu').style.display='none'; document.getElementById('mobile-controls').style.display='flex'; } },
-      quitToMenu(){ this.state='menu'; document.getElementById('pause-menu').style.display='none'; document.getElementById('pause-btn').style.display='none'; document.getElementById('mobile-controls').style.display='none'; document.getElementById('leaderboard-panel').style.display='block'; document.getElementById('start-btn').style.display='block'; document.getElementById('name-input-area').style.display='none'; document.getElementById('countdown-layer').style.display='none'; },
+      quitToMenu(){ 
+          this.state='menu'; 
+          document.getElementById('pause-menu').style.display='none'; 
+          document.getElementById('pause-btn').style.display='none'; 
+          document.getElementById('mobile-controls').style.display='none'; 
+          document.getElementById('leaderboard-panel').style.display='none'; 
+          document.getElementById('name-input-area').style.display='none'; 
+          document.getElementById('countdown-layer').style.display='none'; 
+          // Retour accueil
+          document.getElementById('welcome-screen').style.display='flex';
+      },
       update(car){
-        // Rolling Start Logic
         if (this.state === 'rolling') {
-            // Auto-drive
             car.controls = { u: true, d: false, l: false, r: false };
-            
-            // Check if crossed start line (x > 0)
-            if (car.x >= 0) {
-                this.beginRacing();
-            }
+            if (car.x >= 0) this.beginRacing();
             return;
         }
-
         if(this.state!=='racing') return;
-        
         const now = Date.now(); const lapTime = now - this.lapStartTime;
         GhostSystem.recordFrame(lapTime, car);
         this.checkpoints.forEach(cp => { if(!cp.p && Math.hypot(car.x-cp.x, car.y-cp.y) < 300) cp.p = true; });
@@ -650,20 +638,21 @@
       reset(){ this.x=0; this.y=-600; this.lastX=0; this.angle=0; this.vx=0; this.vy=0; this.speed=0; this.controls={u:false,d:false,l:false,r:false}; }
       update(){
         this.lastX=this.x; 
-        
-        // Physics update allowed in racing AND rolling state
         if(RaceManager.state!=='racing' && RaceManager.state !== 'rolling') return;
 
-        if(Math.abs(this.speed)>0.1){ const dir = this.speed>0?1:-1; if(this.controls.l) this.angle -= PHYSICS.turnSpeed*dir; if(this.controls.r) this.angle += PHYSICS.turnSpeed*dir; }
-        let f=0; if(this.controls.u) f=PHYSICS.acceleration; if(this.controls.d) f=-PHYSICS.acceleration*0.6;
+        // UTILISATION DE LA PHYSIQUE DU MODE
+        const phys = currentMode.physics;
+
+        if(Math.abs(this.speed)>0.1){ const dir = this.speed>0?1:-1; if(this.controls.l) this.angle -= phys.turnSpeed*dir; if(this.controls.r) this.angle += phys.turnSpeed*dir; }
+        let f=0; if(this.controls.u) f=phys.acceleration; if(this.controls.d) f=-phys.acceleration*0.6;
         this.vx += Math.cos(this.angle)*f; this.vy += Math.sin(this.angle)*f;
         const surface = Track.check(this.x, this.y);
-        let fric = PHYSICS.friction;
-        if(surface === 'sand') fric = PHYSICS.offRoadFriction;
+        let fric = phys.friction;
+        if(surface === 'sand') fric = phys.offRoadFriction;
         if(surface === 'sea') fric = 0.5;
 
         this.speed = Math.hypot(this.vx, this.vy); this.vx *= fric; this.vy *= fric;
-        if(this.speed>PHYSICS.maxSpeed){ const r = PHYSICS.maxSpeed/this.speed; this.vx*=r; this.vy*=r; this.speed = PHYSICS.maxSpeed; }
+        if(this.speed>phys.maxSpeed){ const r = phys.maxSpeed/this.speed; this.vx*=r; this.vy*=r; this.speed = phys.maxSpeed; }
         this.x += this.vx; this.y += this.vy;
 
         const moveA = Math.atan2(this.vy, this.vx);
@@ -686,7 +675,7 @@
         ctx.restore();
         ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle+Math.PI/2);
         ctx.globalAlpha = 0.28; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.ellipse(0, 10, 16, 26, 0, 0, Math.PI*2); ctx.fill(); 
-        ctx.globalAlpha = 1; if(carImage.complete) ctx.drawImage(carImage,-22,-40,44,80); else { ctx.fillStyle='#ef4444'; ctx.fillRect(-11,-19,22,38); }
+        ctx.globalAlpha = 1; if(carImage.complete) ctx.drawImage(carImage,-22,-40,44,80); else { ctx.fillStyle=currentMode.colors.body2; ctx.fillRect(-11,-19,22,38); }
         ctx.restore();
       }
     }
@@ -709,7 +698,11 @@
     };
     bindTouch('btn-left','l'); bindTouch('btn-right','r'); bindTouch('btn-gas','u'); bindTouch('btn-brake','d');
 
-    document.getElementById('enter-btn').onclick = () => { document.getElementById('welcome-screen').style.display = 'none'; document.getElementById('leaderboard-panel').style.display = 'block'; };
+    // BIND MODE BUTTONS
+    document.getElementById('btn-mode-beginner').onclick = () => RaceManager.selectMode('beginner');
+    document.getElementById('btn-mode-normal').onclick = () => RaceManager.selectMode('normal');
+    document.getElementById('btn-mode-expert').onclick = () => RaceManager.selectMode('expert');
+
     document.getElementById('start-btn').onclick = () => RaceManager.startRollingStart();
     document.getElementById('pause-btn').onclick = () => RaceManager.pauseGame();
     document.getElementById('resume-btn').onclick = () => RaceManager.resumeGame();
@@ -718,33 +711,27 @@
 
     let lastFrameTime = 0;
     let accumulator = 0;
-    const FIXED_TIME_STEP = 1000 / 60; // 60 FPS physics
+    const FIXED_TIME_STEP = 1000 / 60; 
 
     function loop(timestamp) {
       if (!lastFrameTime) lastFrameTime = timestamp;
       let deltaTime = timestamp - lastFrameTime;
       lastFrameTime = timestamp;
-
-      // Cap delta time to avoid spiral of death (e.g. tab background)
       if (deltaTime > 250) deltaTime = 250;
-
       accumulator += deltaTime;
 
       while (accumulator >= FIXED_TIME_STEP) {
-        // Updated loop logic for rolling start state
         if (RaceManager.state === 'racing' || RaceManager.state === 'rolling') {
           if (RaceManager.state === 'rolling') {
-             // Force auto drive
              car.controls = { u: true, d: false, l: false, r: false };
           }
           car.update();
           RaceManager.update(car);
         }
-        Particles.update(); // Fix particles speed too
+        Particles.update(); 
         accumulator -= FIXED_TIME_STEP;
       }
 
-      // Render
       ctx.clearRect(0,0,canvas.width,canvas.height); 
       ctx.save();
       let camX = canvas.width/2 - car.x; let camY = canvas.height/2 - car.y;
