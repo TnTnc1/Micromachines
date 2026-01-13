@@ -152,19 +152,33 @@
     }
     .badge-dot{ width: 8px; height: 8px; border-radius: 50%; background: #67e8f9; box-shadow: 0 0 10px #67e8f9; }
 
-    /* Poster */
+    /* Poster - FIXED CENTERING */
     .poster-wrap{
-      margin-bottom: 24px; padding: 8px; border-radius: 18px;
+      margin-bottom: 24px; 
+      padding: 10px; /* Slightly thicker frame */
+      border-radius: 18px;
       border: 1px solid rgba(255,255,255,0.3);
-      background: rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.15);
       box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-      transform: rotate(-1.5deg); transition: transform 400ms ease;
-      max-width: 100%; flex-shrink: 1;
+      transform: rotate(-1.5deg); 
+      transition: transform 400ms ease;
+      
+      /* Robust centering */
+      width: 85vw;
+      max-width: 480px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-shrink: 1;
     }
     .poster-wrap:hover{ transform: rotate(0deg) scale(1.01); }
     #poster-img{
-      border-radius: 12px; display:block; max-width: 480px; width: 86vw; height: auto;
-      max-height: 35vh; object-fit: cover;
+      border-radius: 12px; 
+      display: block; 
+      width: 100%; 
+      height: auto;
+      max-height: 35vh; 
+      object-fit: cover;
     }
 
     /* Buttons */
