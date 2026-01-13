@@ -523,12 +523,14 @@
       },
       trace(ctx){
         ctx.beginPath();
-        ctx.moveTo(-400, -600); ctx.lineTo(400, -600);
+        // Modification : Extension de la ligne droite de départ (de -1200 à 400 au lieu de -400 à 400)
+        ctx.moveTo(-1200, -600); ctx.lineTo(400, -600);
         ctx.arc(400, -400, 200, -Math.PI/2, Math.PI/2, false);
         ctx.arc(400, 0, 200, -Math.PI/2, Math.PI/2, false);
         ctx.lineTo(-100, 200); ctx.arc(-100, 400, 200, -Math.PI/2, Math.PI, false);
         ctx.lineTo(-600, 400); ctx.arc(-600, -100, 500, Math.PI/2, -Math.PI/2, false);
-        ctx.lineTo(-400, -600);
+        // Fermeture de la boucle étendue
+        ctx.lineTo(-1200, -600);
       },
       drawCollisionMask(){
         const ctx = this.collisionCtx;
@@ -573,10 +575,9 @@
       startRollingStart(){
         this.state = 'rolling';
         
-        // Place car before start line (on the straight)
-        // Start line is at 0, -600. Straight goes from -400 to 400.
-        // Let's spawn at -600, -600. 
-        car.x = -600;
+        // Place car much further back for extended rolling start
+        // Start line is at 0, -600.
+        car.x = -1200; // Increased distance
         car.y = -600;
         car.angle = 0; // Facing Right
         car.speed = PHYSICS.maxSpeed;
