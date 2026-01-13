@@ -8,11 +8,12 @@
     
     <!-- Firebase Imports & Configuration -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-analytics.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-        // TA CONFIGURATION (Intégrée)
+        // CONFIGURATION FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyAv5_57JNF_-ZK7lRAOnqnD_C6zbXzHxSE",
             authDomain: "micromachines-8e585.firebaseapp.com",
@@ -23,27 +24,23 @@
             measurementId: "G-78WHHQGK2S"
         };
 
-        // Initialisation Firebase
         const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Nom de la collection dans la base de données
-        const GAME_COLLECTION_ID = "world_tour_records";
+        // Nouvelle collection pour repartir proprement avec les noms longs
+        const GAME_COLLECTION_ID = "world_tour_records_v3"; 
 
-        // Connexion Anonyme Automatique
         signInAnonymously(auth)
             .then((userCredential) => {
-                console.log("Connecté au serveur. ID:", userCredential.user.uid);
-                // Démarrage de la synchro du classement
+                console.log("Connecté ID:", userCredential.user.uid);
                 window.Cloud.init(db, GAME_COLLECTION_ID);
             })
             .catch((error) => {
                 console.error("Erreur Auth:", error);
-                document.getElementById('scores-list').innerHTML = '<div class="text-red-400 text-sm">Erreur connexion.<br>Vérifiez la console.</div>';
             });
 
-        // Exposition des outils Firestore pour le reste du script
         window.fs = { collection, addDoc, query, orderBy, limit, onSnapshot };
     </script>
 
@@ -55,7 +52,6 @@
         }
         canvas { display: block; }
         
-        /* HUD */
         #hud-layer { 
             position: absolute; top: 0; left: 0; width: 100%;
             padding: 10px; pointer-events: none; z-index: 10; 
@@ -67,7 +63,6 @@
         .label { font-size: 0.8rem; text-transform: uppercase; opacity: 0.8; color: #cbd5e0; }
         .sub-info { font-family: monospace; font-size: 1.2rem; color: white; }
 
-        /* Leaderboard Panel */
         #leaderboard-panel {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: rgba(26, 32, 44, 0.95); padding: 25px; border-radius: 15px;
@@ -79,16 +74,15 @@
             display: flex; justify-content: space-between; padding: 8px 10px;
             border-bottom: 1px solid #2d3748; font-family: monospace; font-size: 1rem;
         }
-        .score-row:nth-child(1) { color: #fbbf24; font-weight: bold; } /* Gold */
-        .score-row:nth-child(2) { color: #e2e8f0; } /* Silver */
-        .score-row:nth-child(3) { color: #b794f4; } /* Bronze */
+        .score-row:nth-child(1) { color: #fbbf24; font-weight: bold; }
+        .score-row:nth-child(2) { color: #e2e8f0; }
+        .score-row:nth-child(3) { color: #b794f4; }
 
-        /* Finish Input */
         #name-input-area { display: none; margin-top: 20px; }
         input {
             background: #2d3748; border: 2px solid #4a5568; color: white;
-            padding: 10px; border-radius: 5px; width: 70%; text-align: center;
-            font-size: 1.1rem; outline: none; text-transform: uppercase;
+            padding: 10px; border-radius: 5px; width: 80%; text-align: center;
+            font-size: 1.1rem; outline: none;
         }
         
         .action-btn {
@@ -131,10 +125,9 @@
         </div>
     </div>
 
-    <!-- Leaderboard / Start / End Screen -->
     <div id="leaderboard-panel">
         <h1 class="text-3xl font-bold text-yellow-400 mb-1" style="text-shadow: 2px 2px 0 #000;">WORLD TOUR</h1>
-        <p class="text-xs text-gray-400 mb-4">BATTEZ LE FANTÔME DU CHAMPION</p>
+        <p class="text-xs text-gray-400 mb-4">BATTEZ LE CHAMPION</p>
 
         <div id="scores-list" class="mb-4 text-left bg-gray-800 rounded p-2 max-h-48 overflow-y-auto">
             <div class="text-center text-gray-500 text-sm py-4">Chargement...</div>
@@ -145,7 +138,8 @@
         <div id="name-input-area">
             <h2 class="text-xl font-bold text-white mb-2">NOUVEAU RECORD !</h2>
             <div class="text-yellow-300 text-2xl font-mono mb-4" id="final-time-display">00:00.00</div>
-            <input type="text" id="player-name" placeholder="PSEUDO (3 Lettres)" maxlength="3">
+            <!-- Maxlength passé à 15 pour accepter les prénoms entiers -->
+            <input type="text" id="player-name" placeholder="VOTRE PSEUDO" maxlength="15">
             <button id="submit-score-btn" class="action-btn">ENREGISTRER</button>
         </div>
     </div>
@@ -164,14 +158,11 @@
     <canvas id="gameCanvas"></canvas>
 
     <script>
-        // ==========================================
-        // 0. ASSETS & INIT
-        // ==========================================
         const carSpriteSrc = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 80'%3E%3Cdefs%3E%3ClinearGradient id='bodyGrad' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' style='stop-color:%23c53030' /%3E%3Cstop offset='50%25' style='stop-color:%23e53e3e' /%3E%3Cstop offset='100%25' style='stop-color:%239b2c2c' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='2' y='2' width='40' height='76' rx='8' fill='rgba(0,0,0,0.3)' /%3E%3Cpath d='M6,10 Q2,20 2,40 Q2,60 6,70 L6,76 Q6,78 8,78 L36,78 Q38,78 38,76 L38,70 Q42,60 42,40 Q42,20 38,10 L36,4 Q36,2 34,2 L10,2 Q8,2 8,4 Z' fill='url(%23bodyGrad)' stroke='%23742a2a' stroke-width='1' /%3E%3Cpath d='M8,20 L36,20 L34,32 L10,32 Z' fill='%232d3748' /%3E%3Cpath d='M10,48 L34,48 L36,60 L8,60 Z' fill='%231a202c' /%3E%3Crect x='9' y='33' width='26' height='14' fill='%23e53e3e' /%3E%3Crect x='20' y='2' width='4' height='78' fill='rgba(255,255,255,0.8)' /%3E%3Crect x='4' y='68' width='36' height='8' rx='2' fill='%23742a2a' /%3E%3Crect x='6' y='4' width='6' height='4' fill='%23faf089' /%3E%3Crect x='32' y='4' width='6' height='4' fill='%23faf089' /%3E%3C/svg%3E";
         const carImage = new Image(); carImage.src = carSpriteSrc;
 
         // ==========================================
-        // 1. DATA & CLOUD (LEADERBOARD)
+        // 1. DATA & CLOUD
         // ==========================================
         window.Cloud = {
             db: null,
@@ -207,8 +198,6 @@
 
                     snapshot.forEach(doc => {
                         const data = doc.data();
-                        
-                        // Si c'est le rank 1, on récupère son fantôme
                         if (rank === 1) {
                             this.worldRecordTime = data.timeMs;
                             document.getElementById('wr-display').innerText = data.timeStr;
@@ -216,37 +205,34 @@
                                 try {
                                     this.globalGhostData = JSON.parse(data.ghostData);
                                     GhostSystem.setGlobalGhost(this.globalGhostData);
-                                    console.log("Fantôme mondial chargé !");
-                                } catch(e) { console.error("Erreur parsing ghost", e); }
+                                    console.log("Fantôme chargé: " + this.globalGhostData.length + " points");
+                                } catch(e) { console.error("Erreur ghost", e); }
                             }
                         }
-
                         const row = document.createElement('div');
                         row.className = 'score-row';
                         row.innerHTML = `<span>#${rank} ${data.name}</span><span>${data.timeStr}</span>`;
                         listEl.appendChild(row);
                         rank++;
                     });
-                }, (error) => {
-                    console.error("Erreur lecture scores:", error);
-                    // Pas d'affichage d'erreur bloquant, peut-être juste des règles Firestore non initialisées
-                });
+                }, (error) => console.error("Erreur scores:", error));
             },
 
             saveScore: async function(name, timeMs, timeStr, ghostData) {
-                if(!this.db) {
-                    alert("Pas de connexion à la base de données.");
-                    return false;
-                }
+                if(!this.db) { alert("Pas de connexion."); return false; }
                 const { collection, addDoc } = window.fs;
                 
                 const ghostString = JSON.stringify(ghostData);
-                // Limite de taille pour éviter les erreurs Firestore (1MB limit)
-                const safeGhost = ghostString.length < 900000 ? ghostString : null; 
+                console.log("Taille Fantôme (chars):", ghostString.length);
+                
+                // Limite Firestore ~1MB (1,048,576 bytes). On garde une marge.
+                const safeGhost = ghostString.length < 950000 ? ghostString : null; 
+
+                if(!safeGhost) console.warn("Fantôme trop volumineux, ignoré.");
 
                 try {
                     await addDoc(collection(this.db, this.collectionId), {
-                        name: name.toUpperCase(),
+                        name: name.trim(), 
                         timeMs: timeMs,
                         timeStr: timeStr,
                         ghostData: safeGhost,
@@ -255,21 +241,23 @@
                     return true;
                 } catch(e) {
                     console.error("Erreur sauvegarde:", e);
-                    alert("Erreur: Impossible d'enregistrer. Vérifiez les règles Firestore.");
+                    alert("Erreur sauvegarde. Vérifiez connexion.");
                     return false;
                 }
             }
         };
 
         // ==========================================
-        // 2. GHOST SYSTEM (Local + Global)
+        // 2. GHOST SYSTEM (OPTIMISÉ POUR RÉSEAU)
         // ==========================================
         const GhostSystem = {
-            recording: [],       // Mon tour actuel
-            globalFrames: null,  // Le tour du champion (Remote)
+            recording: [],
+            globalFrames: null,
+            recordCounter: 0,
             
             resetRecording: function() {
                 this.recording = [];
+                this.recordCounter = 0;
             },
 
             setGlobalGhost: function(data) {
@@ -277,16 +265,19 @@
             },
 
             recordFrame: function(time, car) {
-                // On enregistre à chaque frame pour fluidité, mais on arrondit pour gagner de la place
+                // OPTIMISATION : Enregistre 1 frame sur 4 (15 FPS)
+                // Cela réduit la taille du fichier par 4 pour passer sur le réseau
+                this.recordCounter++;
+                if (this.recordCounter % 4 !== 0) return;
+
                 this.recording.push({
                     t: Math.round(time),
                     x: Math.round(car.x),
                     y: Math.round(car.y),
-                    a: parseFloat(car.angle.toFixed(3))
+                    a: parseFloat(car.angle.toFixed(2))
                 });
             },
 
-            // Dessine le fantôme mondial
             drawGlobalGhost: function(ctx, time) {
                 if (!this.globalFrames || this.globalFrames.length < 2) return;
                 
@@ -302,38 +293,35 @@
                 
                 if (!next) return;
 
-                // Interpolation
                 const ratio = (time - curr.t) / (next.t - curr.t);
                 const clampedRatio = Math.max(0, Math.min(1, ratio));
 
                 const x = curr.x + (next.x - curr.x) * clampedRatio;
                 const y = curr.y + (next.y - curr.y) * clampedRatio;
+                // Interpolation basique de l'angle
                 const a = curr.a + (next.a - curr.a) * clampedRatio;
 
                 ctx.save();
                 ctx.translate(x, y);
-                ctx.rotate(a + Math.PI/2); // Correction orientation
+                ctx.rotate(a + Math.PI/2); 
 
-                // Style "Champion Fantôme" (Doré)
                 ctx.globalAlpha = 0.5;
                 if(carImage.complete) {
                     ctx.drawImage(carImage, -22, -40, 44, 80);
-                    // Tint Gold
                     ctx.globalCompositeOperation = 'source-atop';
-                    ctx.fillStyle = 'rgba(251, 191, 36, 0.6)'; 
+                    ctx.fillStyle = 'rgba(251, 191, 36, 0.6)'; // Or
                     ctx.fillRect(-22, -40, 44, 80);
                 } else {
                     ctx.fillStyle = '#fbbf24';
                     ctx.fillRect(-11, -19, 22, 38);
                 }
                 
-                // Label
                 ctx.globalAlpha = 0.8;
                 ctx.globalCompositeOperation = 'source-over';
                 ctx.fillStyle = "#fbbf24";
                 ctx.font = "bold 10px Arial";
                 ctx.textAlign = "center";
-                ctx.fillText("WORLD #1", 0, -45);
+                ctx.fillText("CHAMPION", 0, -45);
 
                 ctx.restore();
             }
@@ -433,7 +421,7 @@
                     this.lapStartTime = now;
                     document.getElementById('lap-display').innerText = `${this.currentLap} / ${this.totalLaps}`;
                     this.checkpoints.forEach(cp => cp.p = false);
-                    GhostSystem.resetRecording(); // Reset pour enregistrer le nouveau tour proprement
+                    GhostSystem.resetRecording(); 
                 }
             },
 
@@ -460,7 +448,6 @@
                     newBtn.innerText = "ENVOI...";
                     newBtn.disabled = true;
 
-                    // Sauvegarde du meilleur tour
                     const saved = await window.Cloud.saveScore(name, timeToSubmit, timeStr, GhostSystem.recording);
                     
                     if (saved) {
@@ -555,12 +542,10 @@
         
         Track.init();
 
-        // Controls
         const keys = {ArrowUp:'u',ArrowDown:'d',ArrowLeft:'l',ArrowRight:'r'};
         window.onkeydown = e => { if(keys[e.key]) car.controls[keys[e.key]]=true; }
         window.onkeyup = e => { if(keys[e.key]) car.controls[keys[e.key]]=false; }
         
-        // Touch
         const bindTouch = (id,k) => {
             const el=document.getElementById(id);
             el.ontouchstart=e=>{e.preventDefault();car.controls[k]=true;el.classList.add('active')};
@@ -574,15 +559,12 @@
             car.update();
             RaceManager.update(car);
             
-            // Camera
             ctx.fillStyle = TRACK_CONFIG.grassColor; ctx.fillRect(0,0,canvas.width,canvas.height);
             ctx.save();
             let camX = canvas.width/2 - car.x;
             let camY = canvas.height/2 - car.y;
-            
             camX -= car.vx * 10;
             camY -= car.vy * 10;
-            
             ctx.translate(camX, camY);
 
             Track.draw(ctx);
