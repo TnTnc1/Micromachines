@@ -287,16 +287,14 @@
             id: 'beginner',
             name: 'DÉBUTANT',
             // Physique "Gokart" (Grippy) pour débutant
-            // Acceleration + haute pour compenser la friction
-            // Friction basse (0.92) = s'arrête vite, ne glisse pas
-            physics: { acceleration: 0.28, maxSpeed: 8.5, friction: 0.92, turnSpeed: 0.09, offRoadFriction: 0.85 },
+            // Vitesse encore réduite à 6.5 (vs 12.5 Normal) pour un contrôle parfait
+            physics: { acceleration: 0.28, maxSpeed: 6.5, friction: 0.92, turnSpeed: 0.09, offRoadFriction: 0.85 },
             collection: 'world_tour_records_v3_beginner',
             colors: { body1: '#d97706', body2: '#fbbf24', body3: '#fcd34d', wing: '#92400e' }
         },
         normal: {
             id: 'normal',
             name: 'NORMAL',
-            // Physique équilibrée (Drift contrôlable)
             physics: { acceleration: 0.22, maxSpeed: 12.5, friction: 0.965, turnSpeed: 0.075, offRoadFriction: 0.75 },
             collection: 'world_tour_records_v3_normal',
             colors: { body1: '#c53030', body2: '#e53e3e', body3: '#fc8181', wing: '#742a2a' }
@@ -304,34 +302,31 @@
         expert: {
             id: 'expert',
             name: 'EXPERT',
-            // Physique extrême (Glace/Drift pur)
-            physics: { acceleration: 0.35, maxSpeed: 22.0, friction: 0.98, turnSpeed: 0.085, offRoadFriction: 0.6 },
+            // Vitesse réduite de 22.0 à 16.5 pour être jouable sur 120Hz
+            physics: { acceleration: 0.28, maxSpeed: 16.5, friction: 0.97, turnSpeed: 0.08, offRoadFriction: 0.65 },
             collection: 'world_tour_records_v3_expert',
             colors: { body1: '#111827', body2: '#1f2937', body3: '#374151', wing: '#000000' }
         }
     };
 
-    let currentMode = MODES.normal; // Défaut
+    let currentMode = MODES.normal; 
 
     // Générateur de voiture dynamique
     function getCarSpriteUrl(colors) {
-        // On remplace les couleurs dans le SVG template
         return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 80'%3E%3Cdefs%3E%3ClinearGradient id='bodyGrad' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' style='stop-color:${encodeURIComponent(colors.body1)}' /%3E%3Cstop offset='50%25' style='stop-color:${encodeURIComponent(colors.body2)}' /%3E%3Cstop offset='100%25' style='stop-color:${encodeURIComponent(colors.body1)}' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='2' y='2' width='40' height='76' rx='8' fill='rgba(0,0,0,0.3)' /%3E%3Cpath d='M6,10 Q2,20 2,40 Q2,60 6,70 L6,76 Q6,78 8,78 L36,78 Q38,78 38,76 L38,70 Q42,60 42,40 Q42,20 38,10 L36,4 Q36,2 34,2 L10,2 Q8,2 8,4 Z' fill='url(%23bodyGrad)' stroke='${encodeURIComponent(colors.wing)}' stroke-width='1' /%3E%3Cpath d='M8,20 L36,20 L34,32 L10,32 Z' fill='%232d3748' /%3E%3Cpath d='M10,48 L34,48 L36,60 L8,60 Z' fill='%231a202c' /%3E%3Crect x='9' y='33' width='26' height='14' fill='${encodeURIComponent(colors.body2)}' /%3E%3Crect x='4' y='68' width='36' height='8' rx='2' fill='${encodeURIComponent(colors.wing)}' /%3E%3Crect x='6' y='4' width='6' height='4' fill='%23faf089' /%3E%3Crect x='32' y='4' width='6' height='4' fill='%23faf089' /%3E%3C/svg%3E`;
     }
 
     const carImage = new Image(); 
-    // Chargement initial
     carImage.src = getCarSpriteUrl(currentMode.colors);
 
     // --- 2. GESTION CLOUD ---
     window.Cloud = {
       db: null, worldRecordTime: Infinity, globalGhostData: null, unsubscribe: null,
-      init: function(database) { this.db = database; }, // Just store DB ref, don't listen yet
+      init: function(database) { this.db = database; }, 
       loadLeaderboard: function(modeConfig) {
         if(!this.db) return;
-        if(this.unsubscribe) this.unsubscribe(); // Stop listening to previous mode
+        if(this.unsubscribe) this.unsubscribe(); 
         
-        // Reset local ghost
         this.worldRecordTime = Infinity;
         this.globalGhostData = null;
         GhostSystem.setGlobalGhost(null);
@@ -445,6 +440,7 @@
             const t = Date.now() / 200; const wave = Math.sin(t) * 10;
             ctx.save(); ctx.translate(-120, -100); ctx.rotate(-0.2); ctx.fillStyle="#fff"; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(40, 10+wave); ctx.lineTo(40, 40+wave); ctx.lineTo(0, 30); ctx.fill(); ctx.fillStyle="#000"; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(20, 5+wave/2); ctx.lineTo(20, 20+wave/2); ctx.lineTo(0, 15); ctx.fill(); ctx.beginPath(); ctx.moveTo(20, 20+wave/2); ctx.lineTo(40, 25+wave); ctx.lineTo(40, 40+wave); ctx.lineTo(20, 35+wave/2); ctx.fill(); ctx.restore();
             ctx.save(); ctx.translate(110, -100); ctx.rotate(0.2); ctx.fillStyle="#fff"; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(40, 10-wave); ctx.lineTo(40, 40-wave); ctx.lineTo(0, 30); ctx.fill(); ctx.fillStyle="#000"; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(20, 5-wave/2); ctx.lineTo(20, 20-wave/2); ctx.lineTo(0, 15); ctx.fill(); ctx.beginPath(); ctx.moveTo(20, 20-wave/2); ctx.lineTo(40, 25-wave); ctx.lineTo(40, 40-wave); ctx.lineTo(20, 35-wave/2); ctx.fill(); ctx.restore();
+            ctx.restore();
             ctx.restore();
         }
     };
@@ -723,7 +719,8 @@
       if (deltaTime > 250) deltaTime = 250;
       accumulator += deltaTime;
 
-      while (accumulator >= FIXED_TIME_STEP) {
+      let steps = 0;
+      while (accumulator >= FIXED_TIME_STEP && steps < 5) {
         if (RaceManager.state === 'racing' || RaceManager.state === 'rolling') {
           if (RaceManager.state === 'rolling') {
              car.controls = { u: true, d: false, l: false, r: false };
@@ -733,7 +730,10 @@
         }
         Particles.update(); 
         accumulator -= FIXED_TIME_STEP;
+        steps++;
       }
+      // Safety clamp
+      if (accumulator > FIXED_TIME_STEP) accumulator = 0;
 
       ctx.clearRect(0,0,canvas.width,canvas.height); 
       ctx.save();
