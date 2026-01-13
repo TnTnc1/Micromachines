@@ -72,7 +72,8 @@
     /* HUD */
     #hud-layer{
       position:absolute; top:0; left:0; width:100%;
-      padding: 10px; pointer-events:none; z-index:10;
+      padding: 10px; /* Reduced padding for mobile */
+      pointer-events:none; z-index:10;
       display:flex; justify-content:space-between; gap:6px;
     }
     .hud-card{
@@ -86,6 +87,7 @@
       min-width: 80px; flex-shrink: 1;
     }
     .hud-top{ display:flex; align-items:center; gap:6px; opacity:0.95; }
+    .hud-ico{ width:14px; height:14px; opacity:0.9; }
     .label{ font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.85; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
     .sub-info{ font-family: Orbitron, monospace; font-size: 1rem; margin-top: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
     .big-time{ 
@@ -284,26 +286,27 @@
         beginner: {
             id: 'beginner',
             name: 'DÉBUTANT',
-            // Vitesse encore réduite : 9.0 -> 6.5
-            physics: { acceleration: 0.15, maxSpeed: 6.5, friction: 0.98, turnSpeed: 0.065, offRoadFriction: 0.8 },
+            // Physique "Gokart" (Grippy) pour débutant
+            // Acceleration + haute pour compenser la friction
+            // Friction basse (0.92) = s'arrête vite, ne glisse pas
+            physics: { acceleration: 0.28, maxSpeed: 8.5, friction: 0.92, turnSpeed: 0.09, offRoadFriction: 0.85 },
             collection: 'world_tour_records_v3_beginner',
-            // Jaune/Or pour débutant
             colors: { body1: '#d97706', body2: '#fbbf24', body3: '#fcd34d', wing: '#92400e' }
         },
         normal: {
             id: 'normal',
             name: 'NORMAL',
+            // Physique équilibrée (Drift contrôlable)
             physics: { acceleration: 0.22, maxSpeed: 12.5, friction: 0.965, turnSpeed: 0.075, offRoadFriction: 0.75 },
             collection: 'world_tour_records_v3_normal',
-            // Rouge (Style original)
             colors: { body1: '#c53030', body2: '#e53e3e', body3: '#fc8181', wing: '#742a2a' }
         },
         expert: {
             id: 'expert',
             name: 'EXPERT',
-            physics: { acceleration: 0.35, maxSpeed: 22.0, friction: 0.96, turnSpeed: 0.085, offRoadFriction: 0.6 },
+            // Physique extrême (Glace/Drift pur)
+            physics: { acceleration: 0.35, maxSpeed: 22.0, friction: 0.98, turnSpeed: 0.085, offRoadFriction: 0.6 },
             collection: 'world_tour_records_v3_expert',
-            // Noir / Gris foncé (Style Tueur)
             colors: { body1: '#111827', body2: '#1f2937', body3: '#374151', wing: '#000000' }
         }
     };
