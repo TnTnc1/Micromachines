@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+=<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
@@ -253,11 +253,13 @@
     <!-- Reduced min-width and added centering logic for better mobile fit -->
     <div class="hud-card" style="text-align:center; min-width: 110px; flex: 1; max-width: 200px;">
       <div class="hud-top" style="justify-content:center;"><div class="label">Chrono</div></div>
-      <div id="time-display" class="big-time">00:00.00</div>
+      <!-- Updated default time format to include milliseconds -->
+      <div id="time-display" class="big-time">00:00.000</div>
     </div>
     <div class="hud-card" style="text-align:right;">
       <div class="hud-top" style="justify-content:flex-end;"><div class="label">Record</div></div>
-      <div id="wr-display" class="sub-info" style="color:#fbbf24;">--:--.--</div>
+      <!-- Updated default record format to include milliseconds -->
+      <div id="wr-display" class="sub-info" style="color:#fbbf24;">--:--.---</div>
     </div>
   </div>
 
@@ -291,7 +293,8 @@
     <button id="start-btn" class="action-btn">DÉMARRER</button>
     <div id="name-input-area" style="display:none; margin-top: 14px;">
       <h2 class="text-xl font-black mb-2 text-white">NOUVEAU RECORD !</h2>
-      <div class="text-yellow-300 text-2xl font-mono mb-3" id="final-time-display">00:00.00</div>
+      <!-- Updated final time format default -->
+      <div class="text-yellow-300 text-2xl font-mono mb-3" id="final-time-display">00:00.000</div>
       <input type="text" id="player-name" placeholder="VOTRE PSEUDO" maxlength="15">
       <button id="submit-score-btn" class="action-btn">ENREGISTRER</button>
     </div>
@@ -593,7 +596,7 @@
         document.getElementById('pause-btn').style.display='none'; 
         document.getElementById('mobile-controls').style.display='flex';
         document.getElementById('lap-display').innerText = `1 / ${this.totalLaps}`;
-        document.getElementById('time-display').innerText = "00:00.00";
+        document.getElementById('time-display').innerText = "00:00.000";
         
         // Show "LANCEMENT..." text
         const cd = document.getElementById('countdown-layer');
@@ -659,7 +662,12 @@
           else { newBtn.innerText = "RÉESSAYER"; newBtn.disabled = false; }
         };
       },
-      formatTime(ms){ let m = Math.floor(ms/60000), s = Math.floor((ms%60000)/1000), c = Math.floor((ms%1000)/10); return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}.${c.toString().padStart(2,'0')}`; }
+      formatTime(ms){ 
+        let m = Math.floor(ms/60000);
+        let s = Math.floor((ms%60000)/1000);
+        let mil = ms % 1000; 
+        return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}.${mil.toString().padStart(3,'0')}`; 
+      }
     };
 
     class Car{
