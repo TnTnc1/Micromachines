@@ -6,12 +6,10 @@
   <title>Drift NC - Lagoon</title>
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Fonts (look arcade) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
-  <!-- Firebase Imports & Configuration -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-analytics.js";
@@ -155,7 +153,6 @@
     .mode-btn:hover { transform: scale(1.05); filter: brightness(1.2); }
     .mode-btn:active { transform: scale(0.95); }
 
-    .btn-beginner { background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%); border-color: #fde047; }
     .btn-normal { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); border-color: #fca5a5; }
     .btn-expert { background: linear-gradient(135deg, #1f2937 0%, #000000 100%); border-color: #9ca3af; }
 
@@ -243,7 +240,6 @@
     
     <div class="mb-2 text-sm text-gray-200 font-bold tracking-widest uppercase">Choisis ta catégorie</div>
     <div class="mode-container">
-        <button id="btn-mode-beginner" class="mode-btn btn-beginner">DÉBUTANT</button>
         <button id="btn-mode-normal" class="mode-btn btn-normal">NORMAL</button>
         <button id="btn-mode-expert" class="mode-btn btn-expert">EXPERT</button>
     </div>
@@ -273,7 +269,6 @@
     </div>
   </div>
 
-  <!-- Countdown Element -->
   <div id="countdown-layer"></div>
 
   <canvas id="gameCanvas"></canvas>
@@ -281,15 +276,7 @@
   <script>
     // --- 1. CONFIGURATION DES MODES ---
     const MODES = {
-        beginner: {
-            id: 'beginner',
-            name: 'DÉBUTANT',
-            // Vitesse encore réduite : 9.0 -> 6.5
-            physics: { acceleration: 0.15, maxSpeed: 6.5, friction: 0.98, turnSpeed: 0.065, offRoadFriction: 0.8 },
-            collection: 'world_tour_records_v3_beginner',
-            // Jaune/Or pour débutant
-            colors: { body1: '#d97706', body2: '#fbbf24', body3: '#fcd34d', wing: '#92400e' }
-        },
+        // Mode débutant supprimé de la configuration
         normal: {
             id: 'normal',
             name: 'NORMAL',
@@ -699,7 +686,7 @@
     bindTouch('btn-left','l'); bindTouch('btn-right','r'); bindTouch('btn-gas','u'); bindTouch('btn-brake','d');
 
     // BIND MODE BUTTONS
-    document.getElementById('btn-mode-beginner').onclick = () => RaceManager.selectMode('beginner');
+    // document.getElementById('btn-mode-beginner') : SUPPRIMÉ
     document.getElementById('btn-mode-normal').onclick = () => RaceManager.selectMode('normal');
     document.getElementById('btn-mode-expert').onclick = () => RaceManager.selectMode('expert');
 
