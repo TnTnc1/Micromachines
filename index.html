@@ -317,17 +317,67 @@
       }
     };
 
+    // VISUAL HELPERS - RE-ADDED NOISE GENERATION
+    function makeNoisePattern(size=128){
+      const c = document.createElement('canvas'); c.width = c.height = size;
+      const nctx = c.getContext('2d');
+      const img = nctx.createImageData(size, size);
+      for(let i=0;i<img.data.length;i+=4){
+        const v = (Math.random()*255)|0;
+        img.data[i] = v; img.data[i+1] = v; img.data[i+2] = v; img.data[i+3] = 20;
+      }
+      nctx.putImageData(img,0,0);
+      return { canvas:c, pattern:null };
+    }
+
     const VIS = {
-        // Simple sparkle particles for water
+        noise: makeNoisePattern(160),
         seaParticles: [],
+        tires: [],
+        palms: [],
+        ensurePatterns(ctx){ if(!this.noise.pattern) this.noise.pattern = ctx.createPattern(this.noise.canvas, 'repeat'); },
+        drawVignette(ctx, w, h){
+            ctx.save(); const g = ctx.createRadialGradient(w/2, h/2, Math.min(w,h)*0.20, w/2, h/2, Math.min(w,h)*0.70);
+            g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.55)');
+            ctx.fillStyle = g; ctx.fillRect(0,0,w,h); ctx.restore();
+        },
+        drawFilmGrain(ctx, w, h){
+            this.ensurePatterns(ctx); ctx.save(); ctx.globalAlpha = 0.08; ctx.fillStyle = this.noise.pattern; ctx.fillRect(0,0,w,h); ctx.restore();
+        },
         initSea(){ for(let i=0; i<50; i++) this.seaParticles.push({x:Math.random()*3000, y:Math.random()*3000, t:Math.random()*Math.PI*2}); },
+        initTires(){
+            const addStack = (x,y) => {
+                for(let i=0;i<3;i++) this.tires.push({x:x+(Math.random()-0.5)*20, y:y+(Math.random()-0.5)*20, c:Math.random()>0.5?'#ef4444':'#ffffff'});
+            };
+            addStack(400 - 100, -400); addStack(400 - 90, -380); 
+            addStack(400 - 100, 0); 
+            addStack(-100 + 80, 400); 
+            addStack(-550, 450); 
+        },
+        initPalms(track){
+            for(let i=0; i<60; i++){
+                let x,y, safe=false;
+                for(let k=0; k<10; k++){
+                    x = 500 + Math.random()*2000; y = 500 + Math.random()*2000;
+                    if(track.check(x-1500, y-1500) === 'sand') { safe=true; break; }
+                }
+                if(safe) this.palms.push({x: x-1500, y: y-1500, s: 0.8+Math.random()*0.5, r: Math.random()*Math.PI});
+            }
+        },
+        drawTires(ctx){
+            for(let t of this.tires){
+                ctx.save(); ctx.translate(t.x, t.y);
+                ctx.shadowColor="rgba(0,0,0,0.5)"; ctx.shadowBlur=5;
+                ctx.fillStyle="#1a1a1a"; ctx.beginPath(); ctx.arc(0,0,12,0,Math.PI*2); ctx.fill();
+                ctx.shadowBlur=0;
+                ctx.strokeStyle=t.c; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0,0,6,0,Math.PI*2); ctx.stroke();
+                ctx.restore();
+            }
+        },
         drawSea(ctx){
-            // Gradient Sea
             const g = ctx.createRadialGradient(1500, 1500, 0, 1500, 1500, 2000);
             g.addColorStop(0, '#06b6d4'); g.addColorStop(1, '#0c4a6e');
             ctx.fillStyle = g; ctx.fillRect(0,0,3000,3000);
-            
-            // Sparkles
             ctx.fillStyle = "rgba(255,255,255,0.3)";
             for(let p of this.seaParticles){
                 p.t += 0.05;
@@ -337,38 +387,38 @@
             }
             ctx.globalAlpha = 1;
         },
-        // Palm trees logic
-        palms: [],
-        initPalms(track){
-            for(let i=0; i<60; i++){
-                let x,y, safe=false;
-                // Try to find a spot on SAND (not road, not water)
-                // Since our map is sand island, just need to be not on road.
-                // We simulate map box approx 800-2200 range
-                for(let k=0; k<10; k++){
-                    x = 500 + Math.random()*2000; y = 500 + Math.random()*2000;
-                    if(track.check(x-1500, y-1500) === 'sand') { safe=true; break; }
-                }
-                if(safe) this.palms.push({x: x-1500, y: y-1500, s: 0.8+Math.random()*0.5, r: Math.random()*Math.PI});
-            }
-        },
         drawPalms(ctx){
             for(let p of this.palms){
                 ctx.save(); ctx.translate(p.x, p.y); ctx.scale(p.s, p.s);
-                // Shadow
                 ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.beginPath(); ctx.ellipse(5, 5, 8, 8, 0, 0, Math.PI*2); ctx.fill();
-                // Trunk (top down dot)
                 ctx.fillStyle = "#5d4037"; ctx.beginPath(); ctx.arc(0,0, 6, 0, Math.PI*2); ctx.fill();
-                // Leaves
                 ctx.fillStyle = "#16a34a";
                 for(let j=0; j<7; j++){
                     ctx.rotate((Math.PI*2)/7);
                     ctx.beginPath(); ctx.ellipse(0, -15, 6, 20, 0, 0, Math.PI*2); ctx.fill();
-                    // Detail
                     ctx.strokeStyle = "#14532d"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(0,-5); ctx.lineTo(0,-30); ctx.stroke();
                 }
                 ctx.restore();
             }
+        },
+        drawFinishArch(ctx){
+            ctx.save(); ctx.translate(0, -600);
+            ctx.fillStyle = "#374151"; ctx.fillRect(-120, -100, 10, 100); ctx.fillRect(110, -100, 10, 100);
+            ctx.fillStyle = "#1f2937"; ctx.fillRect(-120, -100, 240, 20);
+            ctx.fillStyle = "#fbbf24"; ctx.fillRect(-60, -115, 120, 30);
+            ctx.fillStyle = "#000"; ctx.font = "bold 16px Orbitron"; ctx.textAlign = "center"; ctx.fillText("DRIFT NC", 0, -95);
+            const t = Date.now() / 200; const wave = Math.sin(t) * 10;
+            ctx.save(); ctx.translate(-120, -100); ctx.rotate(-0.2);
+            ctx.fillStyle="#fff"; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(40, 10+wave); ctx.lineTo(40, 40+wave); ctx.lineTo(0, 30); ctx.fill();
+            ctx.fillStyle="#000"; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(20, 5+wave/2); ctx.lineTo(20, 20+wave/2); ctx.lineTo(0, 15); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(20, 20+wave/2); ctx.lineTo(40, 25+wave); ctx.lineTo(40, 40+wave); ctx.lineTo(20, 35+wave/2); ctx.fill();
+            ctx.restore();
+            ctx.save(); ctx.translate(110, -100); ctx.rotate(0.2);
+            ctx.fillStyle="#fff"; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(40, 10-wave); ctx.lineTo(40, 40-wave); ctx.lineTo(0, 30); ctx.fill();
+            ctx.fillStyle="#000"; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(20, 5-wave/2); ctx.lineTo(20, 20-wave/2); ctx.lineTo(0, 15); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(20, 20-wave/2); ctx.lineTo(40, 25-wave); ctx.lineTo(40, 40-wave); ctx.lineTo(20, 35-wave/2); ctx.fill();
+            ctx.restore();
+            ctx.restore();
         }
     };
 
@@ -379,42 +429,30 @@
         this.list.push({
           x,y, vx,vy,
           r: kind==='smoke' ? 8+Math.random()*10 : 5+Math.random()*8,
-          a: kind==='smoke' ? 0.30 : 0.25,
-          d: kind==='smoke' ? 0.010 : 0.014,
+          a: kind==='smoke' ? 0.40 : 0.25, // More smoke
+          d: kind==='smoke' ? 0.008 : 0.014, // Slower fade
           kind
         });
       },
       update(){
         for(const p of this.list){
-          p.x += p.vx;
-          p.y += p.vy;
-          p.r *= 1.015;
-          p.a -= p.d;
+          p.x += p.vx; p.y += p.vy; p.r *= 1.015; p.a -= p.d;
         }
         this.list = this.list.filter(p => p.a > 0);
       },
       draw(ctx){
         ctx.save();
         for(const p of this.list){
-          if(p.kind==='smoke'){
-            ctx.fillStyle = `rgba(255,255,255,${p.a})`;
-          }else{
-            ctx.fillStyle = `rgba(190,255,215,${p.a*0.65})`;
-          }
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-          ctx.fill();
+          if(p.kind==='smoke'){ ctx.fillStyle = `rgba(255,255,255,${p.a})`; }
+          else{ ctx.fillStyle = `rgba(190,255,215,${p.a*0.65})`; }
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
         }
         ctx.restore();
       }
     };
 
-    const PHYSICS = { acceleration: 0.22, maxSpeed: 12.5, friction: 0.965, turnSpeed: 0.075, offRoadFriction: 0.75 }; // Sand slower
-    const TRACK_CONFIG = {
-      roadColor: '#334155', // Dark slate
-      sandColor: '#fcd34d', // Amber 300
-      lineWidth: 160
-    };
+    const PHYSICS = { acceleration: 0.22, maxSpeed: 12.5, friction: 0.965, turnSpeed: 0.075, offRoadFriction: 0.75 }; 
+    const TRACK_CONFIG = { roadColor: '#334155', sandColor: '#fcd34d', lineWidth: 160 };
 
     const Track = {
       collisionCtx: null, mapW: 3000, mapH: 3000,
@@ -423,6 +461,7 @@
         this.collisionCtx = c.getContext('2d', { willReadFrequently: true });
         this.drawCollisionMask();
         VIS.initSea();
+        VIS.initTires(); // Tires added
         VIS.initPalms(this);
       },
       trace(ctx){
@@ -436,88 +475,38 @@
       },
       drawCollisionMask(){
         const ctx = this.collisionCtx;
-        // Fill grass/sea check background as transparent (sea)
         ctx.clearRect(0,0,3000,3000);
         ctx.save(); ctx.translate(1500, 1500);
-        
-        // 1. Draw Sand Island (Thick base)
         ctx.lineCap='round'; ctx.lineJoin='round';
-        ctx.strokeStyle = '#FF0000'; // Code Red = Sand in check
-        ctx.lineWidth = 450; // Island width
-        this.trace(ctx); ctx.stroke();
-
-        // 2. Draw Road
-        ctx.strokeStyle = '#FFFFFF'; // White = Road
-        ctx.lineWidth = TRACK_CONFIG.lineWidth;
-        this.trace(ctx); ctx.stroke();
+        ctx.strokeStyle = '#FF0000'; ctx.lineWidth = 450; this.trace(ctx); ctx.stroke();
+        ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = TRACK_CONFIG.lineWidth; this.trace(ctx); ctx.stroke();
         ctx.restore();
       },
       draw(ctx){
-        // 1. Sea Background
-        ctx.save(); ctx.translate(-1500, -1500);
-        VIS.drawSea(ctx);
-        ctx.restore();
-
+        ctx.save(); ctx.translate(-1500, -1500); VIS.drawSea(ctx); ctx.restore();
         ctx.lineCap='round'; ctx.lineJoin='round';
-
-        // 2. Sand Island (Beige)
         ctx.shadowColor = "rgba(0,0,0,0.2)"; ctx.shadowBlur = 20;
-        ctx.strokeStyle = TRACK_CONFIG.sandColor;
-        ctx.lineWidth = 450;
-        this.trace(ctx); ctx.stroke();
+        ctx.strokeStyle = TRACK_CONFIG.sandColor; ctx.lineWidth = 450; this.trace(ctx); ctx.stroke();
         ctx.shadowBlur = 0;
-
-        // Texture on Sand
-        ctx.save(); ctx.globalAlpha = 0.05; ctx.globalCompositeOperation = 'multiply';
-        ctx.strokeStyle = '#000'; ctx.lineWidth = 450; this.trace(ctx); ctx.stroke(); ctx.restore();
-
-        // 3. Foam Edge (Soft White around road/sand interface? No, maybe around the island)
-        // Let's do a faint white wash at the edge of the sand
-        ctx.save();
-        ctx.globalCompositeOperation = 'overlay';
-        ctx.strokeStyle = "rgba(255,255,255,0.4)";
-        ctx.lineWidth = 480; // Slightly larger than sand
-        ctx.shadowColor = "#fff"; ctx.shadowBlur = 30;
-        this.trace(ctx); ctx.stroke();
-        ctx.restore();
-
-        // 4. "Kerbs" = Foam / White Beach Sand
-        ctx.strokeStyle = '#fef3c7'; // Very light yellow/white
-        ctx.lineWidth = 176;
-        this.trace(ctx); ctx.stroke();
-
-        // 5. Road
-        ctx.strokeStyle = TRACK_CONFIG.roadColor;
-        ctx.lineWidth = 160;
-        this.trace(ctx); ctx.stroke();
-
-        // Dashed Line
-        ctx.save(); ctx.globalAlpha = 0.3; ctx.strokeStyle = '#fff'; ctx.setLineDash([40, 40]); ctx.lineWidth = 4;
-        this.trace(ctx); ctx.stroke(); ctx.restore();
-
-        // Start Line
-        ctx.save(); ctx.translate(0, -600);
-        ctx.fillStyle = '#fff'; ctx.fillRect(-12, -80, 24, 160);
-        ctx.fillStyle = '#000'; for(let y=-80;y<80;y+=20){ if((y/20)%2===0) ctx.fillRect(-12,y,12,20); else ctx.fillRect(0,y,12,20); }
-        ctx.restore();
-
-        // 6. Decor (Palms)
-        ctx.save(); ctx.translate(-1500, -1500); // Back to map coords for static objects
-        VIS.drawPalms(ctx); // Actually palms are static, so we can draw them here.
-        // Wait, translate context back to 0,0 relative to camera? 
-        // Track.draw is called with camera transform already applied (0,0 is center of track).
-        // My VIS.palms are stored relative to center (0,0). So:
-        ctx.restore(); // Undo the -1500
+        ctx.save(); ctx.globalAlpha = 0.05; ctx.globalCompositeOperation = 'multiply'; ctx.strokeStyle = '#000'; ctx.lineWidth = 450; this.trace(ctx); ctx.stroke(); ctx.restore();
+        ctx.save(); ctx.globalCompositeOperation = 'overlay'; ctx.strokeStyle = "rgba(255,255,255,0.4)"; ctx.lineWidth = 480; ctx.shadowColor = "#fff"; ctx.shadowBlur = 30; this.trace(ctx); ctx.stroke(); ctx.restore();
+        ctx.strokeStyle = '#fef3c7'; ctx.lineWidth = 176; this.trace(ctx); ctx.stroke();
+        ctx.strokeStyle = TRACK_CONFIG.roadColor; ctx.lineWidth = 160; this.trace(ctx); ctx.stroke();
+        ctx.save(); ctx.globalAlpha = 0.3; ctx.strokeStyle = '#fff'; ctx.setLineDash([40, 40]); ctx.lineWidth = 4; this.trace(ctx); ctx.stroke(); ctx.restore();
+        ctx.save(); ctx.translate(0, -600); ctx.fillStyle = '#fff'; ctx.fillRect(-12, -80, 24, 160); ctx.fillStyle = '#000'; for(let y=-80;y<80;y+=20){ if((y/20)%2===0) ctx.fillRect(-12,y,12,20); else ctx.fillRect(0,y,12,20); } ctx.restore();
         
-        VIS.drawPalms(ctx); // Draw relative to center
+        // Environment
+        VIS.drawTires(ctx);
+        VIS.drawFinishArch(ctx);
+        VIS.drawPalms(ctx);
       },
       check(x,y){
         const mx = Math.floor(x+1500), my = Math.floor(y+1500);
         if(mx<0||mx>=3000||my<0||my>=3000) return 'sea';
         const p = this.collisionCtx.getImageData(mx,my,1,1).data;
-        if(p[3]===0) return 'sea'; // Transparent
-        if(p[0]>200 && p[1]<50) return 'sand'; // Red drawn earlier
-        return 'road'; // White
+        if(p[3]===0) return 'sea'; 
+        if(p[0]>200 && p[1]<50) return 'sand'; 
+        return 'road'; 
       }
     };
 
@@ -573,10 +562,9 @@
         let f=0; if(this.controls.u) f=PHYSICS.acceleration; if(this.controls.d) f=-PHYSICS.acceleration*0.6;
         this.vx += Math.cos(this.angle)*f; this.vy += Math.sin(this.angle)*f;
         const surface = Track.check(this.x, this.y);
-        // Physics for surfaces: Road = fast, Sand = slow, Sea = very slow (sink)
         let fric = PHYSICS.friction;
         if(surface === 'sand') fric = PHYSICS.offRoadFriction;
-        if(surface === 'sea') fric = 0.5; // Water drag
+        if(surface === 'sea') fric = 0.5;
 
         this.speed = Math.hypot(this.vx, this.vy); this.vx *= fric; this.vy *= fric;
         if(this.speed>PHYSICS.maxSpeed){ const r = PHYSICS.maxSpeed/this.speed; this.vx*=r; this.vy*=r; this.speed = PHYSICS.maxSpeed; }
@@ -591,7 +579,6 @@
           this.skids.push({x:rearX+s*11, y:rearY-c*11, a:0.55, w:2.6}); this.skids.push({x:rearX-s*11, y:rearY+c*11, a:0.55, w:2.6});
           if(Math.random()<0.55) Particles.spawn(rearX, rearY, -this.vx*0.15+(Math.random()-0.5)*0.6, -this.vy*0.15+(Math.random()-0.5)*0.6, 'smoke');
         }
-        // Sand dust
         if(surface==='sand' && this.speed>3 && Math.random()<0.35) Particles.spawn(this.x, this.y, -this.vx*0.05, -this.vy*0.05, 'dust');
         
         for(const sk of this.skids) sk.a -= 0.012;
@@ -602,14 +589,14 @@
         for(const sk of this.skids){ ctx.strokeStyle = `rgba(0,0,0,${sk.a})`; ctx.lineWidth = sk.w; ctx.beginPath(); ctx.moveTo(sk.x, sk.y); ctx.lineTo(sk.x-this.vx*0.25, sk.y-this.vy*0.25); ctx.stroke(); }
         ctx.restore();
         ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle+Math.PI/2);
-        ctx.globalAlpha = 0.28; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.ellipse(0, 10, 16, 26, 0, 0, Math.PI*2); ctx.fill(); // Shadow
+        ctx.globalAlpha = 0.28; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.ellipse(0, 10, 16, 26, 0, 0, Math.PI*2); ctx.fill(); 
         ctx.globalAlpha = 1; if(carImage.complete) ctx.drawImage(carImage,-22,-40,44,80); else { ctx.fillStyle='#ef4444'; ctx.fillRect(-11,-19,22,38); }
         ctx.restore();
       }
     }
 
     const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d'); const car = new Car();
-    function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; VIS.ensurePatterns(ctx); }
     window.addEventListener('resize', resize); resize();
     Track.init();
 
@@ -633,10 +620,31 @@
     document.getElementById('restart-btn').onclick = () => RaceManager.startRace();
     document.getElementById('quit-btn').onclick = () => RaceManager.quitToMenu();
 
-    function loop(){
-      if (RaceManager.state === 'racing') { car.update(); RaceManager.update(car); }
-      Particles.update();
-      ctx.clearRect(0,0,canvas.width,canvas.height); // Clear completely for sea redraw
+    let lastFrameTime = 0;
+    let accumulator = 0;
+    const FIXED_TIME_STEP = 1000 / 60; // 60 FPS physics
+
+    function loop(timestamp) {
+      if (!lastFrameTime) lastFrameTime = timestamp;
+      let deltaTime = timestamp - lastFrameTime;
+      lastFrameTime = timestamp;
+
+      // Cap delta time to avoid spiral of death (e.g. tab background)
+      if (deltaTime > 250) deltaTime = 250;
+
+      accumulator += deltaTime;
+
+      while (accumulator >= FIXED_TIME_STEP) {
+        if (RaceManager.state === 'racing') {
+          car.update();
+          RaceManager.update(car);
+        }
+        Particles.update(); // Fix particles speed too
+        accumulator -= FIXED_TIME_STEP;
+      }
+
+      // Render
+      ctx.clearRect(0,0,canvas.width,canvas.height); 
       ctx.save();
       let camX = canvas.width/2 - car.x; let camY = canvas.height/2 - car.y;
       camX -= car.vx * 10; camY -= car.vy * 10;
@@ -651,9 +659,12 @@
       Particles.draw(ctx);
       car.draw(ctx);
       ctx.restore();
+      VIS.drawFilmGrain(ctx, canvas.width, canvas.height);
+      VIS.drawVignette(ctx, canvas.width, canvas.height);
+      
       requestAnimationFrame(loop);
     }
-    loop();
+    requestAnimationFrame(loop);
   </script>
 </body>
 </html>
