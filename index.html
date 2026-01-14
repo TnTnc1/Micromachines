@@ -202,11 +202,9 @@
     }
     .action-btn:hover{ transform: translateY(-1px); filter: brightness(1.05); }
 
-    /* Pause UI - DÉPLACÉ VERS LE BAS POUR ÉVITER LE HUD */
+    /* Pause UI */
     #pause-btn{ 
-        position:absolute; 
-        top:75px; 
-        right:16px; 
+        position:absolute; top:75px; right:16px; 
         width:44px; height:44px; border-radius:999px; display:none; align-items:center; justify-content:center; pointer-events:auto; z-index:50; cursor:pointer; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); backdrop-filter:blur(5px); 
     }
     .pause-icon{ width:16px; height:16px; position:relative; }
@@ -288,8 +286,8 @@
               <h3>STREET</h3>
               <p>ÉQUILIBRÉE & MANIABLE</p>
               <div class="stats">
-                  <div style="display:flex; justify-content:space-between; font-size:10px;"><span>VITESSE</span><span>70%</span></div>
-                  <div class="stat-bar"><div class="stat-fill" style="width:70%;"></div></div>
+                  <div style="display:flex; justify-content:space-between; font-size:10px;"><span>VITESSE</span><span>80%</span></div>
+                  <div class="stat-bar"><div class="stat-fill" style="width:80%;"></div></div>
                   <div style="display:flex; justify-content:space-between; font-size:10px;"><span>DRIFT</span><span>60%</span></div>
                   <div class="stat-bar"><div class="stat-fill" style="width:60%;"></div></div>
                   <div style="display:flex; justify-content:space-between; font-size:10px;"><span>CONTRÔLE</span><span>90%</span></div>
@@ -342,20 +340,16 @@
 
   <script>
     // --- 1. CONFIGURATION DES MODES ---
-    // Configuration des sous-véhicules Drift
     const DRIFT_CARS_CONFIG = {
         street: {
             name: "STREET DRIFT",
-            // Vert Toxic / Noir
             colors: { body1: '#14532d', body2: '#22c55e', body3: '#4ade80', wing: '#052e16' },
-            // Plus d'adhérence (friction 0.96 vs 0.98), moins de vitesse max, accélération plus douce
-            physics: { acceleration: 0.19, maxSpeed: 11.5, friction: 0.965, turnSpeed: 0.08, offRoadFriction: 0.6 }
+            // VITESSE BOOSTÉE : maxSpeed 11.5 -> 12.3, accel 0.19 -> 0.21
+            physics: { acceleration: 0.21, maxSpeed: 12.3, friction: 0.97, turnSpeed: 0.085, offRoadFriction: 0.6 }
         },
         pro: {
             name: "PRO DRIFT",
-            // Violet Néon (L'originale)
             colors: { body1: '#701a75', body2: '#d946ef', body3: '#f0abfc', wing: '#4a044e' },
-            // Savonnette rapide
             physics: { acceleration: 0.23, maxSpeed: 12.8, friction: 0.98, turnSpeed: 0.09, offRoadFriction: 0.5 }
         }
     };
@@ -375,7 +369,6 @@
         },
         drift: {
             id: 'drift', type: 'drift', name: 'DRIFT KING',
-            // Physics sera écrasé par le choix de la voiture
             physics: DRIFT_CARS_CONFIG.pro.physics, 
             collection: 'world_tour_records_v3_drift',
             colors: DRIFT_CARS_CONFIG.pro.colors
@@ -476,7 +469,12 @@
             if (currentMode.type !== 'drift') return;
             const moveA = Math.atan2(car.vy, car.vx);
             let slip = Math.abs(moveA - car.angle); while(slip>Math.PI) slip-=Math.PI*2; while(slip<-Math.PI) slip+=Math.PI*2;
-            const isSliding = (car.speed > 5 && Math.abs(slip) > 0.3);
+            
+            // SEUILS DE DETECTION ASSOUPLIS
+            const MIN_SPEED = 3.5; // Avant: 5.0 -> Permet de valider des drifts plus lents
+            const MIN_ANGLE = 0.22; // Avant: 0.3 -> Permet de valider des drifts moins anglés
+
+            const isSliding = (car.speed > MIN_SPEED && Math.abs(slip) > MIN_ANGLE);
 
             if (surface === 'road' && isSliding) {
                 this.isDrifting = true; this.driftTime += 1;
