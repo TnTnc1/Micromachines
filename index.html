@@ -55,12 +55,20 @@
     .drift-score-inc { font-family: Orbitron; font-size: 1.2rem; color: #fbbf24; margin-top: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
     
     /* Message Sens Interdit */
-    #wrong-way-msg { 
-        display: none; color: #ef4444; font-family: Orbitron; font-weight: 900; font-size: 1.2rem; 
-        text-transform: uppercase; margin-top: 5px; animation: blinkFast 0.3s infinite alternate; 
-        text-shadow: 0 0 10px red;
+    #wrong-way-alert { 
+        display: none; color: #ef4444; font-family: Orbitron; font-weight: 900; font-size: 1.5rem; 
+        text-transform: uppercase; margin-top: 5px; animation: blinkFast 0.2s infinite alternate; 
+        text-shadow: 0 0 20px red; background: rgba(0,0,0,0.7); padding: 5px 10px; border-radius: 5px;
     }
-    @keyframes blinkFast { from { opacity: 1; } to { opacity: 0.2; } }
+    @keyframes blinkFast { from { opacity: 1; transform: scale(1); } to { opacity: 0.5; transform: scale(1.1); } }
+
+    /* DISQUALIFIED SCREEN */
+    #dq-screen {
+        position:absolute; inset:0; z-index: 95; background: rgba(127, 29, 29, 0.9); backdrop-filter: blur(10px);
+        display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    }
+    .dq-title { font-family: Orbitron; font-weight: 900; font-size: 3rem; color: white; text-shadow: 0 5px 0 #000; margin-bottom: 10px; }
+    .dq-sub { font-family: Inter; font-weight: 800; font-size: 1.2rem; color: #fca5a5; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 2px; }
 
     .pulse{ animation: pulseGlow 0.35s ease-out; }
     @keyframes pulseGlow{ 0%{ transform: scale(1); } 50%{ transform: scale(1.05); } 100%{ transform: scale(1); } }
@@ -151,7 +159,7 @@
           <span id="drift-multiplier" class="combo-mult">x1</span>
       </div>
       <div id="drift-current-points" class="drift-score-inc">+0</div>
-      <div id="wrong-way-msg">SENS INTERDIT !</div>
+      <div id="wrong-way-alert">⚠️ SENS INTERDIT ⚠️</div>
   </div>
 
   <div id="pause-btn"><div class="pause-icon"></div></div>
@@ -163,6 +171,13 @@
       <button id="restart-btn" class="menu-btn">Recommencer</button>
       <button id="quit-btn" class="menu-btn red">Quitter</button>
     </div>
+  </div>
+
+  <div id="dq-screen">
+      <div class="dq-title">DISQUALIFIÉ</div>
+      <div class="dq-sub">SENS INTERDIT DÉTECTÉ</div>
+      <button class="action-btn" onclick="RaceManager.quitToMenu()" style="width:200px;">MENU</button>
+      <button class="action-btn" onclick="RaceManager.startRollingStart()" style="width:200px; margin-top:10px;">RÉESSAYER</button>
   </div>
 
   <div id="welcome-screen">
@@ -328,51 +343,71 @@
       }
     };
 
-    // --- DRIFT SYSTEM & WRONG WAY ---
+    // --- DRIFT SYSTEM & STRICT WRONG WAY ---
     const DriftSystem = {
         totalScore: 0, currentComboScore: 0, multiplier: 1, isDrifting: false, driftTime: 0, wrongWayTimer: 0,
-        reset() { this.totalScore = 0; this.currentComboScore = 0; this.multiplier = 1; this.driftTime = 0; this.wrongWayTimer = 0; this.updateUI(); },
+        reset() { this.totalScore = 0; this.currentComboScore = 0; this.multiplier = 1; this.driftTime = 0; this.wrongWayTimer = 0; this.updateUI(); document.getElementById('wrong-way-alert').style.display='none'; },
+        
         update(car, surface) {
             if (currentMode.type !== 'drift') return;
             
-            // 1. Check Wrong Way (Vector vs Next Checkpoint)
+            // 1. DETECTION SENS INTERDIT (Strict)
+            // Trouver le checkpoint cible
             let nextCP = 0;
             const cps = RaceManager.checkpoints;
             for(let i=0; i<cps.length; i++) { if(!cps[i].p) { nextCP = i; break; } }
-            // If all CPs passed, target is finish line (start)
+            // Si fini, la cible est le départ
             const target = (nextCP < cps.length) ? cps[nextCP] : {x:-1200, y:-600};
             
             const dx = target.x - car.x; const dy = target.y - car.y;
             const dist = Math.hypot(dx, dy);
             
-            if (dist > 200) { // Don't check if very close to CP
-                const nx = dx/dist; const ny = dy/dist; // Normal vector to CP
-                const speed = Math.hypot(car.vx, car.vy);
-                if (speed > 2.0) {
-                    const vx = car.vx/speed; const vy = car.vy/speed;
-                    const dot = nx*vx + ny*vy;
-                    // If dot is very negative, we are going opposite direction
-                    if (dot < -0.6) {
-                        this.failCombo("WRONG WAY");
-                        document.getElementById('wrong-way-msg').style.display = 'block';
-                    } else {
-                        document.getElementById('wrong-way-msg').style.display = 'none';
+            // Si on roule, qu'on est pas collé au point, et qu'on va à l'opposé
+            const speed = Math.hypot(car.vx, car.vy);
+            if (dist > 300 && speed > 2.0) {
+                const nx = dx/dist; const ny = dy/dist; // Vecteur vers cible normalisé
+                const vx = car.vx/speed; const vy = car.vy/speed; // Vecteur voiture normalisé
+                const dot = nx*vx + ny*vy; // Produit scalaire
+                
+                // Si dot < -0.5, on va à l'opposé
+                if (dot < -0.5) {
+                    this.wrongWayTimer++;
+                    document.getElementById('wrong-way-alert').style.display = 'block';
+                    // Si plus de 90 frames (1.5 sec) -> DISQUALIFICATION
+                    if (this.wrongWayTimer > 90) {
+                        RaceManager.disqualify();
                     }
+                } else {
+                    this.wrongWayTimer = 0;
+                    document.getElementById('wrong-way-alert').style.display = 'none';
                 }
             } else {
-                document.getElementById('wrong-way-msg').style.display = 'none';
+                this.wrongWayTimer = 0;
+                document.getElementById('wrong-way-alert').style.display = 'none';
             }
 
-            // 2. Drift Logic
+            // 2. LOGIQUE DRIFT (Anti-Donut)
+            // On ne marque des points que si on progresse VERS l'objectif (dot > -0.2)
+            // Si on fait un donut, la moitié du temps on est dos à la piste, donc on ne marque pas.
             const moveA = Math.atan2(car.vy, car.vx);
             let slip = Math.abs(moveA - car.angle); while(slip>Math.PI) slip-=Math.PI*2; while(slip<-Math.PI) slip+=Math.PI*2;
             const MIN_SPEED = 3.5; const MIN_ANGLE = 0.22;
             const isSliding = (car.speed > MIN_SPEED && Math.abs(slip) > MIN_ANGLE);
 
+            // Calcul du dot product (progression) pour le scoring
+            const nx = dx/dist; const ny = dy/dist; 
+            const vx = car.vx/speed; const vy = car.vy/speed;
+            const progressionDot = (dist > 300 && speed > 1) ? (nx*vx + ny*vy) : 1;
+
             if (surface === 'road' && isSliding) {
                 this.isDrifting = true; this.driftTime += 1;
-                const framePoints = (car.speed * Math.abs(slip) * 2.5);
-                this.currentComboScore += framePoints;
+                
+                // ANTI-DONUT : Si on recule par rapport à la piste (progressionDot < -0.2), on ne marque pas
+                if (progressionDot > -0.2) {
+                    const framePoints = (car.speed * Math.abs(slip) * 2.5);
+                    this.currentComboScore += framePoints;
+                }
+
                 if (this.driftTime > 60 && this.multiplier < 5) { this.multiplier = 2; }
                 if (this.driftTime > 120 && this.multiplier < 10) { this.multiplier = 3; }
                 if (this.driftTime > 240) { this.multiplier = 4; }
@@ -382,7 +417,7 @@
                     if (surface === 'road') { if (this.driftTime > 0) this.driftTime -= 2; else this.bankPoints(); } 
                     else { this.failCombo("OFF ROAD"); }
                 } else { 
-                    if(document.getElementById('wrong-way-msg').style.display === 'none') document.getElementById('drift-ui').style.display = 'none'; 
+                    if(document.getElementById('wrong-way-alert').style.display === 'none') document.getElementById('drift-ui').style.display = 'none'; 
                 }
             }
             this.updateUI();
@@ -512,7 +547,8 @@
       startRollingStart(){
         this.state = 'rolling'; car.reset(); car.x = -1200; car.y = -600; car.angle = 0; car.speed = currentMode.physics.maxSpeed; car.vx = car.speed;
         this.checkpoints.forEach(cp=>cp.p=false); GhostSystem.resetRecording(); DriftSystem.reset(); 
-        document.getElementById('leaderboard-panel').style.display='none'; document.getElementById('pause-menu').style.display='none'; document.getElementById('pause-btn').style.display='none'; document.getElementById('mobile-controls').style.display='flex';
+        document.getElementById('leaderboard-panel').style.display='none'; document.getElementById('pause-menu').style.display='none'; document.getElementById('pause-btn').style.display='none'; document.getElementById('dq-screen').style.display='none';
+        document.getElementById('mobile-controls').style.display='flex';
         document.getElementById('lap-display').innerText = `1 / ${this.totalLaps}`;
         if(currentMode.type === 'drift') document.getElementById('main-stat-display').innerText = "0"; else document.getElementById('main-stat-display').innerText = "00:00.000";
         const cd = document.getElementById('countdown-layer'); cd.style.display = 'flex'; cd.innerHTML = '<div class="rolling-text">PRÊT ?</div>';
@@ -521,6 +557,13 @@
         this.state='racing'; this.startTime = Date.now(); this.lapStartTime = this.startTime; this.currentLap = 1; this.bestLapTime = Infinity;
         document.getElementById('pause-btn').style.display='flex';
         const cd = document.getElementById('countdown-layer'); cd.innerHTML = '<div class="go-text">DRIFT!</div>'; setTimeout(() => { if(this.state === 'racing') cd.style.display = 'none'; }, 1000);
+      },
+      disqualify(){
+          this.state = 'disqualified';
+          document.getElementById('mobile-controls').style.display = 'none';
+          document.getElementById('pause-btn').style.display = 'none';
+          document.getElementById('drift-ui').style.display = 'none';
+          document.getElementById('dq-screen').style.display = 'flex';
       },
       update(car){
         if (this.state === 'rolling') { car.controls = { u: true, d: false, l: false, r: false }; if (car.x >= 0) this.beginRacing(); return; }
@@ -568,15 +611,7 @@
         
         let f=0; 
         if(this.controls.u) f=phys.acceleration; 
-        if(this.controls.d) {
-            // ANTI-REVERSE FOR DRIFT MODE
-            if (currentMode.type === 'drift') {
-                if (this.speed > 0.1) f = -phys.acceleration * 1.5; // Strong Brake
-                else { f = 0; this.speed = 0; } // Stop, no reverse
-            } else {
-                f = -phys.acceleration * 0.6; // Standard Reverse/Brake
-            }
-        }
+        if(this.controls.d) f = -phys.acceleration * 0.6; // REVERSE OK (as brake/reverse)
 
         this.vx += Math.cos(this.angle)*f; this.vy += Math.sin(this.angle)*f;
         const surface = Track.check(this.x, this.y);
@@ -584,9 +619,6 @@
         this.speed = Math.hypot(this.vx, this.vy); this.vx *= fric; this.vy *= fric;
         if(this.speed>phys.maxSpeed){ const r = phys.maxSpeed/this.speed; this.vx*=r; this.vy*=r; this.speed = phys.maxSpeed; }
         
-        // Prevent negative speed accumulation in drift mode
-        if (currentMode.type === 'drift' && this.controls.d && this.speed < 0.1) { this.vx = 0; this.vy = 0; this.speed = 0; }
-
         this.x += this.vx; this.y += this.vy;
 
         const moveA = Math.atan2(this.vy, this.vx);
