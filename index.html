@@ -255,63 +255,86 @@
   <canvas id="gameCanvas"></canvas>
 
   <script>
-    // --- AUDIO SYSTEM (PROCEDURAL) ---
+    // --- REAL AUDIO SYSTEM (SAMPLES) ---
+    // Liens vers des fichiers open-source stables (Godot Engine Demos)
+    const AudioFiles = {
+        engine: "https://raw.githubusercontent.com/godotengine/godot-demo-projects/master/2d/car_steering/engine.wav",
+        skid: "https://raw.githubusercontent.com/godotengine/godot-demo-projects/master/2d/car_steering/skid.wav"
+    };
+
     const AudioSys = {
-        ctx: null, osc: null, gain: null, noiseGain: null,
+        ctx: null, engine: null, skid: null, engineGain: null, skidGain: null,
         init(){
-            window.addEventListener('click', ()=>{
-                if(!this.ctx){
-                    const AC = window.AudioContext || window.webkitAudioContext;
-                    this.ctx = new AC();
-                    // Moteur
-                    this.osc = this.ctx.createOscillator();
-                    this.gain = this.ctx.createGain();
-                    this.osc.connect(this.gain); this.gain.connect(this.ctx.destination);
-                    this.osc.type = 'sawtooth'; this.osc.frequency.value = 100; this.gain.gain.value = 0;
-                    this.osc.start();
-                    // Pneus (Noise)
-                    const bSize = 2*this.ctx.sampleRate;
-                    const noiseBuffer = this.ctx.createBuffer(1, bSize, this.ctx.sampleRate);
-                    const output = noiseBuffer.getChannelData(0);
-                    for(let i=0; i<bSize; i++) output[i] = Math.random()*2-1;
-                    const noise = this.ctx.createBufferSource();
-                    noise.buffer = noiseBuffer; noise.loop = true;
-                    const noiseFilter = this.ctx.createBiquadFilter();
-                    noiseFilter.type = 'lowpass'; noiseFilter.frequency.value = 1000;
-                    this.noiseGain = this.ctx.createGain(); this.noiseGain.gain.value = 0;
-                    noise.connect(noiseFilter); noiseFilter.connect(this.noiseGain); this.noiseGain.connect(this.ctx.destination);
-                    noise.start();
-                }
-                if(this.ctx.state==='suspended') this.ctx.resume();
+            // Un clic est nécessaire pour démarrer l'audio dans les navigateurs modernes
+            window.addEventListener('click', async () => {
+                if(this.ctx) { if(this.ctx.state === 'suspended') this.ctx.resume(); return; }
+                const AC = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AC();
+                
+                // Charger Engine
+                try {
+                    const eResp = await fetch(AudioFiles.engine);
+                    const eBuf = await this.ctx.decodeAudioData(await eResp.arrayBuffer());
+                    this.engine = this.ctx.createBufferSource();
+                    this.engine.buffer = eBuf; this.engine.loop = true;
+                    this.engineGain = this.ctx.createGain(); this.engineGain.gain.value = 0;
+                    this.engine.connect(this.engineGain); this.engineGain.connect(this.ctx.destination);
+                    this.engine.start();
+                } catch(e){ console.log("Audio load error", e); }
+
+                // Charger Skid
+                try {
+                    const sResp = await fetch(AudioFiles.skid);
+                    const sBuf = await this.ctx.decodeAudioData(await sResp.arrayBuffer());
+                    this.skid = this.ctx.createBufferSource();
+                    this.skid.buffer = sBuf; this.skid.loop = true;
+                    this.skidGain = this.ctx.createGain(); this.skidGain.gain.value = 0;
+                    this.skid.connect(this.skidGain); this.skidGain.connect(this.ctx.destination);
+                    this.skid.start();
+                } catch(e){ console.log("Audio load error", e); }
+
             }, {once:true});
         },
         update(speed, driftFactor){
-            if(!this.ctx) return;
-            // Engine
-            const baseFreq = 80 + (speed * 12);
-            this.osc.frequency.setTargetAtTime(baseFreq, this.ctx.currentTime, 0.1);
-            const vol = Math.min(speed/20, 0.15);
-            this.gain.gain.setTargetAtTime(vol, this.ctx.currentTime, 0.1);
-            // Tires
-            const tireVol = driftFactor ? 0.2 : 0;
-            this.noiseGain.gain.setTargetAtTime(tireVol, this.ctx.currentTime, 0.1);
+            if(!this.ctx || !this.engine) return;
+            // Pitch du moteur selon la vitesse (0.5 à 2.0x vitesse de lecture)
+            const rate = 0.4 + (Math.abs(speed)/15); 
+            this.engine.playbackRate.setTargetAtTime(rate, this.ctx.currentTime, 0.1);
+            // Volume du moteur
+            const vol = Math.min(0.1 + Math.abs(speed)/40, 0.4);
+            this.engineGain.gain.setTargetAtTime(vol, this.ctx.currentTime, 0.1);
+            // Pneus
+            const skidVol = driftFactor ? 0.3 : 0;
+            if(this.skidGain) this.skidGain.gain.setTargetAtTime(skidVol, this.ctx.currentTime, 0.05);
         }
     };
     AudioSys.init();
 
     // --- CONFIG ---
     const DRIFT_CARS_CONFIG = {
-        street: { name: "STREET DRIFT", colors: { body1: '#14532d', body2: '#22c55e', body3: '#4ade80', wing: '#052e16' }, physics: { acceleration: 0.21, maxSpeed: 12.3, friction: 0.97, turnSpeed: 0.085, offRoadFriction: 0.6 } },
-        pro: { name: "PRO DRIFT", colors: { body1: '#701a75', body2: '#d946ef', body3: '#f0abfc', wing: '#4a044e' }, physics: { acceleration: 0.23, maxSpeed: 12.8, friction: 0.98, turnSpeed: 0.09, offRoadFriction: 0.5 } }
+        street: {
+            name: "STREET DRIFT",
+            colors: { body1: '#14532d', body2: '#22c55e', body3: '#4ade80', wing: '#052e16' },
+            physics: { acceleration: 0.21, maxSpeed: 12.3, friction: 0.97, turnSpeed: 0.085, offRoadFriction: 0.6 }
+        },
+        pro: {
+            name: "PRO DRIFT",
+            colors: { body1: '#701a75', body2: '#d946ef', body3: '#f0abfc', wing: '#4a044e' },
+            physics: { acceleration: 0.23, maxSpeed: 12.8, friction: 0.98, turnSpeed: 0.09, offRoadFriction: 0.5 }
+        }
     };
+
     const MODES = {
         normal: { id: 'normal', type: 'race', name: 'NORMAL', physics: { acceleration: 0.22, maxSpeed: 12.5, friction: 0.965, turnSpeed: 0.075, offRoadFriction: 0.75 }, collection: 'world_tour_records_v3_normal', colors: { body1: '#c53030', body2: '#e53e3e', body3: '#fc8181', wing: '#742a2a' } },
         expert: { id: 'expert', type: 'race', name: 'EXPERT', physics: { acceleration: 0.35, maxSpeed: 22.0, friction: 0.96, turnSpeed: 0.085, offRoadFriction: 0.6 }, collection: 'world_tour_records_v3_expert', colors: { body1: '#111827', body2: '#1f2937', body3: '#374151', wing: '#000000' } },
         drift: { id: 'drift', type: 'drift', name: 'DRIFT KING', physics: DRIFT_CARS_CONFIG.pro.physics, collection: 'world_tour_records_v3_drift', colors: DRIFT_CARS_CONFIG.pro.colors }
     };
+
     let currentMode = MODES.normal;
 
-    function getCarSpriteUrl(colors) { return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 80'%3E%3Cdefs%3E%3ClinearGradient id='bodyGrad' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' style='stop-color:${encodeURIComponent(colors.body1)}' /%3E%3Cstop offset='50%25' style='stop-color:${encodeURIComponent(colors.body2)}' /%3E%3Cstop offset='100%25' style='stop-color:${encodeURIComponent(colors.body1)}' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='2' y='2' width='40' height='76' rx='8' fill='rgba(0,0,0,0.3)' /%3E%3Cpath d='M6,10 Q2,20 2,40 Q2,60 6,70 L6,76 Q6,78 8,78 L36,78 Q38,78 38,76 L38,70 Q42,60 42,40 Q42,20 38,10 L36,4 Q36,2 34,2 L10,2 Q8,2 8,4 Z' fill='url(%23bodyGrad)' stroke='${encodeURIComponent(colors.wing)}' stroke-width='1' /%3E%3Cpath d='M8,20 L36,20 L34,32 L10,32 Z' fill='%232d3748' /%3E%3Cpath d='M10,48 L34,48 L36,60 L8,60 Z' fill='%231a202c' /%3E%3Crect x='9' y='33' width='26' height='14' fill='${encodeURIComponent(colors.body2)}' /%3E%3Crect x='4' y='68' width='36' height='8' rx='2' fill='${encodeURIComponent(colors.wing)}' /%3E%3Crect x='6' y='4' width='6' height='4' fill='%23faf089' /%3E%3Crect x='32' y='4' width='6' height='4' fill='%23faf089' /%3E%3C/svg%3E`; }
+    function getCarSpriteUrl(colors) {
+        return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 80'%3E%3Cdefs%3E%3ClinearGradient id='bodyGrad' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' style='stop-color:${encodeURIComponent(colors.body1)}' /%3E%3Cstop offset='50%25' style='stop-color:${encodeURIComponent(colors.body2)}' /%3E%3Cstop offset='100%25' style='stop-color:${encodeURIComponent(colors.body1)}' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='2' y='2' width='40' height='76' rx='8' fill='rgba(0,0,0,0.3)' /%3E%3Cpath d='M6,10 Q2,20 2,40 Q2,60 6,70 L6,76 Q6,78 8,78 L36,78 Q38,78 38,76 L38,70 Q42,60 42,40 Q42,20 38,10 L36,4 Q36,2 34,2 L10,2 Q8,2 8,4 Z' fill='url(%23bodyGrad)' stroke='${encodeURIComponent(colors.wing)}' stroke-width='1' /%3E%3Cpath d='M8,20 L36,20 L34,32 L10,32 Z' fill='%232d3748' /%3E%3Cpath d='M10,48 L34,48 L36,60 L8,60 Z' fill='%231a202c' /%3E%3Crect x='9' y='33' width='26' height='14' fill='${encodeURIComponent(colors.body2)}' /%3E%3Crect x='4' y='68' width='36' height='8' rx='2' fill='${encodeURIComponent(colors.wing)}' /%3E%3Crect x='6' y='4' width='6' height='4' fill='%23faf089' /%3E%3Crect x='32' y='4' width='6' height='4' fill='%23faf089' /%3E%3C/svg%3E`;
+    }
     const carImage = new Image(); carImage.src = getCarSpriteUrl(currentMode.colors);
 
     // --- CLOUD ---
@@ -320,7 +343,8 @@
       init(database) { this.db = database; },
       loadLeaderboard(modeConfig) {
         if(!this.db) return; if(this.unsubscribe) this.unsubscribe();
-        this.bestScore = modeConfig.type === 'race' ? Infinity : 0; this.globalGhostData = null; GhostSystem.setGlobalGhost(null);
+        this.bestScore = modeConfig.type === 'race' ? Infinity : 0;
+        this.globalGhostData = null; GhostSystem.setGlobalGhost(null);
         document.getElementById('wr-display').innerText = "--:--.---";
         const { collection, query, orderBy, limit, onSnapshot } = window.fs;
         let sortField = 'timeMs', sortDir = 'asc'; if (modeConfig.type === 'drift') { sortField = 'score'; sortDir = 'desc'; }
@@ -342,7 +366,7 @@
           });
         });
       },
-      async saveScore(name, value, displayStr, ghostData) {
+      saveScore: async function(name, value, displayStr, ghostData) {
         if(!this.db) return false;
         const { collection, addDoc } = window.fs;
         const safeGhost = JSON.stringify(ghostData).length < 950000 ? JSON.stringify(ghostData) : null;
@@ -374,43 +398,102 @@
       }
     };
 
+    // --- DRIFT SYSTEM & STRICT WRONG WAY ---
     const DriftSystem = {
         totalScore: 0, currentComboScore: 0, multiplier: 1, isDrifting: false, driftTime: 0, wrongWayTimer: 0,
         reset() { this.totalScore = 0; this.currentComboScore = 0; this.multiplier = 1; this.driftTime = 0; this.wrongWayTimer = 0; this.updateUI(); document.getElementById('wrong-way-alert').style.display='none'; },
+        
         update(car, surface) {
             if (currentMode.type !== 'drift') return;
-            let nextCP = 0; const cps = RaceManager.checkpoints; for(let i=0; i<cps.length; i++) { if(!cps[i].p) { nextCP = i; break; } }
+            
+            // 1. DETECTION SENS INTERDIT (Strict)
+            // Trouver le checkpoint cible
+            let nextCP = 0;
+            const cps = RaceManager.checkpoints;
+            for(let i=0; i<cps.length; i++) { if(!cps[i].p) { nextCP = i; break; } }
+            // Si fini, la cible est le départ
             const target = (nextCP < cps.length) ? cps[nextCP] : {x:-1200, y:-600};
-            const dx = target.x - car.x; const dy = target.y - car.y; const dist = Math.hypot(dx, dy);
+            
+            const dx = target.x - car.x; const dy = target.y - car.y;
+            const dist = Math.hypot(dx, dy);
+            
+            // Si on roule, qu'on est pas collé au point, et qu'on va à l'opposé
             const speed = Math.hypot(car.vx, car.vy);
             if (dist > 300 && speed > 2.0) {
-                const nx = dx/dist; const ny = dy/dist; const vx = car.vx/speed; const vy = car.vy/speed; const dot = nx*vx + ny*vy;
-                if (dot < -0.5) { this.wrongWayTimer++; document.getElementById('wrong-way-alert').style.display = 'block'; if (this.wrongWayTimer > 90) RaceManager.disqualify(); } 
-                else { this.wrongWayTimer = 0; document.getElementById('wrong-way-alert').style.display = 'none'; }
-            } else { this.wrongWayTimer = 0; document.getElementById('wrong-way-alert').style.display = 'none'; }
+                const nx = dx/dist; const ny = dy/dist; // Vecteur vers cible normalisé
+                const vx = car.vx/speed; const vy = car.vy/speed; // Vecteur voiture normalisé
+                const dot = nx*vx + ny*vy; // Produit scalaire
+                
+                // Si dot < -0.5, on va à l'opposé
+                if (dot < -0.5) {
+                    this.wrongWayTimer++;
+                    document.getElementById('wrong-way-alert').style.display = 'block';
+                    // Si plus de 90 frames (1.5 sec) -> DISQUALIFICATION
+                    if (this.wrongWayTimer > 90) {
+                        RaceManager.disqualify();
+                    }
+                } else {
+                    this.wrongWayTimer = 0;
+                    document.getElementById('wrong-way-alert').style.display = 'none';
+                }
+            } else {
+                this.wrongWayTimer = 0;
+                document.getElementById('wrong-way-alert').style.display = 'none';
+            }
 
-            const moveA = Math.atan2(car.vy, car.vx); let slip = Math.abs(moveA - car.angle); while(slip>Math.PI) slip-=Math.PI*2; while(slip<-Math.PI) slip+=Math.PI*2;
-            const isSliding = (car.speed > 3.5 && Math.abs(slip) > 0.22);
-            const nx = dx/dist; const ny = dy/dist; const vx = car.vx/speed; const vy = car.vy/speed;
+            // 2. LOGIQUE DRIFT (Anti-Donut)
+            // On ne marque des points que si on progresse VERS l'objectif (dot > -0.2)
+            // Si on fait un donut, la moitié du temps on est dos à la piste, donc on ne marque pas.
+            const moveA = Math.atan2(car.vy, car.vx);
+            let slip = Math.abs(moveA - car.angle); while(slip>Math.PI) slip-=Math.PI*2; while(slip<-Math.PI) slip+=Math.PI*2;
+            const MIN_SPEED = 3.5; const MIN_ANGLE = 0.22;
+            const isSliding = (car.speed > MIN_SPEED && Math.abs(slip) > MIN_ANGLE);
+
+            // Calcul du dot product (progression) pour le scoring
+            const nx = dx/dist; const ny = dy/dist; 
+            const vx = car.vx/speed; const vy = car.vy/speed;
             const progressionDot = (dist > 300 && speed > 1) ? (nx*vx + ny*vy) : 1;
 
             if (surface === 'road' && isSliding) {
                 this.isDrifting = true; this.driftTime += 1;
-                if (progressionDot > -0.2) { this.currentComboScore += (car.speed * Math.abs(slip) * 2.5); }
-                if (this.driftTime > 60 && this.multiplier < 5) { this.multiplier = 2; } if (this.driftTime > 120 && this.multiplier < 10) { this.multiplier = 3; } if (this.driftTime > 240) { this.multiplier = 4; }
+                
+                // ANTI-DONUT : Si on recule par rapport à la piste (progressionDot < -0.2), on ne marque pas
+                if (progressionDot > -0.2) {
+                    const framePoints = (car.speed * Math.abs(slip) * 2.5);
+                    this.currentComboScore += framePoints;
+                }
+
+                if (this.driftTime > 60 && this.multiplier < 5) { this.multiplier = 2; }
+                if (this.driftTime > 120 && this.multiplier < 10) { this.multiplier = 3; }
+                if (this.driftTime > 240) { this.multiplier = 4; }
                 document.getElementById('drift-ui').style.display = 'block';
             } else {
-                if (this.currentComboScore > 0) { if (surface === 'road') { if (this.driftTime > 0) this.driftTime -= 2; else this.bankPoints(); } else { this.failCombo("OFF ROAD"); } } 
-                else { if(document.getElementById('wrong-way-alert').style.display === 'none') document.getElementById('drift-ui').style.display = 'none'; }
+                if (this.currentComboScore > 0) {
+                    if (surface === 'road') { if (this.driftTime > 0) this.driftTime -= 2; else this.bankPoints(); } 
+                    else { this.failCombo("OFF ROAD"); }
+                } else { 
+                    if(document.getElementById('wrong-way-alert').style.display === 'none') document.getElementById('drift-ui').style.display = 'none'; 
+                }
             }
             this.updateUI();
         },
-        bankPoints() { this.totalScore += Math.floor(this.currentComboScore * this.multiplier); this.currentComboScore = 0; this.multiplier = 1; this.driftTime = 0; const el = document.getElementById('main-stat-display'); el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse'); },
-        failCombo(reason) { if (this.currentComboScore > 100) document.getElementById('drift-current-points').style.color = 'red'; this.currentComboScore = 0; this.multiplier = 1; this.driftTime = 0; },
+        bankPoints() {
+            this.totalScore += Math.floor(this.currentComboScore * this.multiplier);
+            this.currentComboScore = 0; this.multiplier = 1; this.driftTime = 0;
+            const el = document.getElementById('main-stat-display'); el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse');
+        },
+        failCombo(reason) {
+            if (this.currentComboScore > 100) document.getElementById('drift-current-points').style.color = 'red';
+            this.currentComboScore = 0; this.multiplier = 1; this.driftTime = 0;
+        },
         updateUI() {
             if (currentMode.type !== 'drift') return;
             document.getElementById('main-stat-display').innerText = Math.floor(this.totalScore).toLocaleString();
-            if (this.currentComboScore > 0) { document.getElementById('drift-multiplier').innerText = "x" + this.multiplier; document.getElementById('drift-current-points').innerText = "+" + Math.floor(this.currentComboScore * this.multiplier).toLocaleString(); document.getElementById('drift-current-points').style.color = '#fbbf24'; }
+            if (this.currentComboScore > 0) {
+                document.getElementById('drift-multiplier').innerText = "x" + this.multiplier;
+                document.getElementById('drift-current-points').innerText = "+" + Math.floor(this.currentComboScore * this.multiplier).toLocaleString();
+                document.getElementById('drift-current-points').style.color = '#fbbf24';
+            }
         }
     };
 
