@@ -43,7 +43,7 @@
     body { margin:0; overflow:hidden; background: radial-gradient(circle at center, #22d3ee 0%, #0284c7 60%, #0c4a6e 100%); color:white; font-family: Inter, sans-serif; touch-action:none; user-select:none; }
     canvas{ display:block; }
 
-    /* UI Z-INDEX FIXES - CRITIQUE POUR LE BOUTON PAUSE */
+    /* UI Z-INDEX FIXES */
     #welcome-screen, #race-sub-screen, #difficulty-screen, #car-select-screen, #profile-screen { 
         position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; 
         z-index: 80; 
@@ -694,9 +694,12 @@
         if(this.speed>phys.maxSpeed){ const r = phys.maxSpeed/this.speed; this.vx*=r; this.vy*=r; this.speed = phys.maxSpeed; }
         
         this.x += this.vx; this.y += this.vy;
-        const moveA = Math.atan2(this.vy, this.vx); let slip = Math.abs(moveA - this.angle); while(slip>Math.PI) slip-=Math.PI*2; while(slip<-Math.PI) slip+=Math.PI*2;
+
+        const moveA = Math.atan2(this.vy, this.vx);
+        let slip = Math.abs(moveA - this.angle); while(slip>Math.PI) slip-=Math.PI*2; while(slip<-Math.PI) slip+=Math.PI*2;
         const drifting = (this.speed>4 && Math.abs(slip)>0.30);
         DriftSystem.update(this, surface);
+
         if(drifting && surface==='road'){
           const c=Math.cos(this.angle), s=Math.sin(this.angle); const rX = this.x - c*20, rY = this.y - s*20;
           const x1=rX+s*11, y1=rY-c*11, x2=rX-s*11, y2=rY+c*11;
