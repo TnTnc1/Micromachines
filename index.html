@@ -25,12 +25,13 @@
       measurementId: "G-78WHHQGK2S"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    signInAnonymously(auth).then((u) => { window.Cloud.db = db; }).catch((e) => { console.error("Auth Error", e); });
-    window.fs = { collection, addDoc, query, orderBy, limit, onSnapshot };
+    try {
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        signInAnonymously(auth).then((u) => { window.Cloud.db = db; }).catch((e) => { console.warn("Mode Hors Ligne (Auth)"); });
+        window.fs = { collection, addDoc, query, orderBy, limit, onSnapshot };
+    } catch(e) { console.warn("Firebase non chargé, mode local uniquement."); }
   </script>
 
   <style>
@@ -80,8 +81,12 @@
     .go-text { font-size: 8rem; color: #34d399; animation: countPop 0.8s cubic-bezier(0.1, 0.7, 1.0, 0.1) forwards; }
     @keyframes countPop{ 0%{ transform:scale(0.5); opacity:0; } 30%{ transform:scale(1.2); opacity:1; } 100%{ transform:scale(1); opacity:0; } }
 
-    #welcome-screen, #car-select-screen { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:70; background: linear-gradient(135deg, rgba(6,182,212,0.95), rgba(12,74,110,0.95)); backdrop-filter: blur(15px); overflow-y: auto; padding: 15px; }
-    #car-select-screen { display: none; z-index: 75; background: rgba(15, 23, 42, 0.95); }
+    #welcome-screen, #race-sub-screen, #difficulty-screen, #car-select-screen { 
+        position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:70; 
+        background: linear-gradient(135deg, rgba(6,182,212,0.95), rgba(12,74,110,0.95)); backdrop-filter: blur(15px); 
+        overflow-y: auto; padding: 15px;
+    }
+    #race-sub-screen, #difficulty-screen, #car-select-screen { display: none; background: rgba(15, 23, 42, 0.98); }
 
     .badge{ display:inline-flex; align-items:center; gap:8px; padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.4); background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); font-size: 12px; font-weight: 600; margin-bottom: 10px; flex-shrink: 0; }
     .badge-dot{ width: 8px; height: 8px; border-radius: 50%; background: #67e8f9; box-shadow: 0 0 10px #67e8f9; }
@@ -91,12 +96,20 @@
 
     /* Mode Buttons */
     .mode-container { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 600px; }
-    .mode-btn { flex: 1; min-width: 100px; padding: 15px 10px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; border: 2px solid rgba(255,255,255,0.2); color: #fff; cursor: pointer; transition: transform 0.2s, filter 0.2s; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    .mode-btn { flex: 1; min-width: 120px; padding: 20px 10px; border-radius: 12px; font-weight: 800; font-size: 1rem; text-transform: uppercase; border: 2px solid rgba(255,255,255,0.2); color: #fff; cursor: pointer; transition: transform 0.2s, filter 0.2s; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
     .mode-btn:hover { transform: scale(1.05); filter: brightness(1.2); }
     .mode-btn:active { transform: scale(0.95); }
+    
+    .btn-main-race { background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border-color: #38bdf8; }
+    .btn-main-drift { background: linear-gradient(135deg, #d946ef 0%, #a21caf 100%); border-color: #f0abfc; }
+    
     .btn-normal { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); border-color: #fca5a5; }
     .btn-expert { background: linear-gradient(135deg, #1f2937 0%, #000000 100%); border-color: #9ca3af; }
-    .btn-drift { background: linear-gradient(135deg, #d946ef 0%, #a21caf 100%); border-color: #f0abfc; }
+    .btn-practice { background: linear-gradient(135deg, #10b981 0%, #047857 100%); border-color: #6ee7b7; }
+    .btn-locked { background: #334155; border-color: #475569; color: #94a3b8; cursor: not-allowed; filter: grayscale(1); }
+    
+    .back-btn { margin-top: 30px; background: transparent; border: none; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; }
+    .back-btn:hover { color: white; }
 
     /* Car Cards */
     .car-card { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 16px; padding: 20px; text-align: center; width: 100%; max-width: 280px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
@@ -188,20 +201,59 @@
     <div class="poster-wrap">
       <img id="poster-img" src="https://i.postimg.cc/vB21QZmP/image-drift-nc.png" alt="Drift NC Poster">
     </div>
-    <div class="mb-2 text-sm text-gray-200 font-bold tracking-widest uppercase">Choisis ta catégorie</div>
+    <div class="mb-2 text-sm text-gray-200 font-bold tracking-widest uppercase">MODE DE JEU</div>
     <div class="mode-container">
-        <button id="btn-mode-normal" class="mode-btn btn-normal" onclick="AudioSys.unlock()">NORMAL<br><span style="font-size:0.65em; opacity:0.8;">Chrono</span></button>
-        <button id="btn-mode-expert" class="mode-btn btn-expert" onclick="AudioSys.unlock()">EXPERT<br><span style="font-size:0.65em; opacity:0.8;">Chrono</span></button>
-        <button id="btn-mode-drift" class="mode-btn btn-drift" onclick="AudioSys.unlock()">DRIFT<br><span style="font-size:0.65em; opacity:0.8;">Points</span></button>
+        <button class="mode-btn btn-main-race" onclick="RaceManager.goToRaceSubMenu()">
+            <div style="font-size:1.5rem; margin-bottom:5px;">🏎️</div>
+            COURSE
+        </button>
+        <button class="mode-btn btn-main-drift" onclick="RaceManager.goToDriftMenu()">
+            <div style="font-size:1.5rem; margin-bottom:5px;">💨</div>
+            DRIFT
+        </button>
     </div>
   </div>
 
+  <div id="race-sub-screen">
+      <h2 class="text-3xl font-black text-white mb-6" style="font-family:Orbitron;">MODE COURSE</h2>
+      <div class="mode-container" style="flex-direction:column; gap:15px;">
+          <button class="mode-btn btn-normal" onclick="RaceManager.selectCategory('time_trial')" style="width:100%; max-width:320px;">
+              ⏱️ CONTRE-LA-MONTRE
+              <div style="font-size:0.7em; opacity:0.8; font-weight:400; margin-top:4px;">3 Tours • Leaderboard</div>
+          </button>
+          <button class="mode-btn btn-practice" onclick="RaceManager.selectCategory('practice')" style="width:100%; max-width:320px;">
+              🔄 ENTRAÎNEMENT
+              <div style="font-size:0.7em; opacity:0.8; font-weight:400; margin-top:4px;">Infini • Fantôme Session</div>
+          </button>
+          <button class="mode-btn btn-locked" style="width:100%; max-width:320px;" disabled>
+              🔒 COURSE (IA)
+              <div style="font-size:0.7em; opacity:0.8; font-weight:400; margin-top:4px;">Prochainement</div>
+          </button>
+      </div>
+      <button class="back-btn" onclick="RaceManager.backToMain()">Retour</button>
+  </div>
+
+  <div id="difficulty-screen">
+      <h2 class="text-3xl font-black text-white mb-6" style="font-family:Orbitron;">CLASSE</h2>
+      <div class="mode-container">
+          <button class="mode-btn btn-normal" onclick="RaceManager.selectDifficulty('normal')">
+              NORMAL
+              <div style="font-size:0.7em; opacity:0.8; margin-top:4px;">Équilibré</div>
+          </button>
+          <button class="mode-btn btn-expert" onclick="RaceManager.selectDifficulty('expert')">
+              EXPERT
+              <div style="font-size:0.7em; opacity:0.8; margin-top:4px;">Rapide & Technique</div>
+          </button>
+      </div>
+      <button class="back-btn" onclick="RaceManager.backToSubMenu()">Retour</button>
+  </div>
+
   <div id="car-select-screen">
-      <h2 class="text-3xl font-black text-white mb-6" style="font-family:Orbitron;">CHOISIS TA VOITURE</h2>
+      <h2 class="text-3xl font-black text-white mb-6" style="font-family:Orbitron;">GARAGE DRIFT</h2>
       <div class="mode-container">
           <div class="car-card card-street" onclick="RaceManager.confirmDriftCar('street')">
               <h3>STREET</h3>
-              <p>ÉQUILIBRÉE & MANIABLE</p>
+              <p>ÉQUILIBRÉE</p>
               <div class="stats">
                   <div style="display:flex; justify-content:space-between; font-size:10px;"><span>VITESSE</span><span>80%</span></div>
                   <div class="stat-bar"><div class="stat-fill" style="width:80%;"></div></div>
@@ -213,7 +265,7 @@
           </div>
           <div class="car-card card-pro" onclick="RaceManager.confirmDriftCar('pro')">
               <h3>PRO</h3>
-              <p>PUISSANTE & GLISSANTE</p>
+              <p>MONSTRE</p>
               <div class="stats">
                   <div style="display:flex; justify-content:space-between; font-size:10px;"><span>VITESSE</span><span>95%</span></div>
                   <div class="stat-bar"><div class="stat-fill" style="width:95%;"></div></div>
@@ -224,7 +276,7 @@
               </div>
           </div>
       </div>
-      <button class="text-gray-400 mt-8 hover:text-white text-sm uppercase font-bold tracking-widest" onclick="location.reload()">Retour</button>
+      <button class="back-btn" onclick="RaceManager.backToMain()">Retour</button>
   </div>
 
   <div id="leaderboard-panel">
@@ -255,60 +307,33 @@
   <canvas id="gameCanvas"></canvas>
 
   <script>
-    // --- REAL AUDIO SYSTEM (MP3 SAMPLES) ---
+    // --- PROCEDURAL AUDIO SYSTEM (NO FILES) ---
     const AudioSys = {
-        ctx: null, engine: null, skid: null, engineGain: null, skidGain: null, loaded: false,
-        
-        async unlock(){
+        ctx: null, engineOsc: [], engineGain: null, skidNode: null, skidGain: null,
+        unlock(){
             if(this.ctx) { if(this.ctx.state === 'suspended') this.ctx.resume(); return; }
-            
-            const AC = window.AudioContext || window.webkitAudioContext;
-            this.ctx = new AC();
-            
-            // Fichiers MP3 Fiables (Jake Gordon's JS Racer - MIT License)
-            const engineUrl = 'https://raw.githubusercontent.com/jakesgordon/javascript-racer/master/sounds/engine.mp3';
-            const skidUrl = 'https://raw.githubusercontent.com/jakesgordon/javascript-racer/master/sounds/screech.mp3';
-
-            const loadSample = async (url) => {
-                try {
-                    const r = await fetch(url);
-                    const b = await r.arrayBuffer();
-                    return await this.ctx.decodeAudioData(b);
-                } catch(e) { console.error("Audio Load Fail:", url); return null; }
-            };
-
-            const engBuf = await loadSample(engineUrl);
-            const skidBuf = await loadSample(skidUrl);
-
-            if(engBuf){
-                this.engine = this.ctx.createBufferSource();
-                this.engine.buffer = engBuf; this.engine.loop = true;
-                this.engineGain = this.ctx.createGain(); this.engineGain.gain.value = 0;
-                this.engine.connect(this.engineGain); this.engineGain.connect(this.ctx.destination);
-                this.engine.start();
-            }
-
-            if(skidBuf){
-                this.skid = this.ctx.createBufferSource();
-                this.skid.buffer = skidBuf; this.skid.loop = true;
-                this.skidGain = this.ctx.createGain(); this.skidGain.gain.value = 0;
-                this.skid.connect(this.skidGain); this.skidGain.connect(this.ctx.destination);
-                this.skid.start();
-            }
-            this.loaded = true;
-            console.log("Audio System: Ready");
+            const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC();
+            // Engine
+            this.engineGain = this.ctx.createGain(); this.engineGain.gain.value = 0; this.engineGain.connect(this.ctx.destination);
+            const osc1 = this.ctx.createOscillator(); osc1.type = 'sawtooth'; osc1.connect(this.engineGain); osc1.start(); this.engineOsc.push(osc1);
+            const osc2 = this.ctx.createOscillator(); osc2.type = 'square'; osc2.detune.value = 10;
+            const osc2Gain = this.ctx.createGain(); osc2Gain.gain.value = 0.3;
+            osc2.connect(osc2Gain); osc2Gain.connect(this.engineGain); osc2.start(); this.engineOsc.push(osc2);
+            // Skid
+            const bSize = this.ctx.sampleRate*2; const buf = this.ctx.createBuffer(1, bSize, this.ctx.sampleRate);
+            const d = buf.getChannelData(0); for(let i=0;i<bSize;i++) d[i]=Math.random()*2-1;
+            this.skidNode = this.ctx.createBufferSource(); this.skidNode.buffer = buf; this.skidNode.loop = true;
+            const sf = this.ctx.createBiquadFilter(); sf.type = 'bandpass'; sf.frequency.value = 1000;
+            this.skidGain = this.ctx.createGain(); this.skidGain.gain.value = 0;
+            this.skidNode.connect(sf); sf.connect(this.skidGain); this.skidGain.connect(this.ctx.destination); this.skidNode.start();
+            console.log("Audio System: Started (Procedural)");
         },
         update(speed, driftFactor){
-            if(!this.ctx || !this.engine) return;
-            // Pitch shift basé sur la vitesse
-            const rate = 0.5 + (Math.abs(speed)/15); 
-            this.engine.playbackRate.setTargetAtTime(rate, this.ctx.currentTime, 0.1);
-            // Volume moteur
-            const vol = Math.min(0.1 + Math.abs(speed)/40, 0.3);
-            this.engineGain.gain.setTargetAtTime(vol, this.ctx.currentTime, 0.1);
-            // Volume drift
-            const skidVol = driftFactor ? 0.3 : 0;
-            if(this.skidGain) this.skidGain.gain.setTargetAtTime(skidVol, this.ctx.currentTime, 0.05);
+            if(!this.ctx) return;
+            const absSpeed = Math.abs(speed);
+            const pitch = 60 + (absSpeed * 8); this.engineOsc.forEach(o => o.frequency.setTargetAtTime(pitch, this.ctx.currentTime, 0.1));
+            const vol = 0.1 + (absSpeed/100); this.engineGain.gain.setTargetAtTime(Math.min(vol, 0.4), this.ctx.currentTime, 0.1);
+            const skidVol = driftFactor ? 0.35 : 0; this.skidGain.gain.setTargetAtTime(skidVol, this.ctx.currentTime, 0.05);
         }
     };
 
@@ -335,33 +360,37 @@
         if(!this.db) return; if(this.unsubscribe) this.unsubscribe();
         this.bestScore = modeConfig.type === 'race' ? Infinity : 0; this.globalGhostData = null; GhostSystem.setGlobalGhost(null);
         document.getElementById('wr-display').innerText = "--:--.---";
-        const { collection, query, orderBy, limit, onSnapshot } = window.fs;
-        let sortField = 'timeMs', sortDir = 'asc'; if (modeConfig.type === 'drift') { sortField = 'score'; sortDir = 'desc'; }
-        const q = query(collection(this.db, modeConfig.collection), orderBy(sortField, sortDir), limit(10));
-        this.unsubscribe = onSnapshot(q, (snapshot) => {
-          const listEl = document.getElementById('scores-list'); listEl.innerHTML = ''; let rank = 1;
-          if(snapshot.empty) { listEl.innerHTML = '<div class="text-center text-gray-400 text-sm">Aucun record pour ce mode.</div>'; return; }
-          snapshot.forEach(doc => {
-            const data = doc.data();
-            if (rank === 1) {
-              if (modeConfig.type === 'race') { this.bestScore = data.timeMs; document.getElementById('wr-display').innerText = data.timeStr; } 
-              else { this.bestScore = data.score; document.getElementById('wr-display').innerText = data.score.toLocaleString() + " pts"; }
-              if (data.ghostData) { try { this.globalGhostData = JSON.parse(data.ghostData); GhostSystem.setGlobalGhost(this.globalGhostData); } catch(e) {} }
-            }
-            const row = document.createElement('div'); row.className = 'score-row';
-            const displayValue = modeConfig.type === 'race' ? data.timeStr : `${data.score} pts`;
-            row.innerHTML = `<span>#${rank} ${data.name}</span><span>${displayValue}</span>`;
-            listEl.appendChild(row); rank++;
-          });
-        });
+        try {
+            const { collection, query, orderBy, limit, onSnapshot } = window.fs;
+            let sortField = 'timeMs', sortDir = 'asc'; if (modeConfig.type === 'drift') { sortField = 'score'; sortDir = 'desc'; }
+            const q = query(collection(this.db, modeConfig.collection), orderBy(sortField, sortDir), limit(10));
+            this.unsubscribe = onSnapshot(q, (snapshot) => {
+              const listEl = document.getElementById('scores-list'); listEl.innerHTML = ''; let rank = 1;
+              if(snapshot.empty) { listEl.innerHTML = '<div class="text-center text-gray-400 text-sm">Aucun record pour ce mode.</div>'; return; }
+              snapshot.forEach(doc => {
+                const data = doc.data();
+                if (rank === 1) {
+                  if (modeConfig.type === 'race') { this.bestScore = data.timeMs; document.getElementById('wr-display').innerText = data.timeStr; } 
+                  else { this.bestScore = data.score; document.getElementById('wr-display').innerText = data.score.toLocaleString() + " pts"; }
+                  if (data.ghostData) { try { this.globalGhostData = JSON.parse(data.ghostData); GhostSystem.setGlobalGhost(this.globalGhostData); } catch(e) {} }
+                }
+                const row = document.createElement('div'); row.className = 'score-row';
+                const displayValue = modeConfig.type === 'race' ? data.timeStr : `${data.score} pts`;
+                row.innerHTML = `<span>#${rank} ${data.name}</span><span>${displayValue}</span>`;
+                listEl.appendChild(row); rank++;
+              });
+            }, (error) => { console.log("Leaderboard offline/index error"); });
+        } catch(e) { console.log("Cloud init fail"); }
       },
       async saveScore(name, value, displayStr, ghostData) {
         if(!this.db) return false;
-        const { collection, addDoc } = window.fs;
-        const safeGhost = JSON.stringify(ghostData).length < 950000 ? JSON.stringify(ghostData) : null;
-        const payload = { name: name.trim(), ghostData: safeGhost, date: Date.now() };
-        if (currentMode.type === 'race') { payload.timeMs = value; payload.timeStr = displayStr; } else { payload.score = value; payload.timeStr = displayStr; }
-        try { await addDoc(collection(this.db, currentMode.collection), payload); return true; } catch(e) { return false; }
+        try {
+            const { collection, addDoc } = window.fs;
+            const safeGhost = JSON.stringify(ghostData).length < 950000 ? JSON.stringify(ghostData) : null;
+            const payload = { name: name.trim(), ghostData: safeGhost, date: Date.now() };
+            if (currentMode.type === 'race') { payload.timeMs = value; payload.timeStr = displayStr; } else { payload.score = value; payload.timeStr = displayStr; }
+            await addDoc(collection(this.db, currentMode.collection), payload); return true; 
+        } catch(e) { return false; }
       }
     };
 
@@ -383,7 +412,7 @@
         const x = curr.x + (next.x - curr.x) * r, y = curr.y + (next.y - curr.y) * r, a = curr.a + (next.a - curr.a) * r;
         ctx.save(); ctx.translate(x, y); ctx.rotate(a + Math.PI/2); ctx.globalAlpha = 0.5;
         if(carImage.complete){ ctx.drawImage(carImage, -22, -40, 44, 80); ctx.globalCompositeOperation = 'source-atop'; ctx.fillStyle = 'rgba(251,191,36,0.6)'; ctx.fillRect(-22, -40, 44, 80); }
-        ctx.globalAlpha = 0.8; ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = "#fbbf24"; ctx.font = "bold 10px Arial"; ctx.textAlign = "center"; ctx.fillText("CHAMPION", 0, -45); ctx.restore();
+        ctx.globalAlpha = 0.8; ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = "#fbbf24"; ctx.font = "bold 10px Arial"; ctx.textAlign = "center"; ctx.fillText("GHOST", 0, -45); ctx.restore();
       }
     };
 
@@ -517,37 +546,53 @@
     };
 
     const RaceManager = {
-      totalLaps: 3, currentLap: 1, state: 'menu', startTime: 0, lapStartTime: 0, bestLapTime: Infinity,
+      totalLaps: 3, currentLap: 1, state: 'menu', startTime: 0, lapStartTime: 0, bestLapTime: Infinity, selectedCategory: null,
       checkpoints: [ {x:500,y:-400,p:false}, {x:400,y:100,p:false}, {x:-200,y:400,p:false}, {x:-900,y:0,p:false} ],
       
-      selectMode(modeKey) {
-        if (modeKey === 'drift') { document.getElementById('welcome-screen').style.display = 'none'; document.getElementById('car-select-screen').style.display = 'flex'; return; }
-        currentMode = MODES[modeKey]; this.finalizeModeSelection();
-      },
+      goToDriftMenu() { document.getElementById('welcome-screen').style.display = 'none'; document.getElementById('car-select-screen').style.display = 'flex'; },
+      goToRaceSubMenu() { document.getElementById('welcome-screen').style.display = 'none'; document.getElementById('race-sub-screen').style.display = 'flex'; },
+      backToMain() { document.getElementById('car-select-screen').style.display = 'none'; document.getElementById('race-sub-screen').style.display = 'none'; document.getElementById('welcome-screen').style.display = 'flex'; },
+      backToSubMenu() { document.getElementById('difficulty-screen').style.display = 'none'; document.getElementById('race-sub-screen').style.display = 'flex'; },
+
       confirmDriftCar(carType) {
           currentMode = MODES.drift; currentMode.physics = DRIFT_CARS_CONFIG[carType].physics; currentMode.colors = DRIFT_CARS_CONFIG[carType].colors;
+          this.totalLaps = 3; 
           document.getElementById('car-select-screen').style.display = 'none'; this.finalizeModeSelection();
       },
+      selectCategory(cat) {
+          this.selectedCategory = cat;
+          document.getElementById('race-sub-screen').style.display = 'none'; document.getElementById('difficulty-screen').style.display = 'flex';
+      },
+      selectDifficulty(diff) {
+          currentMode = MODES[diff];
+          if(this.selectedCategory === 'practice') { this.totalLaps = Infinity; currentMode.name = "ENTRAÎNEMENT (" + diff.toUpperCase() + ")"; }
+          else { this.totalLaps = 3; currentMode.name = "CONTRE-LA-MONTRE (" + diff.toUpperCase() + ")"; }
+          document.getElementById('difficulty-screen').style.display = 'none'; this.finalizeModeSelection();
+      },
       finalizeModeSelection() {
-          document.getElementById('welcome-screen').style.display = 'none'; document.getElementById('leaderboard-panel').style.display = 'block'; document.getElementById('mode-title').innerText = currentMode.name;
+          AudioSys.unlock();
+          document.getElementById('leaderboard-panel').style.display = 'block'; document.getElementById('mode-title').innerText = currentMode.name;
           const label = document.getElementById('main-stat-label'); const subtitle = document.getElementById('lb-subtitle');
           if (currentMode.type === 'drift') { label.innerText = "SCORE"; subtitle.innerText = "MAXIMISEZ VOS POINTS DE DÉRAPAGE"; document.getElementById('main-stat-display').innerText = "0"; } 
           else { label.innerText = "CHRONO"; subtitle.innerText = "BATTEZ LE FANTÔME DU CHAMPION"; document.getElementById('main-stat-display').innerText = "00:00.000"; }
-          carImage.src = getCarSpriteUrl(currentMode.colors); window.Cloud.loadLeaderboard(currentMode);
+          carImage.src = getCarSpriteUrl(currentMode.colors); 
+          window.Cloud.loadLeaderboard(currentMode);
       },
       startRollingStart(){
         this.state = 'rolling'; car.reset(); car.x = -1200; car.y = -600; car.angle = 0; car.speed = currentMode.physics.maxSpeed; car.vx = car.speed;
-        this.checkpoints.forEach(cp=>cp.p=false); GhostSystem.resetRecording(); DriftSystem.reset(); 
+        this.checkpoints.forEach(cp=>cp.p=false); 
+        GhostSystem.resetRecording(); DriftSystem.reset(); 
         document.getElementById('leaderboard-panel').style.display='none'; document.getElementById('pause-menu').style.display='none'; document.getElementById('pause-btn').style.display='none'; document.getElementById('dq-screen').style.display='none';
         document.getElementById('mobile-controls').style.display='flex';
-        document.getElementById('lap-display').innerText = `1 / ${this.totalLaps}`;
+        if (this.totalLaps === Infinity) document.getElementById('lap-display').innerText = "Tours: 0";
+        else document.getElementById('lap-display').innerText = `1 / ${this.totalLaps}`;
         if(currentMode.type === 'drift') document.getElementById('main-stat-display').innerText = "0"; else document.getElementById('main-stat-display').innerText = "00:00.000";
         const cd = document.getElementById('countdown-layer'); cd.style.display = 'flex'; cd.innerHTML = '<div class="rolling-text">PRÊT ?</div>';
       },
       beginRacing(){
         this.state='racing'; this.startTime = Date.now(); this.lapStartTime = this.startTime; this.currentLap = 1; this.bestLapTime = Infinity;
         document.getElementById('pause-btn').style.display='flex';
-        const cd = document.getElementById('countdown-layer'); cd.innerHTML = '<div class="go-text">DRIFT!</div>'; setTimeout(() => { if(this.state === 'racing') cd.style.display = 'none'; }, 1000);
+        const cd = document.getElementById('countdown-layer'); cd.innerHTML = '<div class="go-text">GO!</div>'; setTimeout(() => { if(this.state === 'racing') cd.style.display = 'none'; }, 1000);
       },
       disqualify(){
           this.state = 'disqualified';
@@ -567,10 +612,16 @@
       completeLap(now){
         DriftSystem.bankPoints();
         const lapTime = now - this.lapStartTime;
-        if(currentMode.type === 'race' && lapTime < this.bestLapTime){ this.bestLapTime = lapTime; GhostSystem.saveRecordingAsBest(); } 
-        else if (currentMode.type === 'drift') { GhostSystem.saveRecordingAsBest(); }
-        if(this.currentLap >= this.totalLaps) this.finishRace(now);
-        else{ this.currentLap++; this.lapStartTime = now; document.getElementById('lap-display').innerText = `${this.currentLap} / ${this.totalLaps}`; this.checkpoints.forEach(cp=>cp.p=false); if(currentMode.type === 'race') GhostSystem.resetRecording(); }
+        if (lapTime < this.bestLapTime) {
+            this.bestLapTime = lapTime; GhostSystem.saveRecordingAsBest(); 
+            if (this.totalLaps === Infinity) { GhostSystem.setGlobalGhost(GhostSystem.bestRecording); }
+        }
+        if(this.currentLap >= this.totalLaps) { this.finishRace(now); } else { 
+            this.currentLap++; this.lapStartTime = now; 
+            if(this.totalLaps === Infinity) document.getElementById('lap-display').innerText = `Tours: ${this.currentLap - 1}`;
+            else document.getElementById('lap-display').innerText = `${this.currentLap} / ${this.totalLaps}`;
+            this.checkpoints.forEach(cp=>cp.p=false); GhostSystem.resetRecording(); 
+        }
       },
       finishRace(now){
         this.state='finished'; let valueToSubmit, strToSubmit;
@@ -578,16 +629,11 @@
         else { valueToSubmit = this.bestLapTime; strToSubmit = this.formatTime(valueToSubmit); }
         document.getElementById('pause-btn').style.display='none'; document.getElementById('leaderboard-panel').style.display='block'; document.getElementById('start-btn').style.display='none'; document.getElementById('mobile-controls').style.display='none'; document.getElementById('drift-ui').style.display='none';
         document.getElementById('name-input-area').style.display='block'; document.getElementById('final-score-display').innerText = strToSubmit;
-        
-        const nameInput = document.getElementById('player-name');
-        const savedName = localStorage.getItem('drift_nc_username');
-        if(savedName) nameInput.value = savedName;
-
+        const nameInput = document.getElementById('player-name'); const savedName = localStorage.getItem('drift_nc_username'); if(savedName) nameInput.value = savedName;
         const submitBtn = document.getElementById('submit-score-btn'); const newBtn = submitBtn.cloneNode(true); submitBtn.parentNode.replaceChild(newBtn, submitBtn);
         newBtn.onclick = async () => {
           const name = document.getElementById('player-name').value; if(name.length < 1) return;
-          localStorage.setItem('drift_nc_username', name);
-          newBtn.innerText = "ENVOI..."; newBtn.disabled = true;
+          localStorage.setItem('drift_nc_username', name); newBtn.innerText = "ENVOI..."; newBtn.disabled = true;
           const saved = await window.Cloud.saveScore(name, valueToSubmit, strToSubmit, GhostSystem.bestRecording);
           if (saved) { document.getElementById('name-input-area').innerHTML = '<div class="text-emerald-300 font-black py-4">SCORE ENREGISTRÉ !</div><button class="action-btn" onclick="location.reload()">REJOUER</button>'; } else { newBtn.innerText = "RÉESSAYER"; newBtn.disabled = false; }
         };
@@ -605,32 +651,21 @@
         this.lastX=this.x; if(RaceManager.state!=='racing' && RaceManager.state !== 'rolling') return;
         const phys = currentMode.physics;
         if(Math.abs(this.speed)>0.1){ const dir = this.speed>0?1:-1; if(this.controls.l) this.angle -= phys.turnSpeed*dir; if(this.controls.r) this.angle += phys.turnSpeed*dir; }
-        
-        let f=0; 
-        if(this.controls.u) f=phys.acceleration; 
-        if(this.controls.d) f = -phys.acceleration * 0.6; 
-
+        let f=0; if(this.controls.u) f=phys.acceleration; if(this.controls.d) f = -phys.acceleration * 0.6; 
         this.vx += Math.cos(this.angle)*f; this.vy += Math.sin(this.angle)*f;
         const surface = Track.check(this.x, this.y);
         let fric = phys.friction; if(surface === 'sand') fric = phys.offRoadFriction; if(surface === 'sea') fric = 0.5;
         this.speed = Math.hypot(this.vx, this.vy); this.vx *= fric; this.vy *= fric;
         if(this.speed>phys.maxSpeed){ const r = phys.maxSpeed/this.speed; this.vx*=r; this.vy*=r; this.speed = phys.maxSpeed; }
-        
         this.x += this.vx; this.y += this.vy;
-
-        const moveA = Math.atan2(this.vy, this.vx);
-        let slip = Math.abs(moveA - this.angle); while(slip>Math.PI) slip-=Math.PI*2; while(slip<-Math.PI) slip+=Math.PI*2;
+        const moveA = Math.atan2(this.vy, this.vx); let slip = Math.abs(moveA - this.angle); while(slip>Math.PI) slip-=Math.PI*2; while(slip<-Math.PI) slip+=Math.PI*2;
         const drifting = (this.speed>4 && Math.abs(slip)>0.30);
-        DriftSystem.update(this, surface);
-        AudioSys.update(this.speed, (drifting && surface==='road'));
-
+        DriftSystem.update(this, surface); AudioSys.update(this.speed, (drifting && surface==='road'));
         if(drifting && surface==='road'){
           const c=Math.cos(this.angle), s=Math.sin(this.angle); const rX = this.x - c*20, rY = this.y - s*20;
           const x1=rX+s*11, y1=rY-c*11, x2=rX-s*11, y2=rY+c*11;
           this.skids.push({x:x1, y:y1, a:0.55, w:2.6}); this.skids.push({x:x2, y:y2, a:0.55, w:2.6});
-          // Dessiner trace permanente
-          VIS.addSkid(x1, y1, x1-this.vx*0.5, y1-this.vy*0.5, 0.2);
-          VIS.addSkid(x2, y2, x2-this.vx*0.5, y2-this.vy*0.5, 0.2);
+          VIS.addSkid(x1, y1, x1-this.vx*0.5, y1-this.vy*0.5, 0.2); VIS.addSkid(x2, y2, x2-this.vx*0.5, y2-this.vy*0.5, 0.2);
           if(Math.random()<0.55) Particles.spawn(rX, rY, -this.vx*0.15, -this.vy*0.15, 'smoke');
         }
         if(surface==='sand' && this.speed>3 && Math.random()<0.35) Particles.spawn(this.x, this.y, -this.vx*0.05, -this.vy*0.05, 'dust');
@@ -656,15 +691,6 @@
       el.ontouchstart=h; el.ontouchend=r; el.onmousedown=h; el.onmouseup=r; el.onmouseleave=r;
     };
     bindTouch('btn-left','l'); bindTouch('btn-right','r'); bindTouch('btn-gas','u'); bindTouch('btn-brake','d');
-
-    document.getElementById('btn-mode-normal').onclick = () => RaceManager.selectMode('normal');
-    document.getElementById('btn-mode-expert').onclick = () => RaceManager.selectMode('expert');
-    document.getElementById('btn-mode-drift').onclick = () => RaceManager.selectMode('drift');
-    document.getElementById('start-btn').onclick = () => RaceManager.startRollingStart();
-    document.getElementById('pause-btn').onclick = () => RaceManager.pauseGame();
-    document.getElementById('resume-btn').onclick = () => RaceManager.resumeGame();
-    document.getElementById('restart-btn').onclick = () => RaceManager.startRollingStart();
-    document.getElementById('quit-btn').onclick = () => RaceManager.quitToMenu();
 
     // AUTO-UNLOCK AUDIO ON ANY INTERACTION
     document.body.addEventListener('click', () => AudioSys.unlock(), {once:true});
