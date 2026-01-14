@@ -99,8 +99,11 @@
     #pause-btn{ position:absolute; top:75px; right:16px; width:44px; height:44px; border-radius:999px; display:none; align-items:center; justify-content:center; pointer-events:auto; z-index:10000; cursor:pointer; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); backdrop-filter:blur(5px); }
     .pause-icon{ width:16px; height:16px; position:relative; } .pause-icon::before, .pause-icon::after{ content:""; position:absolute; top:0; bottom:0; width:5px; border-radius:3px; background:white; } .pause-icon::before{ left:0; } .pause-icon::after{ right:0; }
     #pause-menu{ position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; z-index:80; background:rgba(15,23,42,0.8); backdrop-filter:blur(15px); pointer-events:auto; }
-    .menu-btn{ background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.3); padding:12px 30px; color:white; font-weight:900; border-radius:999px; cursor:pointer; margin:10px; width:220px; text-transform:uppercase; }
-    
+    .menu-btn{ background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.3); padding:12px 30px; color:white; font-weight:900; border-radius:999px; cursor:pointer; margin:10px; width:220px; text-transform:uppercase; transition:0.2s; pointer-events:auto; }
+    .menu-btn:hover{ background:white; color:#0f172a; }
+    .menu-btn.red{ border-color:#ef4444; color:#ef4444; background:rgba(239,68,68,0.1); }
+    .menu-btn.red:hover{ background:#ef4444; color:white; }
+
     #mobile-controls{ position:absolute; left:0; right:0; bottom:calc(18px + env(safe-area-inset-bottom)); height:150px; display:flex; justify-content:space-between; padding:0 18px; pointer-events:none; z-index:20; }
     .control-group{ display:flex; gap:14px; align-items:flex-end; pointer-events:auto; }
     .btn{ width:78px; height:78px; border-radius:999px; display:flex; align-items:center; justify-content:center; font-weight:900; color:white; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); backdrop-filter:blur(10px); touch-action:none; user-select:none; }
@@ -492,30 +495,22 @@
       selectMode(modeId) {
           if (modeId === 'practice') { currentMode = MODES.practice; this.totalLaps = Infinity; }
           else { currentMode = MODES[modeId]; this.totalLaps = 3; }
-          
           this.finalizeModeSelection();
       },
 
       confirmDriftCar(carType) {
-          currentMode = MODES.drift; 
-          currentMode.physics = DRIFT_CARS_CONFIG[carType].physics; 
-          currentMode.colors = DRIFT_CARS_CONFIG[carType].colors;
+          currentMode = MODES.drift; currentMode.physics = DRIFT_CARS_CONFIG[carType].physics; currentMode.colors = DRIFT_CARS_CONFIG[carType].colors;
           this.totalLaps = 3; 
-          document.getElementById('car-select-screen').style.display = 'none'; 
-          this.finalizeModeSelection();
+          document.getElementById('car-select-screen').style.display = 'none'; this.finalizeModeSelection();
       },
 
       finalizeModeSelection() {
           AudioSys.unlock();
           document.getElementById('welcome-screen').style.display = 'none';
-          document.getElementById('leaderboard-panel').style.display = 'block'; 
-          document.getElementById('mode-title').innerText = currentMode.name;
-          
-          const label = document.getElementById('main-stat-label'); 
-          const subtitle = document.getElementById('lb-subtitle');
-          if (currentMode.type === 'drift') { label.innerText = "SCORE"; subtitle.innerText = "MAXIMISEZ VOS POINTS"; document.getElementById('main-stat-display').innerText = "0"; } 
-          else { label.innerText = "CHRONO"; subtitle.innerText = "BATTEZ LE CHAMPION"; document.getElementById('main-stat-display').innerText = "00:00.000"; }
-          
+          document.getElementById('leaderboard-panel').style.display = 'block'; document.getElementById('mode-title').innerText = currentMode.name;
+          const label = document.getElementById('main-stat-label'); const subtitle = document.getElementById('lb-subtitle');
+          if (currentMode.type === 'drift') { label.innerText = "SCORE"; subtitle.innerText = "MAXIMISEZ VOS POINTS DE DÉRAPAGE"; document.getElementById('main-stat-display').innerText = "0"; } 
+          else { label.innerText = "CHRONO"; subtitle.innerText = "BATTEZ LE FANTÔME DU CHAMPION"; document.getElementById('main-stat-display').innerText = "00:00.000"; }
           carImage.src = getCarSpriteUrl(currentMode.colors); 
           Cloud.loadLeaderboard(currentMode);
       },
@@ -590,7 +585,8 @@
       },
       formatTime(ms){ let m = Math.floor(ms/60000), s = Math.floor((ms%60000)/1000), c = Math.floor((ms%1000)/10); return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}.${c.toString().padStart(2,'0')}`; },
       pauseGame(){ if(this.state==='racing'){ this.state='paused'; this.pausedTime = Date.now(); document.getElementById('pause-menu').style.display='flex'; document.getElementById('mobile-controls').style.display='none'; } },
-      resumeGame(){ if(this.state==='paused'){ const d = Date.now() - this.pausedTime; this.startTime += d; this.lapStartTime += d; this.state='racing'; document.getElementById('pause-menu').style.display='none'; document.getElementById('mobile-controls').style.display='flex'; } }
+      resumeGame(){ if(this.state==='paused'){ const d = Date.now() - this.pausedTime; this.startTime += d; this.lapStartTime += d; this.state='racing'; document.getElementById('pause-menu').style.display='none'; document.getElementById('mobile-controls').style.display='flex'; } },
+      quitToMenu(){ location.reload(); }
     };
 
     class Car{
