@@ -644,7 +644,7 @@
     function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', resize); resize(); Track.init();
 
-    const keys = {ArrowUp:'u',ArrowDown:'d',ArrowLeft:'l',ArrowRight:'r'};
+    const keys = {ArrowUp:'u',ArrowDown:'d',ArrowLeft:'l',ArrowRight:'r', z:'u',Z:'u',w:'u',W:'u', s:'d',S:'d', q:'l',Q:'l',a:'l',A:'l', d:'r',D:'r'};
     window.onkeydown = e => { if(keys[e.key]) car.controls[keys[e.key]]=true; };
     window.onkeyup   = e => { if(keys[e.key]) car.controls[keys[e.key]]=false; };
     const bindTouch = (id,k) => {
