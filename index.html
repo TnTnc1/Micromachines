@@ -117,10 +117,14 @@
     .action-btn{ width: 100%; margin-top: 12px; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.18); font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; background: linear-gradient(90deg, rgba(72,187,120,1), rgba(34,197,94,0.85)); box-shadow: 0 18px 45px rgba(0,0,0,0.35); transition: transform 150ms ease, filter 200ms ease; cursor:pointer; }
     .action-btn:hover{ transform: translateY(-1px); filter: brightness(1.05); }
 
+    /* Buttons Layer */
     #pause-btn{ position:absolute; top:75px; right:16px; width:44px; height:44px; border-radius:999px; display:none; align-items:center; justify-content:center; pointer-events:auto; z-index:50; cursor:pointer; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); backdrop-filter:blur(5px); }
     .pause-icon{ width:16px; height:16px; position:relative; }
     .pause-icon::before, .pause-icon::after{ content:""; position:absolute; top:0; bottom:0; width:5px; border-radius:3px; background:white; }
     .pause-icon::before{ left:0; } .pause-icon::after{ right:0; }
+    
+    #control-toggle-btn { position:absolute; top:75px; left:16px; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.2); backdrop-filter:blur(5px); border:1px solid rgba(255,255,255,0.3); z-index:50; display:none; align-items:center; justify-content:center; cursor:pointer; pointer-events:auto; font-size:20px; }
+
     #pause-menu{ position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; z-index:80; background:rgba(15,23,42,0.8); backdrop-filter:blur(15px); pointer-events:auto; }
     .menu-btn{ background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.3); padding:12px 30px; color:white; font-weight:900; border-radius:999px; cursor:pointer; margin:10px; width:220px; text-transform:uppercase; transition:0.2s; pointer-events:auto; }
     .menu-btn:hover{ background:white; color:#0f172a; }
@@ -128,12 +132,51 @@
     .menu-btn.red:hover{ background:#ef4444; color:white; }
 
     /* Controls */
-    #mobile-controls{ position:absolute; left:0; right:0; bottom:calc(18px + env(safe-area-inset-bottom)); height:150px; display:flex; justify-content:space-between; padding:0 18px; pointer-events:none; z-index:20; }
+    #mobile-controls{ position:absolute; left:0; right:0; bottom:calc(18px + env(safe-area-inset-bottom)); height:150px; display:flex; justify-content:space-between; padding:0 18px; pointer-events:none; z-index:20; transition: all 0.3s ease; }
     .control-group{ display:flex; gap:14px; align-items:flex-end; pointer-events:auto; }
     .btn{ width:78px; height:78px; border-radius:999px; display:flex; align-items:center; justify-content:center; font-weight:900; color:white; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); backdrop-filter:blur(10px); touch-action:none; user-select:none; }
     .btn:active, .btn.active{ transform:scale(0.95); background:rgba(255,255,255,0.3); }
     .btn.gas{ background:rgba(34,197,94,0.3); border-color:rgba(34,197,94,0.5); }
     .btn.brake{ background:rgba(239,68,68,0.3); border-color:rgba(239,68,68,0.5); }
+
+    /* --- ARCADE MODE (AUTO-GAS) STYLES --- */
+    body.arcade-mode #mobile-controls {
+        height: 100%;
+        padding: 0;
+        bottom: 0;
+        align-items: flex-end;
+    }
+    /* En mode arcade, on cache le bouton GAZ */
+    body.arcade-mode #btn-gas { display: none !important; }
+    
+    /* Boutons directionnels géants */
+    body.arcade-mode #btn-left {
+        position: absolute; top: 0; left: 0; bottom: 0;
+        width: 45%; height: 100%;
+        border-radius: 0; border: none;
+        background: linear-gradient(90deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+        justify-content: flex-start; padding-left: 20px; font-size: 2rem;
+    }
+    body.arcade-mode #btn-right {
+        position: absolute; top: 0; right: 0; bottom: 0;
+        width: 45%; height: 100%;
+        border-radius: 0; border: none;
+        background: linear-gradient(-90deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+        justify-content: flex-end; padding-right: 20px; font-size: 2rem;
+    }
+    
+    /* Frein central */
+    body.arcade-mode #btn-brake {
+        position: absolute; bottom: 30px; left: 50%;
+        transform: translateX(-50%);
+        width: 140px; height: 80px;
+        border-radius: 20px;
+        font-size: 1.2rem;
+        background: rgba(239, 68, 68, 0.4);
+        border: 2px solid rgba(239, 68, 68, 0.8);
+        z-index: 30;
+    }
+    body.arcade-mode .control-group { position: static; display: block; }
   </style>
 </head>
 
@@ -163,6 +206,7 @@
   </div>
 
   <div id="pause-btn"><div class="pause-icon"></div></div>
+  <div id="control-toggle-btn">🎮</div>
 
   <div id="pause-menu">
     <div class="hud-card" style="min-width: 320px; text-align:center; pointer-events:auto; background:transparent; border:none; box-shadow:none;">
@@ -538,7 +582,7 @@
       startRollingStart(){
         this.state = 'rolling'; car.reset(); car.x = -1200; car.y = -600; car.angle = 0; car.speed = currentMode.physics.maxSpeed; car.vx = car.speed;
         this.checkpoints.forEach(cp=>cp.p=false); GhostSystem.resetRecording(); DriftSystem.reset(); 
-        document.getElementById('leaderboard-panel').style.display='none'; document.getElementById('pause-menu').style.display='none'; document.getElementById('pause-btn').style.display='none'; document.getElementById('dq-screen').style.display='none';
+        document.getElementById('leaderboard-panel').style.display='none'; document.getElementById('pause-menu').style.display='none'; document.getElementById('pause-btn').style.display='none'; document.getElementById('dq-screen').style.display='none'; document.getElementById('control-toggle-btn').style.display='none';
         document.getElementById('mobile-controls').style.display='flex';
         document.getElementById('lap-display').innerText = `1 / ${this.totalLaps}`;
         if(currentMode.type === 'drift') document.getElementById('main-stat-display').innerText = "0"; else document.getElementById('main-stat-display').innerText = "00:00.000";
@@ -547,12 +591,15 @@
       beginRacing(){
         this.state='racing'; this.startTime = Date.now(); this.lapStartTime = this.startTime; this.currentLap = 1; this.bestLapTime = Infinity;
         document.getElementById('pause-btn').style.display='flex';
+        // Affiche le bouton Toggle Mode Arcade
+        document.getElementById('control-toggle-btn').style.display='flex';
         const cd = document.getElementById('countdown-layer'); cd.innerHTML = '<div class="go-text">DRIFT!</div>'; setTimeout(() => { if(this.state === 'racing') cd.style.display = 'none'; }, 1000);
       },
       disqualify(){
           this.state = 'disqualified';
           document.getElementById('mobile-controls').style.display = 'none';
           document.getElementById('pause-btn').style.display = 'none';
+          document.getElementById('control-toggle-btn').style.display = 'none';
           document.getElementById('drift-ui').style.display = 'none';
           document.getElementById('dq-screen').style.display = 'flex';
       },
@@ -576,7 +623,7 @@
         this.state='finished'; let valueToSubmit, strToSubmit;
         if (currentMode.type === 'drift') { valueToSubmit = DriftSystem.totalScore; strToSubmit = valueToSubmit.toLocaleString() + " pts"; } 
         else { valueToSubmit = this.bestLapTime; strToSubmit = this.formatTime(valueToSubmit); }
-        document.getElementById('pause-btn').style.display='none'; document.getElementById('leaderboard-panel').style.display='block'; document.getElementById('start-btn').style.display='none'; document.getElementById('mobile-controls').style.display='none'; document.getElementById('drift-ui').style.display='none';
+        document.getElementById('pause-btn').style.display='none'; document.getElementById('control-toggle-btn').style.display='none'; document.getElementById('leaderboard-panel').style.display='block'; document.getElementById('start-btn').style.display='none'; document.getElementById('mobile-controls').style.display='none'; document.getElementById('drift-ui').style.display='none';
         document.getElementById('name-input-area').style.display='block'; document.getElementById('final-score-display').innerText = strToSubmit;
         
         const nameInput = document.getElementById('player-name');
@@ -593,8 +640,8 @@
         };
       },
       formatTime(ms){ let m = Math.floor(ms/60000), s = Math.floor((ms%60000)/1000), c = Math.floor((ms%1000)/10); return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}.${c.toString().padStart(2,'0')}`; },
-      pauseGame(){ if(this.state==='racing'){ this.state='paused'; this.pausedTime = Date.now(); document.getElementById('pause-menu').style.display='flex'; document.getElementById('mobile-controls').style.display='none'; } },
-      resumeGame(){ if(this.state==='paused'){ const d = Date.now() - this.pausedTime; this.startTime += d; this.lapStartTime += d; this.state='racing'; document.getElementById('pause-menu').style.display='none'; document.getElementById('mobile-controls').style.display='flex'; } },
+      pauseGame(){ if(this.state==='racing'){ this.state='paused'; this.pausedTime = Date.now(); document.getElementById('pause-menu').style.display='flex'; document.getElementById('mobile-controls').style.display='none'; document.getElementById('control-toggle-btn').style.display='none'; } },
+      resumeGame(){ if(this.state==='paused'){ const d = Date.now() - this.pausedTime; this.startTime += d; this.lapStartTime += d; this.state='racing'; document.getElementById('pause-menu').style.display='none'; document.getElementById('mobile-controls').style.display='flex'; document.getElementById('control-toggle-btn').style.display='flex'; } },
       quitToMenu(){ location.reload(); }
     };
 
@@ -604,6 +651,13 @@
       update(){
         this.lastX=this.x; if(RaceManager.state!=='racing' && RaceManager.state !== 'rolling') return;
         const phys = currentMode.physics;
+        
+        // --- LOGIQUE AUTO-GAS POUR LE MODE ARCADE ---
+        if (autoGasMode && RaceManager.state === 'racing' && !this.controls.d) {
+             this.controls.u = true;
+        }
+        // --------------------------------------------
+
         if(Math.abs(this.speed)>0.1){ const dir = this.speed>0?1:-1; if(this.controls.l) this.angle -= phys.turnSpeed*dir; if(this.controls.r) this.angle += phys.turnSpeed*dir; }
         
         let f=0; 
@@ -656,6 +710,22 @@
       el.ontouchstart=h; el.ontouchend=r; el.onmousedown=h; el.onmouseup=r; el.onmouseleave=r;
     };
     bindTouch('btn-left','l'); bindTouch('btn-right','r'); bindTouch('btn-gas','u'); bindTouch('btn-brake','d');
+
+    // --- GESTION DES MODES DE CONTRÔLE ---
+    let autoGasMode = false;
+    document.getElementById('control-toggle-btn').onclick = () => {
+        autoGasMode = !autoGasMode;
+        if(autoGasMode) {
+            document.body.classList.add('arcade-mode');
+            document.getElementById('btn-left').innerText = "<<";
+            document.getElementById('btn-right').innerText = ">>";
+        } else {
+            document.body.classList.remove('arcade-mode');
+            document.getElementById('btn-left').innerText = "⬅️";
+            document.getElementById('btn-right').innerText = "➡️";
+        }
+        if(navigator.vibrate) navigator.vibrate(50);
+    };
 
     document.getElementById('btn-mode-normal').onclick = () => RaceManager.selectMode('normal');
     document.getElementById('btn-mode-expert').onclick = () => RaceManager.selectMode('expert');
