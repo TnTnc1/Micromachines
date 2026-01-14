@@ -587,9 +587,18 @@
         else { valueToSubmit = this.bestLapTime; strToSubmit = this.formatTime(valueToSubmit); }
         document.getElementById('pause-btn').style.display='none'; document.getElementById('leaderboard-panel').style.display='block'; document.getElementById('start-btn').style.display='none'; document.getElementById('mobile-controls').style.display='none'; document.getElementById('drift-ui').style.display='none';
         document.getElementById('name-input-area').style.display='block'; document.getElementById('final-score-display').innerText = strToSubmit;
+        
+        // AUTO-FILL NAME
+        const nameInput = document.getElementById('player-name');
+        const savedName = localStorage.getItem('drift_nc_username');
+        if(savedName) nameInput.value = savedName;
+
         const submitBtn = document.getElementById('submit-score-btn'); const newBtn = submitBtn.cloneNode(true); submitBtn.parentNode.replaceChild(newBtn, submitBtn);
         newBtn.onclick = async () => {
           const name = document.getElementById('player-name').value; if(name.length < 1) return;
+          // SAVE NAME
+          localStorage.setItem('drift_nc_username', name);
+          
           newBtn.innerText = "ENVOI..."; newBtn.disabled = true;
           const saved = await window.Cloud.saveScore(name, valueToSubmit, strToSubmit, GhostSystem.bestRecording);
           if (saved) { document.getElementById('name-input-area').innerHTML = '<div class="text-emerald-300 font-black py-4">SCORE ENREGISTRÉ !</div><button class="action-btn" onclick="location.reload()">REJOUER</button>'; } else { newBtn.innerText = "RÉESSAYER"; newBtn.disabled = false; }
@@ -644,9 +653,16 @@
     function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', resize); resize(); Track.init();
 
-    const keys = {ArrowUp:'u',ArrowDown:'d',ArrowLeft:'l',ArrowRight:'r', z:'u',Z:'u',w:'u',W:'u', s:'d',S:'d', q:'l',Q:'l',a:'l',A:'l', d:'r',D:'r'};
+    // KEYBOARD MAPPING ADDED: ZQSD + WASD + ARROWS
+    const keys = {
+        ArrowUp:'u', z:'u', Z:'u', w:'u', W:'u',
+        ArrowDown:'d', s:'d', S:'d',
+        ArrowLeft:'l', q:'l', Q:'l', a:'l', A:'l',
+        ArrowRight:'r', d:'r', D:'r'
+    };
     window.onkeydown = e => { if(keys[e.key]) car.controls[keys[e.key]]=true; };
     window.onkeyup   = e => { if(keys[e.key]) car.controls[keys[e.key]]=false; };
+    
     const bindTouch = (id,k) => {
       const el=document.getElementById(id);
       const h = (e) => { e.preventDefault(); car.controls[k]=true; el.classList.add('active'); if(navigator.vibrate) navigator.vibrate(10); };
