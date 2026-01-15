@@ -157,7 +157,7 @@
     
     body.arcade-mode #btn-gas { display: none !important; }
     
-    /* GAUCHE */
+    /* GAUCHE : Invisible mais détectable */
     body.arcade-mode #btn-left {
         position: absolute; top: 0; left: 0; bottom: 0;
         width: 50%; height: 100%;
@@ -173,7 +173,7 @@
         opacity: 1;
     }
     
-    /* DROITE */
+    /* DROITE : Pareil */
     body.arcade-mode #btn-right {
         position: absolute; top: 0; right: 0; bottom: 0;
         width: 50%; height: 100%;
@@ -189,15 +189,20 @@
         opacity: 1;
     }
     
-    /* FREIN */
+    /* FREIN : MODIFIÉ - EN BAS, PLUS LARGE, TRANSPARENT */
     body.arcade-mode #btn-brake {
         position: absolute; 
-        bottom: 10px; left: 50%; transform: translateX(-50%);
-        width: 200px; height: 70px;
-        border-radius: 12px; font-size: 1.2rem;
-        background: rgba(239, 68, 68, 0.2);
+        bottom: 10px; /* Collé en bas */
+        left: 50%;
+        transform: translateX(-50%);
+        width: 200px; /* Plus large */
+        height: 70px; /* Moins haut */
+        border-radius: 12px;
+        font-size: 1.2rem;
+        background: rgba(239, 68, 68, 0.2); /* Plus transparent */
         border: 2px solid rgba(239, 68, 68, 0.4);
-        backdrop-filter: none; z-index: 30;
+        backdrop-filter: none;
+        z-index: 30;
     }
     body.arcade-mode .control-group { position: static; display: block; }
   </style>
@@ -352,6 +357,15 @@
   <canvas id="gameCanvas"></canvas>
 
   <script>
+    // --- AI WAYPOINTS (TRAJECTOIRE IDÉALE) ---
+    const AI_PATH = [
+        {x:-1200, y:-550}, {x:-800, y:-550}, {x:-400, y:-550}, {x:0, y:-550}, {x:350, y:-550}, // Ligne droite haut
+        {x:550, y:-450}, {x:550, y:-350}, {x:400, y:-200}, {x:400, y:-100}, {x:500, y:0}, {x:550, y:150}, // Sinueux droite
+        {x:400, y:250}, {x:200, y:150}, {x:0, y:200}, {x:-100, y:300}, // Diagonale centre
+        {x:-150, y:500}, {x:-400, y:550}, {x:-600, y:450}, // Virage bas
+        {x:-700, y:200}, {x:-850, y:0}, {x:-1000, y:-200}, {x:-1150, y:-400} // Remontée gauche
+    ];
+
     // --- REAL AUDIO SYSTEM ---
     const AudioSys = {
         ctx: null, engine: null, skid: null, engineGain: null, skidGain: null, loaded: false,
@@ -396,14 +410,14 @@
         constructor(x, y, config) {
             this.x = x; this.y = y; this.angle = 0; this.speed = 0; this.vx = 0; this.vy = 0;
             this.config = config; // { maxSpeed, turnSpeed, color }
-            this.targetCP = 0;
+            this.targetNode = 0;
             this.sprite = new Image();
             this.sprite.src = getCarSpriteUrl(config.colors);
         }
-        update(checkpoints) {
-            // Target logic
-            let cp = checkpoints[this.targetCP];
-            let dx = cp.x - this.x; let dy = cp.y - this.y;
+        update() {
+            // Target logic with WAYPOINTS (not Checkpoints)
+            let node = AI_PATH[this.targetNode];
+            let dx = node.x - this.x; let dy = node.y - this.y;
             let dist = Math.hypot(dx, dy);
             
             // Steer towards target
@@ -416,11 +430,12 @@
             
             // Speed logic
             const surface = Track.check(this.x, this.y);
-            let fric = 0.96; if(surface === 'sand') fric = 0.7; if(surface === 'sea') fric = 0.5;
+            let fric = 0.96; if(surface === 'sand') fric = 0.8; if(surface === 'sea') fric = 0.5;
             
             let acc = 0.2;
-            // Slow down for sharp turns or obstacles
-            if(Math.abs(diff) > 0.5) acc = 0.1; 
+            // Brake hard for sharp turns
+            if(Math.abs(diff) > 0.6) acc = -0.1;
+            else if(Math.abs(diff) > 0.3) acc = 0.05; 
             
             this.vx += Math.cos(this.angle) * acc;
             this.vy += Math.sin(this.angle) * acc;
@@ -435,9 +450,9 @@
             
             this.x += this.vx; this.y += this.vy;
             
-            // Checkpoint validation logic (simple)
-            if(dist < 300) {
-                this.targetCP = (this.targetCP + 1) % checkpoints.length;
+            // Switch to next waypoint when close
+            if(dist < 200) {
+                this.targetNode = (this.targetNode + 1) % AI_PATH.length;
             }
         }
         draw(ctx) {
@@ -775,6 +790,8 @@
                   new AICar(-1200, -650, { maxSpeed: 12.0, turnSpeed: 0.075, colors: { body1: '#2563eb', body2: '#3b82f6', body3: '#60a5fa', wing: '#1e40af' } }),
                   new AICar(-1150, -580, { maxSpeed: 12.8, turnSpeed: 0.085, colors: { body1: '#4c1d95', body2: '#6d28d9', body3: '#8b5cf6', wing: '#2e1065' } })
               ];
+        } else {
+            this.aiCars = [];
         }
 
         document.getElementById('leaderboard-panel').style.display='none'; document.getElementById('pause-menu').style.display='none'; document.getElementById('pause-btn').style.display='none'; document.getElementById('dq-screen').style.display='none'; document.getElementById('control-toggle-btn').style.display='none';
@@ -817,30 +834,26 @@
         
         // Update AI
         if (currentMode.id === 'arcade') {
-            this.aiCars.forEach(ai => ai.update(this.checkpoints));
+            this.aiCars.forEach(ai => ai.update());
             // Calculate Position
             let position = 1;
-            // Simple dist check to next CP logic for rank
-            // Simplified: Compare checkpoint progress + distance to it
-            // For robust ranking, we count CP passed. Here simple approximation:
-            // Just check who is ahead on X axis mostly since track loops
-            // Better: Check Checkpoint Index
             this.aiCars.forEach(ai => {
-                if (ai.targetCP > this.getCarCPIndex(car) || (ai.targetCP === this.getCarCPIndex(car) && this.distToCP(ai) < this.distToCP(car))) {
-                    position++;
-                }
+                // Si l'IA est au checkpoint suivant ou au même mais plus proche
+                const aiCP = ai.targetNode;
+                // Approximation: On compare qui est le plus avancé dans la liste des waypoints
+                // Pour simplifier, on regarde juste si l'IA a un index de node plus élevé
+                // Ou une distance au prochain node plus faible
+                // C'est une approximation, pour un vrai jeu il faudrait des "gates"
+                // Ici on fait simple: distance au prochain checkpoint officiel
+                if (this.distToNextCP(ai) < this.distToNextCP(car)) position++;
             });
             document.getElementById('main-stat-display').innerText = `${position} / 4`;
         }
       },
-      getCarCPIndex(c) { 
-          // Find next unpassed checkpoint index
-          for(let i=0; i<this.checkpoints.length; i++) if(!this.checkpoints[i].p) return i;
-          return 0;
-      },
-      distToCP(c) {
-          const cp = this.checkpoints[this.getCarCPIndex(c) || 0];
-          return Math.hypot(cp.x - c.x, cp.y - c.y);
+      distToNextCP(c) {
+          // Trouver le prochain CP actif
+          let target = this.checkpoints.find(cp => !cp.p) || this.checkpoints[0];
+          return Math.hypot(target.x - c.x, target.y - c.y);
       },
       completeLap(now){
         DriftSystem.bankPoints();
