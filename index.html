@@ -131,6 +131,21 @@
     .menu-btn.red{ border-color:#ef4444; color:#ef4444; background:rgba(239,68,68,0.1); }
     .menu-btn.red:hover{ background:#ef4444; color:white; }
 
+    /* --- SCREEN ROTATION MESSAGE --- */
+    #rotate-device-overlay {
+        position: fixed; inset: 0; z-index: 9999;
+        background: #0f172a; color: white;
+        display: none; flex-direction: column; align-items: center; justify-content: center;
+        text-align: center; padding: 20px;
+    }
+    .rotate-icon { font-size: 3rem; animation: spinRotate 2s infinite linear; margin-bottom: 20px; }
+    @keyframes spinRotate { 0% { transform: rotate(0deg); } 25% { transform: rotate(-90deg); } 50% { transform: rotate(-90deg); } 100% { transform: rotate(0deg); } }
+    
+    /* Detect Portrait on Mobile Devices */
+    @media screen and (orientation: portrait) and (max-width: 1024px) {
+        #rotate-device-overlay { display: flex; }
+    }
+
     /* Controls */
     #mobile-controls{ position:absolute; left:0; right:0; bottom:calc(18px + env(safe-area-inset-bottom)); height:150px; display:flex; justify-content:space-between; padding:0 18px; pointer-events:none; z-index:20; transition: all 0.3s ease; }
     .control-group{ display:flex; gap:14px; align-items:flex-end; pointer-events:auto; }
@@ -139,7 +154,7 @@
     .btn.gas{ background:rgba(34,197,94,0.3); border-color:rgba(34,197,94,0.5); }
     .btn.brake{ background:rgba(239,68,68,0.3); border-color:rgba(239,68,68,0.5); }
 
-    /* --- ARCADE MODE (AUTO-GAS) STYLES CORRIGÉS --- */
+    /* --- ARCADE MODE (AUTO-GAS) STYLES --- */
     body.arcade-mode #mobile-controls {
         height: 100%;
         padding: 0;
@@ -149,19 +164,18 @@
     
     body.arcade-mode #btn-gas { display: none !important; }
     
-    /* GAUCHE : Invisible mais détectable, icône centrée verticalement */
+    /* GAUCHE : Invisible mais détectable */
     body.arcade-mode #btn-left {
         position: absolute; top: 0; left: 0; bottom: 0;
         width: 50%; height: 100%;
         border-radius: 0; border: none;
-        background: transparent; /* TRANSPARENT ! */
-        backdrop-filter: none !important; /* PAS DE FLOU ! */
+        background: transparent;
+        backdrop-filter: none !important;
         box-shadow: none;
         justify-content: flex-start; padding-left: 20px; font-size: 2rem;
-        opacity: 0.6; /* Un peu transparent par défaut */
+        opacity: 0.6;
         transition: background 0.1s;
     }
-    /* Quand on appuie, petit flash subtil */
     body.arcade-mode #btn-left:active, body.arcade-mode #btn-left.active {
         background: rgba(255,255,255,0.05); 
         opacity: 1;
@@ -201,6 +215,12 @@
 </head>
 
 <body>
+  <div id="rotate-device-overlay">
+      <div class="rotate-icon">🔄</div>
+      <h2 style="font-family:Orbitron; font-weight:900; font-size:1.5rem;">TOURNEZ VOTRE<br>APPAREIL</h2>
+      <p style="margin-top:10px; opacity:0.8;">Le drift, ça se passe à l'horizontale !</p>
+  </div>
+
   <div id="hud-layer">
     <div class="hud-card" style="text-align:left;">
       <div class="hud-top"><div class="label">Tour</div></div>
@@ -743,6 +763,8 @@
     if (autoGasMode) {
         document.body.classList.add('arcade-mode');
         // Flèches sur les bords, pas de boutons
+        document.getElementById('btn-left').innerText = "⬅️";
+        document.getElementById('btn-right').innerText = "➡️";
     } else {
         document.body.classList.remove('arcade-mode');
         // Boutons classiques
