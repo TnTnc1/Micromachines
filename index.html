@@ -80,8 +80,8 @@
     .go-text { font-size: 8rem; color: #34d399; animation: countPop 0.8s cubic-bezier(0.1, 0.7, 1.0, 0.1) forwards; }
     @keyframes countPop{ 0%{ transform:scale(0.5); opacity:0; } 30%{ transform:scale(1.2); opacity:1; } 100%{ transform:scale(1); opacity:0; } }
 
-    #welcome-screen, #car-select-screen, #race-mode-select { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:70; background: linear-gradient(135deg, rgba(6,182,212,0.95), rgba(12,74,110,0.95)); backdrop-filter: blur(15px); overflow-y: auto; padding: 15px; }
-    #car-select-screen, #race-mode-select { display: none; z-index: 75; background: rgba(15, 23, 42, 0.95); }
+    #welcome-screen, #car-select-screen, #race-mode-select, #difficulty-select-screen { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:70; background: linear-gradient(135deg, rgba(6,182,212,0.95), rgba(12,74,110,0.95)); backdrop-filter: blur(15px); overflow-y: auto; padding: 15px; }
+    #car-select-screen, #race-mode-select, #difficulty-select-screen { display: none; z-index: 75; background: rgba(15, 23, 42, 0.95); }
 
     .badge{ display:inline-flex; align-items:center; gap:8px; padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.4); background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); font-size: 12px; font-weight: 600; margin-bottom: 10px; flex-shrink: 0; }
     .badge-dot{ width: 8px; height: 8px; border-radius: 50%; background: #67e8f9; box-shadow: 0 0 10px #67e8f9; }
@@ -100,6 +100,9 @@
     
     .btn-sub-ta { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-color: #93c5fd; }
     .btn-sub-training { background: linear-gradient(135deg, #10b981 0%, #047857 100%); border-color: #6ee7b7; }
+    
+    .btn-diff-normal { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); border-color: #fca5a5; }
+    .btn-diff-expert { background: linear-gradient(135deg, #1f2937 0%, #000000 100%); border-color: #9ca3af; }
 
     /* Car Cards */
     .car-card { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 16px; padding: 20px; text-align: center; width: 100%; max-width: 280px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
@@ -267,10 +270,19 @@
   <div id="race-mode-select">
       <h2 class="text-3xl font-black text-white mb-6" style="font-family:Orbitron;">TYPE DE COURSE</h2>
       <div class="mode-container" style="flex-direction:column;">
-          <button class="mode-btn btn-sub-ta" onclick="RaceManager.selectMode('normal')">CONTRE-LA-MONTRE<br><span style="font-size:0.65em; opacity:0.8;">3 Tours • Classement</span></button>
+          <button class="mode-btn btn-sub-ta" onclick="RaceManager.showDifficultySelect()">CONTRE-LA-MONTRE<br><span style="font-size:0.65em; opacity:0.8;">3 Tours • Classement</span></button>
           <button class="mode-btn btn-sub-training" onclick="RaceManager.selectMode('training')">ENTRAÎNEMENT<br><span style="font-size:0.65em; opacity:0.8;">Infini • Fantôme Local</span></button>
       </div>
       <button class="text-gray-400 mt-8 hover:text-white text-sm uppercase font-bold tracking-widest" onclick="location.reload()">Retour</button>
+  </div>
+
+  <div id="difficulty-select-screen">
+      <h2 class="text-3xl font-black text-white mb-6" style="font-family:Orbitron;">DIFFICULTÉ</h2>
+      <div class="mode-container" style="flex-direction:column;">
+          <button class="mode-btn btn-diff-normal" onclick="RaceManager.selectMode('normal')">NORMAL<br><span style="font-size:0.65em; opacity:0.8;">Standard • Voiture Rouge</span></button>
+          <button class="mode-btn btn-diff-expert" onclick="RaceManager.selectMode('expert')">EXPERT<br><span style="font-size:0.65em; opacity:0.8;">Vitesse Max • Voiture Noire</span></button>
+      </div>
+      <button class="text-gray-400 mt-8 hover:text-white text-sm uppercase font-bold tracking-widest" onclick="RaceManager.showRaceSubMenu()">Retour</button>
   </div>
 
   <div id="car-select-screen">
@@ -615,7 +627,13 @@
       
       showRaceSubMenu() {
           document.getElementById('welcome-screen').style.display = 'none';
+          document.getElementById('difficulty-select-screen').style.display = 'none';
           document.getElementById('race-mode-select').style.display = 'flex';
+      },
+      
+      showDifficultySelect() {
+          document.getElementById('race-mode-select').style.display = 'none';
+          document.getElementById('difficulty-select-screen').style.display = 'flex';
       },
       
       selectMode(modeKey) {
@@ -637,6 +655,7 @@
         }
         
         document.getElementById('race-mode-select').style.display = 'none';
+        document.getElementById('difficulty-select-screen').style.display = 'none';
         this.finalizeModeSelection();
       },
       
