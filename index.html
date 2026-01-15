@@ -100,8 +100,36 @@
     .btn-settings { background: linear-gradient(135deg, #4b5563 0%, #1f2937 100%); border-color: #9ca3af; min-width: 300px; flex: 0 0 100%; margin-top: 10px; font-size: 0.9rem; padding: 15px;}
     
     .btn-sub-ta { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-color: #93c5fd; }
-    .btn-sub-arcade { background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%); border-color: #fcd34d; }
     .btn-sub-training { background: linear-gradient(135deg, #10b981 0%, #047857 100%); border-color: #6ee7b7; }
+    
+    /* MULTIJOUEUR - COMING SOON STYLE */
+    .btn-multi-locked {
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        border: 2px solid #fbbf24;
+        color: #e5e7eb;
+        cursor: not-allowed;
+        opacity: 0.9;
+        position: relative;
+        overflow: hidden;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .btn-multi-locked:hover { transform: none; filter: none; }
+    .soon-badge {
+        margin-top: 5px;
+        background: #fbbf24;
+        color: #000;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.6em;
+        font-weight: 900;
+        letter-spacing: 1px;
+        animation: pulseBadge 2s infinite;
+    }
+    @keyframes pulseBadge { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
     
     .btn-diff-normal { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); border-color: #fca5a5; }
     .btn-diff-expert { background: linear-gradient(135deg, #1f2937 0%, #000000 100%); border-color: #9ca3af; }
@@ -157,7 +185,7 @@
     
     body.arcade-mode #btn-gas { display: none !important; }
     
-    /* GAUCHE : Invisible mais détectable */
+    /* GAUCHE */
     body.arcade-mode #btn-left {
         position: absolute; top: 0; left: 0; bottom: 0;
         width: 50%; height: 100%;
@@ -173,7 +201,7 @@
         opacity: 1;
     }
     
-    /* DROITE : Pareil */
+    /* DROITE */
     body.arcade-mode #btn-right {
         position: absolute; top: 0; right: 0; bottom: 0;
         width: 50%; height: 100%;
@@ -189,20 +217,15 @@
         opacity: 1;
     }
     
-    /* FREIN : MODIFIÉ - EN BAS, PLUS LARGE, TRANSPARENT */
+    /* FREIN */
     body.arcade-mode #btn-brake {
         position: absolute; 
-        bottom: 10px; /* Collé en bas */
-        left: 50%;
-        transform: translateX(-50%);
-        width: 200px; /* Plus large */
-        height: 70px; /* Moins haut */
-        border-radius: 12px;
-        font-size: 1.2rem;
-        background: rgba(239, 68, 68, 0.2); /* Plus transparent */
+        bottom: 10px; left: 50%; transform: translateX(-50%);
+        width: 200px; height: 70px;
+        border-radius: 12px; font-size: 1.2rem;
+        background: rgba(239, 68, 68, 0.2);
         border: 2px solid rgba(239, 68, 68, 0.4);
-        backdrop-filter: none;
-        z-index: 30;
+        backdrop-filter: none; z-index: 30;
     }
     body.arcade-mode .control-group { position: static; display: block; }
   </style>
@@ -283,8 +306,12 @@
       <h2 class="text-3xl font-black text-white mb-6" style="font-family:Orbitron;">TYPE DE COURSE</h2>
       <div class="mode-container" style="flex-direction:column;">
           <button class="mode-btn btn-sub-ta" onclick="RaceManager.setupRace('race')">CONTRE-LA-MONTRE<br><span style="font-size:0.65em; opacity:0.8;">3 Tours • Classement</span></button>
-          <button class="mode-btn btn-sub-arcade" onclick="RaceManager.setupRace('arcade')">COURSE ARCADE<br><span style="font-size:0.65em; opacity:0.8;">VS 3 IA • 3 Tours</span></button>
           <button class="mode-btn btn-sub-training" onclick="RaceManager.setupRace('training')">ENTRAÎNEMENT<br><span style="font-size:0.65em; opacity:0.8;">Infini • Fantôme Local</span></button>
+          <div class="mode-btn btn-multi-locked">
+              MULTIJOUEUR EN LIGNE<br>
+              <span style="font-size:0.6em; font-weight:400; opacity:0.8; color:#9ca3af;">AFFRONTEZ LE MONDE ENTIER</span>
+              <div class="soon-badge">PROCHAINEMENT</div>
+          </div>
       </div>
       <button class="text-gray-400 mt-8 hover:text-white text-sm uppercase font-bold tracking-widest" onclick="location.reload()">Retour</button>
   </div>
@@ -357,34 +384,60 @@
   <canvas id="gameCanvas"></canvas>
 
   <script>
-    // --- AI WAYPOINTS (TRAJECTOIRE IDÉALE) ---
-    const AI_PATH = [
-        {x:-1200, y:-550}, {x:-800, y:-550}, {x:-400, y:-550}, {x:0, y:-550}, {x:350, y:-550},
-        {x:550, y:-450}, {x:550, y:-350}, {x:400, y:-200}, {x:400, y:-100}, {x:500, y:0}, {x:550, y:150},
-        {x:400, y:250}, {x:200, y:150}, {x:0, y:200}, {x:-100, y:300},
-        {x:-150, y:500}, {x:-400, y:550}, {x:-600, y:450},
-        {x:-700, y:200}, {x:-850, y:0}, {x:-1000, y:-200}, {x:-1150, y:-400}
-    ];
-
-    // --- REAL AUDIO SYSTEM ---
+    // --- REAL AUDIO SYSTEM (MP3 SAMPLES) ---
     const AudioSys = {
         ctx: null, engine: null, skid: null, engineGain: null, skidGain: null, loaded: false,
+        
         async unlock(){
             if(this.ctx) { if(this.ctx.state === 'suspended') this.ctx.resume(); return; }
-            const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC();
+            
+            const AC = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AC();
+            
+            // Fichiers MP3 Fiables (Jake Gordon's JS Racer - MIT License)
             const engineUrl = 'https://raw.githubusercontent.com/jakesgordon/javascript-racer/master/sounds/engine.mp3';
             const skidUrl = 'https://raw.githubusercontent.com/jakesgordon/javascript-racer/master/sounds/screech.mp3';
-            const loadSample = async (url) => { try { const r = await fetch(url); const b = await r.arrayBuffer(); return await this.ctx.decodeAudioData(b); } catch(e) { return null; } };
-            const engBuf = await loadSample(engineUrl); const skidBuf = await loadSample(skidUrl);
-            if(engBuf){ this.engine = this.ctx.createBufferSource(); this.engine.buffer = engBuf; this.engine.loop = true; this.engineGain = this.ctx.createGain(); this.engineGain.gain.value = 0; this.engine.connect(this.engineGain); this.engineGain.connect(this.ctx.destination); this.engine.start(); }
-            if(skidBuf){ this.skid = this.ctx.createBufferSource(); this.skid.buffer = skidBuf; this.skid.loop = true; this.skidGain = this.ctx.createGain(); this.skidGain.gain.value = 0; this.skid.connect(this.skidGain); this.skidGain.connect(this.ctx.destination); this.skid.start(); }
+
+            const loadSample = async (url) => {
+                try {
+                    const r = await fetch(url);
+                    const b = await r.arrayBuffer();
+                    return await this.ctx.decodeAudioData(b);
+                } catch(e) { console.error("Audio Load Fail:", url); return null; }
+            };
+
+            const engBuf = await loadSample(engineUrl);
+            const skidBuf = await loadSample(skidUrl);
+
+            if(engBuf){
+                this.engine = this.ctx.createBufferSource();
+                this.engine.buffer = engBuf; this.engine.loop = true;
+                this.engineGain = this.ctx.createGain(); this.engineGain.gain.value = 0;
+                this.engine.connect(this.engineGain); this.engineGain.connect(this.ctx.destination);
+                this.engine.start();
+            }
+
+            if(skidBuf){
+                this.skid = this.ctx.createBufferSource();
+                this.skid.buffer = skidBuf; this.skid.loop = true;
+                this.skidGain = this.ctx.createGain(); this.skidGain.gain.value = 0;
+                this.skid.connect(this.skidGain); this.skidGain.connect(this.ctx.destination);
+                this.skid.start();
+            }
             this.loaded = true;
+            console.log("Audio System: Ready");
         },
         update(speed, driftFactor){
             if(!this.ctx || !this.engine) return;
-            const rate = 0.5 + (Math.abs(speed)/15); this.engine.playbackRate.setTargetAtTime(rate, this.ctx.currentTime, 0.1);
-            const vol = Math.min(0.1 + Math.abs(speed)/40, 0.3); this.engineGain.gain.setTargetAtTime(vol, this.ctx.currentTime, 0.1);
-            const skidVol = driftFactor ? 0.3 : 0; if(this.skidGain) this.skidGain.gain.setTargetAtTime(skidVol, this.ctx.currentTime, 0.05);
+            // Pitch shift basé sur la vitesse
+            const rate = 0.5 + (Math.abs(speed)/15); 
+            this.engine.playbackRate.setTargetAtTime(rate, this.ctx.currentTime, 0.1);
+            // Volume moteur
+            const vol = Math.min(0.1 + Math.abs(speed)/40, 0.3);
+            this.engineGain.gain.setTargetAtTime(vol, this.ctx.currentTime, 0.1);
+            // Volume drift
+            const skidVol = driftFactor ? 0.3 : 0;
+            if(this.skidGain) this.skidGain.gain.setTargetAtTime(skidVol, this.ctx.currentTime, 0.05);
         }
     };
 
@@ -397,7 +450,6 @@
         normal: { id: 'normal', type: 'race', name: 'NORMAL', physics: { acceleration: 0.22, maxSpeed: 12.5, friction: 0.965, turnSpeed: 0.075, offRoadFriction: 0.75 }, collection: 'world_tour_records_v3_normal', colors: { body1: '#c53030', body2: '#e53e3e', body3: '#fc8181', wing: '#742a2a' } },
         training: { id: 'training', type: 'race', name: 'ENTRAÎNEMENT', physics: { acceleration: 0.22, maxSpeed: 12.5, friction: 0.965, turnSpeed: 0.075, offRoadFriction: 0.75 }, collection: null, colors: { body1: '#2563eb', body2: '#3b82f6', body3: '#60a5fa', wing: '#1e40af' } },
         expert: { id: 'expert', type: 'race', name: 'EXPERT', physics: { acceleration: 0.35, maxSpeed: 22.0, friction: 0.96, turnSpeed: 0.085, offRoadFriction: 0.6 }, collection: 'world_tour_records_v3_expert', colors: { body1: '#111827', body2: '#1f2937', body3: '#374151', wing: '#000000' } },
-        arcade: { id: 'arcade', type: 'race', name: 'COURSE ARCADE', physics: { acceleration: 0.22, maxSpeed: 12.5, friction: 0.965, turnSpeed: 0.075, offRoadFriction: 0.75 }, collection: null, colors: { body1: '#c53030', body2: '#e53e3e', body3: '#fc8181', wing: '#742a2a' } },
         drift: { id: 'drift', type: 'drift', name: 'DRIFT KING', physics: DRIFT_CARS_CONFIG.pro.physics, collection: 'world_tour_records_v3_drift', colors: DRIFT_CARS_CONFIG.pro.colors }
     };
     let currentMode = MODES.normal;
@@ -405,70 +457,13 @@
     function getCarSpriteUrl(colors) { return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 80'%3E%3Cdefs%3E%3ClinearGradient id='bodyGrad' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' style='stop-color:${encodeURIComponent(colors.body1)}' /%3E%3Cstop offset='50%25' style='stop-color:${encodeURIComponent(colors.body2)}' /%3E%3Cstop offset='100%25' style='stop-color:${encodeURIComponent(colors.body1)}' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='2' y='2' width='40' height='76' rx='8' fill='rgba(0,0,0,0.3)' /%3E%3Cpath d='M6,10 Q2,20 2,40 Q2,60 6,70 L6,76 Q6,78 8,78 L36,78 Q38,78 38,76 L38,70 Q42,60 42,40 Q42,20 38,10 L36,4 Q36,2 34,2 L10,2 Q8,2 8,4 Z' fill='url(%23bodyGrad)' stroke='${encodeURIComponent(colors.wing)}' stroke-width='1' /%3E%3Cpath d='M8,20 L36,20 L34,32 L10,32 Z' fill='%232d3748' /%3E%3Cpath d='M10,48 L34,48 L36,60 L8,60 Z' fill='%231a202c' /%3E%3Crect x='9' y='33' width='26' height='14' fill='${encodeURIComponent(colors.body2)}' /%3E%3Crect x='4' y='68' width='36' height='8' rx='2' fill='${encodeURIComponent(colors.wing)}' /%3E%3Crect x='6' y='4' width='6' height='4' fill='%23faf089' /%3E%3Crect x='32' y='4' width='6' height='4' fill='%23faf089' /%3E%3C/svg%3E`; }
     const carImage = new Image(); carImage.src = getCarSpriteUrl(currentMode.colors);
 
-    // --- AI CAR CLASS ---
-    class AICar {
-        constructor(x, y, config) {
-            this.x = x; this.y = y; this.angle = 0; this.speed = 0; this.vx = 0; this.vy = 0;
-            this.config = config; // { maxSpeed, turnSpeed, color }
-            this.targetNode = 0;
-            this.sprite = new Image();
-            this.sprite.src = getCarSpriteUrl(config.colors);
-        }
-        update() {
-            // Target logic with WAYPOINTS (not Checkpoints)
-            let node = AI_PATH[this.targetNode];
-            let dx = node.x - this.x; let dy = node.y - this.y;
-            let dist = Math.hypot(dx, dy);
-            
-            // Steer towards target
-            let targetAngle = Math.atan2(dy, dx);
-            let diff = targetAngle - this.angle;
-            while(diff > Math.PI) diff -= Math.PI*2; while(diff < -Math.PI) diff += Math.PI*2;
-            
-            if (diff > 0.1) this.angle += this.config.turnSpeed;
-            else if (diff < -0.1) this.angle -= this.config.turnSpeed;
-            
-            // Speed logic
-            const surface = Track.check(this.x, this.y);
-            let fric = 0.96; if(surface === 'sand') fric = 0.8; if(surface === 'sea') fric = 0.5;
-            
-            let acc = 0.2;
-            // Brake hard for sharp turns
-            if(Math.abs(diff) > 0.6) acc = -0.1;
-            else if(Math.abs(diff) > 0.3) acc = 0.05; 
-            
-            this.vx += Math.cos(this.angle) * acc;
-            this.vy += Math.sin(this.angle) * acc;
-            this.speed = Math.hypot(this.vx, this.vy);
-            
-            this.vx *= fric; this.vy *= fric;
-            
-            if(this.speed > this.config.maxSpeed) {
-                const r = this.config.maxSpeed / this.speed;
-                this.vx *= r; this.vy *= r;
-            }
-            
-            this.x += this.vx; this.y += this.vy;
-            
-            // Switch to next waypoint when close
-            if(dist < 200) {
-                this.targetNode = (this.targetNode + 1) % AI_PATH.length;
-            }
-        }
-        draw(ctx) {
-            ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle + Math.PI/2);
-            if(this.sprite.complete) ctx.drawImage(this.sprite, -22, -40, 44, 80);
-            ctx.restore();
-        }
-    }
-
     // --- CLOUD ---
     window.Cloud = {
       db: null, bestScore: -Infinity, globalGhostData: null, unsubscribe: null,
       init(database) { this.db = database; },
       loadLeaderboard(modeConfig) {
-        if (modeConfig.id === 'training' || modeConfig.id === 'arcade') {
-            document.getElementById('scores-list').innerHTML = '<div class="text-center text-green-400 text-sm py-4">MODE LOCAL<br>PAS DE CLASSEMENT EN LIGNE</div>';
+        if (modeConfig.id === 'training') {
+            document.getElementById('scores-list').innerHTML = '<div class="text-center text-green-400 text-sm py-4">MODE ENTRAÎNEMENT<br>PAS DE CLASSEMENT</div>';
             return;
         }
         if(!this.db) return; if(this.unsubscribe) this.unsubscribe();
@@ -495,7 +490,7 @@
         });
       },
       async saveScore(name, value, displayStr, ghostData) {
-        if(!this.db || currentMode.id === 'training' || currentMode.id === 'arcade') return false;
+        if(!this.db || currentMode.id === 'training') return false;
         const { collection, addDoc } = window.fs;
         const safeGhost = JSON.stringify(ghostData).length < 950000 ? JSON.stringify(ghostData) : null;
         const payload = { name: name.trim(), ghostData: safeGhost, date: Date.now() };
@@ -670,7 +665,6 @@
       checkpoints: [ {x:500,y:-400,p:false}, {x:400,y:100,p:false}, {x:-200,y:400,p:false}, {x:-900,y:0,p:false} ],
       pendingSessionType: null, // 'race', 'training', 'arcade'
       trainingDifficulty: null, // 'normal' or 'expert' for storage
-      aiCars: [],
 
       showRaceSubMenu() {
           document.getElementById('welcome-screen').style.display = 'none';
@@ -702,11 +696,6 @@
               // Arcade start directly
               currentMode = MODES.arcade;
               this.totalLaps = 3;
-              this.aiCars = [
-                  new AICar(-1200, -550, { maxSpeed: 11.0, turnSpeed: 0.065, colors: { body1: '#16a34a', body2: '#22c55e', body3: '#4ade80', wing: '#14532d' } }), // Green (Easy)
-                  new AICar(-1200, -650, { maxSpeed: 12.0, turnSpeed: 0.075, colors: { body1: '#2563eb', body2: '#3b82f6', body3: '#60a5fa', wing: '#1e40af' } }), // Blue (Medium)
-                  new AICar(-1150, -580, { maxSpeed: 12.8, turnSpeed: 0.085, colors: { body1: '#4c1d95', body2: '#6d28d9', body3: '#8b5cf6', wing: '#2e1065' } })  // Purple (Hard)
-              ];
               document.getElementById('race-mode-select').style.display = 'none';
               this.finalizeModeSelection();
           } else {
@@ -717,7 +706,6 @@
       
       launchSession(difficulty) { // difficulty = 'normal' or 'expert'
           const baseConfig = MODES[difficulty];
-          this.aiCars = []; // No AI for solo modes
           
           if (this.pendingSessionType === 'training') {
               this.trainingDifficulty = difficulty; // Save for local storage key
@@ -790,17 +778,6 @@
         this.state = 'rolling'; car.reset(); car.x = -1200; car.y = -600; car.angle = 0; car.speed = currentMode.physics.maxSpeed; car.vx = car.speed;
         this.checkpoints.forEach(cp=>cp.p=false); GhostSystem.resetRecording(); DriftSystem.reset(); 
         
-        // Reset AI
-        if (currentMode.id === 'arcade') {
-             this.aiCars = [
-                  new AICar(-1200, -550, { maxSpeed: 11.0, turnSpeed: 0.065, colors: { body1: '#16a34a', body2: '#22c55e', body3: '#4ade80', wing: '#14532d' } }),
-                  new AICar(-1200, -650, { maxSpeed: 12.0, turnSpeed: 0.075, colors: { body1: '#2563eb', body2: '#3b82f6', body3: '#60a5fa', wing: '#1e40af' } }),
-                  new AICar(-1150, -580, { maxSpeed: 12.8, turnSpeed: 0.085, colors: { body1: '#4c1d95', body2: '#6d28d9', body3: '#8b5cf6', wing: '#2e1065' } })
-              ];
-        } else {
-            this.aiCars = [];
-        }
-
         document.getElementById('leaderboard-panel').style.display='none'; document.getElementById('pause-menu').style.display='none'; document.getElementById('pause-btn').style.display='none'; document.getElementById('dq-screen').style.display='none'; document.getElementById('control-toggle-btn').style.display='none';
         document.getElementById('mobile-controls').style.display='flex';
         
@@ -838,29 +815,6 @@
         GhostSystem.recordFrame(lapTime, car);
         this.checkpoints.forEach(cp => { if(!cp.p && Math.hypot(car.x-cp.x, car.y-cp.y) < 300) cp.p = true; });
         if(Math.abs(car.y - (-600)) < 80 && car.x > 0 && car.lastX <= 0 && this.checkpoints.every(cp => cp.p)) this.completeLap(now);
-        
-        // Update AI
-        if (currentMode.id === 'arcade') {
-            this.aiCars.forEach(ai => ai.update());
-            // Calculate Position
-            let position = 1;
-            this.aiCars.forEach(ai => {
-                // Si l'IA est au checkpoint suivant ou au même mais plus proche
-                const aiCP = ai.targetNode;
-                // Approximation: On compare qui est le plus avancé dans la liste des waypoints
-                // Pour simplifier, on regarde juste si l'IA a un index de node plus élevé
-                // Ou une distance au prochain node plus faible
-                // C'est une approximation, pour un vrai jeu il faudrait des "gates"
-                // Ici on fait simple: distance au prochain checkpoint officiel
-                if (this.distToNextCP(ai) < this.distToNextCP(car)) position++;
-            });
-            document.getElementById('main-stat-display').innerText = `${position} / 4`;
-        }
-      },
-      distToNextCP(c) {
-          // Trouver le prochain CP actif
-          let target = this.checkpoints.find(cp => !cp.p) || this.checkpoints[0];
-          return Math.hypot(target.x - c.x, target.y - c.y);
       },
       completeLap(now){
         DriftSystem.bankPoints();
@@ -1091,7 +1045,6 @@
           GhostSystem.drawGlobalGhost(ctx, time); 
           if(currentMode.type === 'race' && currentMode.id !== 'arcade') document.getElementById('main-stat-display').innerText = RaceManager.formatTime(time); 
       }
-      RaceManager.aiCars.forEach(ai => ai.draw(ctx));
       
       Particles.draw(ctx); car.draw(ctx); ctx.restore();
       VIS.drawVignette(ctx, canvas.width, canvas.height);
