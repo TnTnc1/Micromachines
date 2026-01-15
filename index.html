@@ -413,60 +413,25 @@
   <canvas id="gameCanvas"></canvas>
 
   <script>
-    // --- REAL AUDIO SYSTEM (MP3 SAMPLES) ---
+    // --- REAL AUDIO SYSTEM ---
     const AudioSys = {
         ctx: null, engine: null, skid: null, engineGain: null, skidGain: null, loaded: false,
-        
         async unlock(){
             if(this.ctx) { if(this.ctx.state === 'suspended') this.ctx.resume(); return; }
-            
-            const AC = window.AudioContext || window.webkitAudioContext;
-            this.ctx = new AC();
-            
-            // Fichiers MP3 Fiables (Jake Gordon's JS Racer - MIT License)
+            const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC();
             const engineUrl = 'https://raw.githubusercontent.com/jakesgordon/javascript-racer/master/sounds/engine.mp3';
             const skidUrl = 'https://raw.githubusercontent.com/jakesgordon/javascript-racer/master/sounds/screech.mp3';
-
-            const loadSample = async (url) => {
-                try {
-                    const r = await fetch(url);
-                    const b = await r.arrayBuffer();
-                    return await this.ctx.decodeAudioData(b);
-                } catch(e) { console.error("Audio Load Fail:", url); return null; }
-            };
-
-            const engBuf = await loadSample(engineUrl);
-            const skidBuf = await loadSample(skidUrl);
-
-            if(engBuf){
-                this.engine = this.ctx.createBufferSource();
-                this.engine.buffer = engBuf; this.engine.loop = true;
-                this.engineGain = this.ctx.createGain(); this.engineGain.gain.value = 0;
-                this.engine.connect(this.engineGain); this.engineGain.connect(this.ctx.destination);
-                this.engine.start();
-            }
-
-            if(skidBuf){
-                this.skid = this.ctx.createBufferSource();
-                this.skid.buffer = skidBuf; this.skid.loop = true;
-                this.skidGain = this.ctx.createGain(); this.skidGain.gain.value = 0;
-                this.skid.connect(this.skidGain); this.skidGain.connect(this.ctx.destination);
-                this.skid.start();
-            }
+            const loadSample = async (url) => { try { const r = await fetch(url); const b = await r.arrayBuffer(); return await this.ctx.decodeAudioData(b); } catch(e) { return null; } };
+            const engBuf = await loadSample(engineUrl); const skidBuf = await loadSample(skidUrl);
+            if(engBuf){ this.engine = this.ctx.createBufferSource(); this.engine.buffer = engBuf; this.engine.loop = true; this.engineGain = this.ctx.createGain(); this.engineGain.gain.value = 0; this.engine.connect(this.engineGain); this.engineGain.connect(this.ctx.destination); this.engine.start(); }
+            if(skidBuf){ this.skid = this.ctx.createBufferSource(); this.skid.buffer = skidBuf; this.skid.loop = true; this.skidGain = this.ctx.createGain(); this.skidGain.gain.value = 0; this.skid.connect(this.skidGain); this.skidGain.connect(this.ctx.destination); this.skid.start(); }
             this.loaded = true;
-            console.log("Audio System: Ready");
         },
         update(speed, driftFactor){
             if(!this.ctx || !this.engine) return;
-            // Pitch shift basé sur la vitesse
-            const rate = 0.5 + (Math.abs(speed)/15); 
-            this.engine.playbackRate.setTargetAtTime(rate, this.ctx.currentTime, 0.1);
-            // Volume moteur
-            const vol = Math.min(0.1 + Math.abs(speed)/40, 0.3);
-            this.engineGain.gain.setTargetAtTime(vol, this.ctx.currentTime, 0.1);
-            // Volume drift
-            const skidVol = driftFactor ? 0.3 : 0;
-            if(this.skidGain) this.skidGain.gain.setTargetAtTime(skidVol, this.ctx.currentTime, 0.05);
+            const rate = 0.5 + (Math.abs(speed)/15); this.engine.playbackRate.setTargetAtTime(rate, this.ctx.currentTime, 0.1);
+            const vol = Math.min(0.1 + Math.abs(speed)/40, 0.3); this.engineGain.gain.setTargetAtTime(vol, this.ctx.currentTime, 0.1);
+            const skidVol = driftFactor ? 0.3 : 0; if(this.skidGain) this.skidGain.gain.setTargetAtTime(skidVol, this.ctx.currentTime, 0.05);
         }
     };
 
@@ -485,6 +450,15 @@
 
     function getCarSpriteUrl(colors) { return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 80'%3E%3Cdefs%3E%3ClinearGradient id='bodyGrad' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' style='stop-color:${encodeURIComponent(colors.body1)}' /%3E%3Cstop offset='50%25' style='stop-color:${encodeURIComponent(colors.body2)}' /%3E%3Cstop offset='100%25' style='stop-color:${encodeURIComponent(colors.body1)}' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='2' y='2' width='40' height='76' rx='8' fill='rgba(0,0,0,0.3)' /%3E%3Cpath d='M6,10 Q2,20 2,40 Q2,60 6,70 L6,76 Q6,78 8,78 L36,78 Q38,78 38,76 L38,70 Q42,60 42,40 Q42,20 38,10 L36,4 Q36,2 34,2 L10,2 Q8,2 8,4 Z' fill='url(%23bodyGrad)' stroke='${encodeURIComponent(colors.wing)}' stroke-width='1' /%3E%3Cpath d='M8,20 L36,20 L34,32 L10,32 Z' fill='%232d3748' /%3E%3Cpath d='M10,48 L34,48 L36,60 L8,60 Z' fill='%231a202c' /%3E%3Crect x='9' y='33' width='26' height='14' fill='${encodeURIComponent(colors.body2)}' /%3E%3Crect x='4' y='68' width='36' height='8' rx='2' fill='${encodeURIComponent(colors.wing)}' /%3E%3Crect x='6' y='4' width='6' height='4' fill='%23faf089' /%3E%3Crect x='32' y='4' width='6' height='4' fill='%23faf089' /%3E%3C/svg%3E`; }
     const carImage = new Image(); carImage.src = getCarSpriteUrl(currentMode.colors);
+
+    // --- AI WAYPOINTS (TRAJECTOIRE IDÉALE) ---
+    const AI_PATH = [
+        {x:-1200, y:-550}, {x:-800, y:-550}, {x:-400, y:-550}, {x:0, y:-550}, {x:350, y:-550},
+        {x:550, y:-450}, {x:550, y:-350}, {x:400, y:-200}, {x:400, y:-100}, {x:500, y:0}, {x:550, y:150},
+        {x:400, y:250}, {x:200, y:150}, {x:0, y:200}, {x:-100, y:300},
+        {x:-150, y:500}, {x:-400, y:550}, {x:-600, y:450},
+        {x:-700, y:200}, {x:-850, y:0}, {x:-1000, y:-200}, {x:-1150, y:-400}
+    ];
 
     // --- CLOUD ---
     window.Cloud = {
@@ -539,13 +513,8 @@
       },
       drawGlobalGhost(ctx, time){
         let frames = this.globalFrames;
-        // En mode entraînement, on utilise le fantôme local (bestRecording)
-        if (currentMode.id === 'training' && this.bestRecording.length > 0) {
-            frames = this.bestRecording;
-        }
-        
+        if (currentMode.id === 'training' && this.bestRecording.length > 0) frames = this.bestRecording;
         if (!frames || frames.length < 2) return;
-        
         let idx = 0; while(idx < frames.length - 1 && frames[idx+1].t < time) idx++;
         const curr = frames[idx], next = frames[idx+1]; if (!next) return;
         const r = Math.max(0, Math.min(1, (time - curr.t) / (next.t - curr.t)));
@@ -553,7 +522,6 @@
         ctx.save(); ctx.translate(x, y); ctx.rotate(a + Math.PI/2); ctx.globalAlpha = 0.5;
         if(carImage.complete){ ctx.drawImage(carImage, -22, -40, 44, 80); ctx.globalCompositeOperation = 'source-atop'; ctx.fillStyle = 'rgba(251,191,36,0.6)'; ctx.fillRect(-22, -40, 44, 80); }
         ctx.globalAlpha = 0.8; ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = "#fbbf24"; ctx.font = "bold 10px Arial"; ctx.textAlign = "center"; 
-        
         const ghostName = currentMode.id === 'training' ? "MEILLEUR TOUR" : "CHAMPION";
         ctx.fillText(ghostName, 0, -45); 
         ctx.restore();
@@ -1001,7 +969,7 @@
     bindTouch('btn-left','l'); bindTouch('btn-right','r'); bindTouch('btn-gas','u'); bindTouch('btn-brake','d');
 
     // --- GESTION DES MODES DE CONTRÔLE ---
-    let autoGasMode = false; 
+    let autoGasMode = true; // DEFAULT: ARCADE (Auto-Gas)
 
     // Fonction toggle controls (centralisée)
     function toggleControls() {
@@ -1034,7 +1002,7 @@
     document.getElementById('controls-btn').onclick = toggleControls;
 
     // --- GESTION DU ZOOM ---
-    let globalZoom = 1.0;
+    let globalZoom = 0.65; // DEFAULT: FAR
     
     function toggleZoom() {
         if(globalZoom === 1.0) globalZoom = 0.65; else globalZoom = 1.0;
@@ -1054,12 +1022,16 @@
 
     // --- INIT SETTINGS ---
     function initSettings() {
+        // Controls Default: Arcade unless user set Classic
         const savedCtrl = localStorage.getItem('drift_nc_controls');
-        if (savedCtrl === 'arcade') autoGasMode = true;
+        if (savedCtrl === 'classic') autoGasMode = false;
+        else autoGasMode = true; 
         updateControlUI();
         
+        // Zoom Default: Far unless user set Close
         const savedZoom = localStorage.getItem('drift_nc_zoom');
-        if (savedZoom === 'far') globalZoom = 0.65;
+        if (savedZoom === 'close') globalZoom = 1.0;
+        else globalZoom = 0.65;
         updateZoomUI();
     }
     initSettings();
