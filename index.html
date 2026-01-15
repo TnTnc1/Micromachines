@@ -397,10 +397,6 @@
   <canvas id="gameCanvas"></canvas>
 
   <script>
-    // PRELOAD MOBIL LOGO
-    const mobilLogo = new Image();
-    mobilLogo.src = 'https://i.postimg.cc/ryxndwbM/mobil.webp';
-
     // --- AI WAYPOINTS (TRAJECTOIRE IDÉALE) ---
     const AI_PATH = [
         {x:-1200, y:-550}, {x:-800, y:-550}, {x:-400, y:-550}, {x:0, y:-550}, {x:350, y:-550},
@@ -645,11 +641,7 @@
       }
     };
 
-    // COULEURS MOBIL
-    const MOBIL_BLUE = '#0033a0';
-    const MOBIL_RED = '#e31d1c';
-
-    const TRACK_CONFIG = { roadColor: '#000000', sandColor: '#fcd34d' }; // Route NOIRE
+    const TRACK_CONFIG = { roadColor: '#334155', sandColor: '#fcd34d' };
     const Track = {
       collisionCtx: null,
       init(){
@@ -667,56 +659,11 @@
       },
       draw(ctx){
         ctx.save(); ctx.translate(-1500,-1500); VIS.drawSea(ctx); ctx.restore();
-        
-        // --- NOUVEAU LOGO DANS L'EAU (ÎLE CENTRALE) ---
-        if (mobilLogo.complete) {
-            ctx.save();
-            // Position centrale dans l'île (un peu décalé pour le style)
-            ctx.translate(-150, -100); 
-            // On le fait un peu plus grand pour qu'il se voie bien dans l'eau
-            ctx.drawImage(mobilLogo, -250, -100, 500, 200);
-            ctx.restore();
-        }
-        // ---------------------------------------------
-
         ctx.lineCap='round';ctx.lineJoin='round'; ctx.shadowColor="rgba(0,0,0,0.2)";ctx.shadowBlur=20;
-        
-        // SABLE
         ctx.strokeStyle=TRACK_CONFIG.sandColor;ctx.lineWidth=450;this.trace(ctx);ctx.stroke();ctx.shadowBlur=0;
-        
-        // ROUTE PRINCIPALE (Maintenant noire)
         ctx.strokeStyle=TRACK_CONFIG.roadColor;ctx.lineWidth=160;this.trace(ctx);ctx.stroke();
-
-        // --- VIBREURS BLEU ET BLANC (La touche Mobil) ---
-        ctx.save();
-        ctx.lineWidth = 180; 
-        ctx.strokeStyle = MOBIL_BLUE;
-        ctx.setLineDash([40, 40]);
-        this.trace(ctx);
-        ctx.stroke();
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineDashOffset = 40;
-        this.trace(ctx);
-        ctx.stroke();
-        ctx.restore();
-        // -----------------------------------------------
-
-        // LOGOS MOBIL SUR LA PISTE (Juste celui horizontal)
-        if (mobilLogo.complete) {
-            ctx.save();
-            // Logo 1 : Ligne droite du bas (ON GARDE CELUI-LA)
-            ctx.translate(-400, -600); // Position approximative sur la ligne droite
-            ctx.drawImage(mobilLogo, -150, -60, 300, 120); // Largeur 300, Hauteur 120, centré
-            ctx.restore();
-
-            // LE DEUXIEME LOGO DE TRAVERS A ETE SUPPRIME ICI
-        }
-
-        // LIGNE MEDIANE
         ctx.save();ctx.strokeStyle='#fff';ctx.setLineDash([40,40]);ctx.lineWidth=4;ctx.globalAlpha=0.3;this.trace(ctx);ctx.stroke();ctx.restore();
-        // LIGNE DE DEPART
         ctx.save();ctx.translate(0,-600);ctx.fillStyle='#fff';ctx.fillRect(-12,-80,24,160);for(let y=-80;y<80;y+=20)ctx.fillStyle=((y/20)%2===0)?'#000':'#fff',ctx.fillRect(y%40?-12:0,y,12,20);ctx.restore();
-        
         VIS.drawEnv(ctx);
       },
       check(x,y){
