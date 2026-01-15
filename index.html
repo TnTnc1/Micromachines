@@ -200,8 +200,7 @@
         background: transparent !important;
         backdrop-filter: none !important;
         box-shadow: none;
-        /* Positionnement interne pour l'élément enfant SVG */
-        display: block; /* On casse le flex pour utiliser absolute sur l'enfant */
+        display: block; 
         transition: none;
     }
     body.arcade-mode #btn-left .arcade-arrow {
@@ -744,6 +743,17 @@
               const storageKey = `drift_nc_training_${difficulty}`;
               const savedBest = localStorage.getItem(storageKey);
               window.Cloud.bestScore = savedBest ? parseInt(savedBest) : Infinity;
+              
+              // Load saved ghost data
+              const ghostKey = `drift_nc_ghost_${difficulty}`;
+              const savedGhost = localStorage.getItem(ghostKey);
+              if (savedGhost) {
+                  try {
+                      GhostSystem.bestRecording = JSON.parse(savedGhost);
+                  } catch(e) { console.error("Ghost load fail", e); }
+              } else {
+                  GhostSystem.bestRecording = [];
+              }
 
               // Create a hybrid mode
               currentMode = {
@@ -754,7 +764,6 @@
               };
               this.totalLaps = 999;
               GhostSystem.resetRecording();
-              GhostSystem.bestRecording = [];
           } else {
               // Standard Time Trial
               currentMode = baseConfig;
@@ -864,6 +873,12 @@
                     localStorage.setItem(`drift_nc_training_${this.trainingDifficulty}`, lapTime);
                     document.getElementById('wr-display').innerText = this.formatTime(lapTime);
                     
+                    // SAVE GHOST TO STORAGE
+                    GhostSystem.saveRecordingAsBest(); 
+                    try {
+                        localStorage.setItem(`drift_nc_ghost_${this.trainingDifficulty}`, JSON.stringify(GhostSystem.bestRecording));
+                    } catch(e) { console.warn("Ghost storage full"); }
+
                     // Flash Feedback
                     const disp = document.getElementById('main-stat-display');
                     disp.style.color = '#4ade80';
