@@ -276,7 +276,7 @@
           <button id="set-ctrl-btn" class="mode-btn" style="background:rgba(255,255,255,0.1);" onclick="toggleControls()">CONTRÔLES : CLASSIQUE</button>
           <button id="set-cam-btn" class="mode-btn" style="background:rgba(255,255,255,0.1);" onclick="toggleZoom()">CAMÉRA : PROCHE</button>
       </div>
-      <button class="text-gray-400 mt-8 hover:text-white text-sm uppercase font-bold tracking-widest" onclick="location.reload()">Retour</button>
+      <button class="text-gray-400 mt-8 hover:text-white text-sm uppercase font-bold tracking-widest" onclick="RaceManager.showMainMenu()">Retour</button>
   </div>
 
   <div id="race-mode-select">
@@ -359,11 +359,11 @@
   <script>
     // --- AI WAYPOINTS (TRAJECTOIRE IDÉALE) ---
     const AI_PATH = [
-        {x:-1200, y:-550}, {x:-800, y:-550}, {x:-400, y:-550}, {x:0, y:-550}, {x:350, y:-550}, // Ligne droite haut
-        {x:550, y:-450}, {x:550, y:-350}, {x:400, y:-200}, {x:400, y:-100}, {x:500, y:0}, {x:550, y:150}, // Sinueux droite
-        {x:400, y:250}, {x:200, y:150}, {x:0, y:200}, {x:-100, y:300}, // Diagonale centre
-        {x:-150, y:500}, {x:-400, y:550}, {x:-600, y:450}, // Virage bas
-        {x:-700, y:200}, {x:-850, y:0}, {x:-1000, y:-200}, {x:-1150, y:-400} // Remontée gauche
+        {x:-1200, y:-550}, {x:-800, y:-550}, {x:-400, y:-550}, {x:0, y:-550}, {x:350, y:-550},
+        {x:550, y:-450}, {x:550, y:-350}, {x:400, y:-200}, {x:400, y:-100}, {x:500, y:0}, {x:550, y:150},
+        {x:400, y:250}, {x:200, y:150}, {x:0, y:200}, {x:-100, y:300},
+        {x:-150, y:500}, {x:-400, y:550}, {x:-600, y:450},
+        {x:-700, y:200}, {x:-850, y:0}, {x:-1000, y:-200}, {x:-1150, y:-400}
     ];
 
     // --- REAL AUDIO SYSTEM ---
@@ -689,6 +689,13 @@
           document.getElementById('settings-screen').style.display = 'flex';
       },
       
+      showMainMenu() {
+          document.getElementById('settings-screen').style.display = 'none';
+          document.getElementById('difficulty-select-screen').style.display = 'none';
+          document.getElementById('race-mode-select').style.display = 'none';
+          document.getElementById('welcome-screen').style.display = 'flex';
+      },
+      
       setupRace(type) {
           this.pendingSessionType = type;
           if (type === 'arcade') {
@@ -995,15 +1002,17 @@
     bindTouch('btn-left','l'); bindTouch('btn-right','r'); bindTouch('btn-gas','u'); bindTouch('btn-brake','d');
 
     // --- GESTION DES MODES DE CONTRÔLE ---
-    
-    // Par défaut, pas d'auto-gas (le joueur doit l'activer via l'icone manette)
     let autoGasMode = false; 
 
     // Fonction toggle controls (centralisée)
     function toggleControls() {
         autoGasMode = !autoGasMode;
-        
-        // Mettre à jour les boutons dans les deux menus (Pause et Settings)
+        localStorage.setItem('drift_nc_controls', autoGasMode ? 'arcade' : 'classic');
+        updateControlUI();
+        if(navigator.vibrate) navigator.vibrate(50);
+    }
+    
+    function updateControlUI() {
         const ctrlBtnPause = document.getElementById('controls-btn');
         const ctrlBtnSettings = document.getElementById('set-ctrl-btn');
         
@@ -1011,47 +1020,50 @@
             document.body.classList.add('arcade-mode');
             document.getElementById('btn-left').innerText = "⬅️";
             document.getElementById('btn-right').innerText = "➡️";
-            
             if(ctrlBtnPause) ctrlBtnPause.innerText = "CONTRÔLES : ARCADE";
             if(ctrlBtnSettings) ctrlBtnSettings.innerText = "CONTRÔLES : ARCADE";
         } else {
             document.body.classList.remove('arcade-mode');
             document.getElementById('btn-left').innerText = "⬅️";
             document.getElementById('btn-right').innerText = "➡️";
-            
             if(ctrlBtnPause) ctrlBtnPause.innerText = "CONTRÔLES : CLASSIQUE";
             if(ctrlBtnSettings) ctrlBtnSettings.innerText = "CONTRÔLES : CLASSIQUE";
         }
-        if(navigator.vibrate) navigator.vibrate(50);
     }
 
-    // Gestion du Toggle Button (Jeu)
     document.getElementById('control-toggle-btn').onclick = toggleControls;
-    // Gestion du Toggle Button (Menu Pause)
     document.getElementById('controls-btn').onclick = toggleControls;
 
     // --- GESTION DU ZOOM ---
     let globalZoom = 1.0;
     
-    // Fonction toggle zoom (centralisée)
     function toggleZoom() {
-        // Mettre à jour les boutons dans les deux menus (Pause et Settings)
-        const zoomBtnPause = document.getElementById('zoom-btn');
-        const zoomBtnSettings = document.getElementById('set-cam-btn');
-
-        if(globalZoom === 1.0) {
-            globalZoom = 0.65;
-            if(zoomBtnPause) zoomBtnPause.innerText = "CAMÉRA : ÉLOIGNÉE";
-            if(zoomBtnSettings) zoomBtnSettings.innerText = "CAMÉRA : ÉLOIGNÉE";
-        } else {
-            globalZoom = 1.0;
-            if(zoomBtnPause) zoomBtnPause.innerText = "CAMÉRA : PROCHE";
-            if(zoomBtnSettings) zoomBtnSettings.innerText = "CAMÉRA : PROCHE";
-        }
+        if(globalZoom === 1.0) globalZoom = 0.65; else globalZoom = 1.0;
+        localStorage.setItem('drift_nc_zoom', globalZoom === 1.0 ? 'close' : 'far');
+        updateZoomUI();
     }
     
-    // Gestion du Zoom (Menu Pause et Settings)
+    function updateZoomUI() {
+        const zoomBtnPause = document.getElementById('zoom-btn');
+        const zoomBtnSettings = document.getElementById('set-cam-btn');
+        const txt = globalZoom === 1.0 ? "CAMÉRA : PROCHE" : "CAMÉRA : ÉLOIGNÉE";
+        if(zoomBtnPause) zoomBtnPause.innerText = txt;
+        if(zoomBtnSettings) zoomBtnSettings.innerText = txt;
+    }
+    
     document.getElementById('zoom-btn').onclick = toggleZoom;
+
+    // --- INIT SETTINGS ---
+    function initSettings() {
+        const savedCtrl = localStorage.getItem('drift_nc_controls');
+        if (savedCtrl === 'arcade') autoGasMode = true;
+        updateControlUI();
+        
+        const savedZoom = localStorage.getItem('drift_nc_zoom');
+        if (savedZoom === 'far') globalZoom = 0.65;
+        updateZoomUI();
+    }
+    initSettings();
 
     document.getElementById('start-btn').onclick = () => RaceManager.startRollingStart();
     document.getElementById('pause-btn').onclick = () => RaceManager.pauseGame();
@@ -1069,7 +1081,6 @@
       while (accumulator >= FIXED_STEP) { if (RaceManager.state === 'racing' || RaceManager.state === 'rolling') { car.update(); RaceManager.update(car); } Particles.update(); accumulator -= FIXED_STEP; }
       ctx.clearRect(0,0,canvas.width,canvas.height); ctx.save();
       
-      // SYSTÈME DE CAMÉRA AVEC ZOOM CORRECT (DEPUIS LE CENTRE)
       ctx.translate(canvas.width/2, canvas.height/2);
       ctx.scale(globalZoom, globalZoom);
       ctx.translate(-car.x - car.vx*10, -car.y - car.vy*10); // Offset caméra standard
@@ -1080,7 +1091,6 @@
           GhostSystem.drawGlobalGhost(ctx, time); 
           if(currentMode.type === 'race' && currentMode.id !== 'arcade') document.getElementById('main-stat-display').innerText = RaceManager.formatTime(time); 
       }
-      // Draw AI Cars
       RaceManager.aiCars.forEach(ai => ai.draw(ctx));
       
       Particles.draw(ctx); car.draw(ctx); ctx.restore();
