@@ -198,16 +198,19 @@
         opacity: 1;
     }
     
-    /* FREIN : Reste visible et stylé */
+    /* FREIN : MODIFIÉ - EN BAS, PLUS LARGE, TRANSPARENT */
     body.arcade-mode #btn-brake {
-        position: absolute; bottom: 30px; left: 50%;
+        position: absolute; 
+        bottom: 5px; /* Collé en bas */
+        left: 50%;
         transform: translateX(-50%);
-        width: 140px; height: 80px;
-        border-radius: 20px;
+        width: 200px; /* Plus large */
+        height: 60px; /* Moins haut */
+        border-radius: 12px;
         font-size: 1.2rem;
-        background: rgba(239, 68, 68, 0.4);
-        border: 2px solid rgba(239, 68, 68, 0.8);
-        backdrop-filter: blur(4px);
+        background: rgba(239, 68, 68, 0.2); /* Plus transparent */
+        border: 2px solid rgba(239, 68, 68, 0.4);
+        backdrop-filter: none;
         z-index: 30;
     }
     body.arcade-mode .control-group { position: static; display: block; }
@@ -803,8 +806,15 @@
       if (!lastTime) lastTime = t; let dt = t - lastTime; lastTime = t; if (dt > 100) dt = 100; accumulator += dt;
       while (accumulator >= FIXED_STEP) { if (RaceManager.state === 'racing' || RaceManager.state === 'rolling') { car.update(); RaceManager.update(car); } Particles.update(); accumulator -= FIXED_STEP; }
       ctx.clearRect(0,0,canvas.width,canvas.height); ctx.save();
-      let camX = canvas.width/2 - car.x - car.vx*10; let camY = canvas.height/2 - car.y - car.vy*10;
-      ctx.translate(camX, camY); Track.draw(ctx);
+      
+      // --- NOUVEAU SYSTÈME DE CAMÉRA (ZOOM & OFFSET) ---
+      const ZOOM = 0.65; // Dézoom (plus petit = plus loin)
+      ctx.translate(canvas.width/2, canvas.height/2); // Centre l'écran
+      ctx.scale(ZOOM, ZOOM); // Applique le zoom
+      // Caméra suit la voiture avec anticipation (offset)
+      ctx.translate(-car.x - car.vx*20, -car.y - car.vy*20);
+      
+      Track.draw(ctx);
       if(RaceManager.state === 'racing' || RaceManager.state === 'paused'){ const time = (RaceManager.state==='paused'?RaceManager.pausedTime:Date.now()) - RaceManager.lapStartTime; GhostSystem.drawGlobalGhost(ctx, time); if(currentMode.type === 'race') document.getElementById('main-stat-display').innerText = RaceManager.formatTime(time); }
       Particles.draw(ctx); car.draw(ctx); ctx.restore();
       VIS.drawVignette(ctx, canvas.width, canvas.height);
