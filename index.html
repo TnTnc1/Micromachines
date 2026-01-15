@@ -732,7 +732,23 @@
     bindTouch('btn-left','l'); bindTouch('btn-right','r'); bindTouch('btn-gas','u'); bindTouch('btn-brake','d');
 
     // --- GESTION DES MODES DE CONTRÔLE ---
-    let autoGasMode = false;
+    
+    // Détection basique du tactile
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    
+    // Si tactile, on active le mode Arcade (Auto-Gas) par défaut
+    let autoGasMode = isTouchDevice; 
+
+    // Initialisation Visuelle
+    if (autoGasMode) {
+        document.body.classList.add('arcade-mode');
+        // Flèches sur les bords, pas de boutons
+    } else {
+        document.body.classList.remove('arcade-mode');
+        // Boutons classiques
+    }
+
+    // Gestion du Toggle Button
     document.getElementById('control-toggle-btn').onclick = () => {
         autoGasMode = !autoGasMode;
         if(autoGasMode) {
