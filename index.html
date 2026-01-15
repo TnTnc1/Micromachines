@@ -35,7 +35,7 @@
 
   <style>
     :root{ --bg0:#0891b2; --bg1:#0c4a6e; --glass: rgba(255,255,255,0.15); --stroke: rgba(255,255,255,0.3); --gold:#fbbf24; --red:#ef4444; --purple:#d946ef; --green:#22c55e; }
-    *{ box-sizing: border-box; }
+    *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; /* Suppression du highlight natif mobile */ }
     body { margin:0; overflow:hidden; background: radial-gradient(circle at center, #22d3ee 0%, #0284c7 60%, #0c4a6e 100%); color:white; font-family: Inter, sans-serif; touch-action:none; user-select:none; }
     canvas{ display:block; }
 
@@ -161,15 +161,15 @@
         position: absolute; top: 0; left: 0; bottom: 0;
         width: 50%; height: 100%;
         border-radius: 0; border: none;
-        background: transparent;
+        background: transparent !important; /* CORRECTION : Transparent absolu */
         backdrop-filter: none !important;
         box-shadow: none;
         justify-content: flex-start; padding-left: 20px; font-size: 2rem;
-        opacity: 0.6;
-        transition: background 0.1s;
+        transition: none; /* Pas de transition */
     }
+    /* Suppression du changement de couleur au clic */
     body.arcade-mode #btn-left:active, body.arcade-mode #btn-left.active {
-        background: rgba(255,255,255,0.05); 
+        background: transparent !important;
         opacity: 1;
     }
     
@@ -178,15 +178,14 @@
         position: absolute; top: 0; right: 0; bottom: 0;
         width: 50%; height: 100%;
         border-radius: 0; border: none;
-        background: transparent;
+        background: transparent !important;
         backdrop-filter: none !important;
         box-shadow: none;
         justify-content: flex-end; padding-right: 20px; font-size: 2rem;
-        opacity: 0.6;
-        transition: background 0.1s;
+        transition: none;
     }
     body.arcade-mode #btn-right:active, body.arcade-mode #btn-right.active {
-        background: rgba(255,255,255,0.05);
+        background: transparent !important;
         opacity: 1;
     }
     
@@ -437,7 +436,6 @@
       loadLeaderboard(modeConfig) {
         if (modeConfig.id === 'training') {
             document.getElementById('scores-list').innerHTML = '<div class="text-center text-green-400 text-sm py-4">MODE ENTRAÎNEMENT<br>PAS DE CLASSEMENT</div>';
-            document.getElementById('wr-display').innerText = "TRAINING";
             return;
         }
         if(!this.db) return; if(this.unsubscribe) this.unsubscribe();
@@ -638,6 +636,7 @@
       totalLaps: 3, currentLap: 1, state: 'menu', startTime: 0, lapStartTime: 0, bestLapTime: Infinity,
       checkpoints: [ {x:500,y:-400,p:false}, {x:400,y:100,p:false}, {x:-200,y:400,p:false}, {x:-900,y:0,p:false} ],
       pendingSessionType: null, // 'race' or 'training'
+      trainingDifficulty: null, // 'normal' or 'expert' for storage
 
       showRaceSubMenu() {
           document.getElementById('welcome-screen').style.display = 'none';
@@ -666,9 +665,16 @@
           const baseConfig = MODES[difficulty];
           
           if (this.pendingSessionType === 'training') {
-              // Create a hybrid mode: Training Rules + Difficulty Physics
+              this.trainingDifficulty = difficulty; // Save for local storage key
+              
+              // Load saved best time from LocalStorage
+              const storageKey = `drift_nc_training_${difficulty}`;
+              const savedBest = localStorage.getItem(storageKey);
+              window.Cloud.bestScore = savedBest ? parseInt(savedBest) : Infinity;
+
+              // Create a hybrid mode
               currentMode = {
-                  ...MODES.training, // Inherit training name, no collection
+                  ...MODES.training, 
                   physics: baseConfig.physics,
                   colors: baseConfig.colors,
                   name: "ENTRAÎNEMENT (" + baseConfig.name + ")"
@@ -680,6 +686,7 @@
               // Standard Time Trial
               currentMode = baseConfig;
               this.totalLaps = 3;
+              window.Cloud.bestScore = Infinity; // Will be loaded from Cloud
           }
           
           document.getElementById('difficulty-select-screen').style.display = 'none';
@@ -692,7 +699,6 @@
             document.getElementById('car-select-screen').style.display = 'flex'; 
             return; 
         }
-        // Fallback for direct calls if any
         currentMode = MODES[modeKey];
         this.finalizeModeSelection();
       },
@@ -704,9 +710,19 @@
       finalizeModeSelection() {
           document.getElementById('welcome-screen').style.display = 'none'; document.getElementById('leaderboard-panel').style.display = 'block'; document.getElementById('mode-title').innerText = currentMode.name;
           const label = document.getElementById('main-stat-label'); const subtitle = document.getElementById('lb-subtitle');
-          if (currentMode.type === 'drift') { label.innerText = "SCORE"; subtitle.innerText = "MAXIMISEZ VOS POINTS DE DÉRAPAGE"; document.getElementById('main-stat-display').innerText = "0"; } 
-          else { label.innerText = "CHRONO"; subtitle.innerText = "BATTEZ LE FANTÔME DU CHAMPION"; document.getElementById('main-stat-display').innerText = "00:00.000"; }
-          carImage.src = getCarSpriteUrl(currentMode.colors); window.Cloud.loadLeaderboard(currentMode);
+          
+          // Initial Reset for Training Display
+          if (currentMode.id === 'training') {
+              label.innerText = "CHRONO"; 
+              subtitle.innerText = "BATTRE LE RECORD PERSONNEL"; 
+              document.getElementById('main-stat-display').innerText = "00:00.000";
+              // Load Leaderboard handles the right-side display
+              window.Cloud.loadLeaderboard(currentMode); 
+          }
+          else if (currentMode.type === 'drift') { label.innerText = "SCORE"; subtitle.innerText = "MAXIMISEZ VOS POINTS DE DÉRAPAGE"; document.getElementById('main-stat-display').innerText = "0"; window.Cloud.loadLeaderboard(currentMode); } 
+          else { label.innerText = "CHRONO"; subtitle.innerText = "BATTEZ LE FANTÔME DU CHAMPION"; document.getElementById('main-stat-display').innerText = "00:00.000"; window.Cloud.loadLeaderboard(currentMode); }
+          
+          carImage.src = getCarSpriteUrl(currentMode.colors); 
       },
       startRollingStart(){
         this.state = 'rolling'; car.reset(); car.x = -1200; car.y = -600; car.angle = 0; car.speed = currentMode.physics.maxSpeed; car.vx = car.speed;
@@ -752,18 +768,25 @@
         
         // Logique Fantôme & Best Time
         if(currentMode.type === 'race') {
-            if (lapTime < this.bestLapTime){ 
-                this.bestLapTime = lapTime; 
-                // En training, on save le ghost local immédiatement si c'est le meilleur de la session
+            // Check against current session OR stored best
+            let currentRecord = (currentMode.id === 'training') ? window.Cloud.bestScore : this.bestLapTime;
+
+            if (lapTime < currentRecord){ 
+                this.bestLapTime = lapTime; // Update session best
+                
                 if(currentMode.id === 'training') {
-                    GhostSystem.saveRecordingAsBest(); 
-                    // Petit feedback visuel
-                    const oldText = document.getElementById('main-stat-display').innerText;
-                    document.getElementById('main-stat-display').style.color = '#4ade80';
-                    setTimeout(() => document.getElementById('main-stat-display').style.color = 'white', 1000);
-                } else {
-                    GhostSystem.saveRecordingAsBest();
+                    // Update Global Storage & HUD
+                    window.Cloud.bestScore = lapTime;
+                    localStorage.setItem(`drift_nc_training_${this.trainingDifficulty}`, lapTime);
+                    document.getElementById('wr-display').innerText = this.formatTime(lapTime);
+                    
+                    // Flash Feedback
+                    const disp = document.getElementById('main-stat-display');
+                    disp.style.color = '#4ade80';
+                    setTimeout(() => disp.style.color = 'white', 1000);
                 }
+                
+                GhostSystem.saveRecordingAsBest(); 
             } 
         }
         else if (currentMode.type === 'drift') { GhostSystem.saveRecordingAsBest(); }
