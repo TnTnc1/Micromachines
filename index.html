@@ -80,8 +80,8 @@
     .go-text { font-size: 8rem; color: #34d399; animation: countPop 0.8s cubic-bezier(0.1, 0.7, 1.0, 0.1) forwards; }
     @keyframes countPop{ 0%{ transform:scale(0.5); opacity:0; } 30%{ transform:scale(1.2); opacity:1; } 100%{ transform:scale(1); opacity:0; } }
 
-    #welcome-screen, #car-select-screen { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:70; background: linear-gradient(135deg, rgba(6,182,212,0.95), rgba(12,74,110,0.95)); backdrop-filter: blur(15px); overflow-y: auto; padding: 15px; }
-    #car-select-screen { display: none; z-index: 75; background: rgba(15, 23, 42, 0.95); }
+    #welcome-screen, #car-select-screen, #race-mode-select { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:70; background: linear-gradient(135deg, rgba(6,182,212,0.95), rgba(12,74,110,0.95)); backdrop-filter: blur(15px); overflow-y: auto; padding: 15px; }
+    #car-select-screen, #race-mode-select { display: none; z-index: 75; background: rgba(15, 23, 42, 0.95); }
 
     .badge{ display:inline-flex; align-items:center; gap:8px; padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.4); background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); font-size: 12px; font-weight: 600; margin-bottom: 10px; flex-shrink: 0; }
     .badge-dot{ width: 8px; height: 8px; border-radius: 50%; background: #67e8f9; box-shadow: 0 0 10px #67e8f9; }
@@ -91,12 +91,15 @@
 
     /* Mode Buttons */
     .mode-container { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 600px; }
-    .mode-btn { flex: 1; min-width: 100px; padding: 15px 10px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; border: 2px solid rgba(255,255,255,0.2); color: #fff; cursor: pointer; transition: transform 0.2s, filter 0.2s; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    .mode-btn { flex: 1; min-width: 140px; padding: 20px 10px; border-radius: 16px; font-weight: 800; font-size: 1.1rem; text-transform: uppercase; border: 2px solid rgba(255,255,255,0.2); color: #fff; cursor: pointer; transition: transform 0.2s, filter 0.2s; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
     .mode-btn:hover { transform: scale(1.05); filter: brightness(1.2); }
     .mode-btn:active { transform: scale(0.95); }
-    .btn-normal { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); border-color: #fca5a5; }
-    .btn-expert { background: linear-gradient(135deg, #1f2937 0%, #000000 100%); border-color: #9ca3af; }
+    
+    .btn-race { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); border-color: #fca5a5; }
     .btn-drift { background: linear-gradient(135deg, #d946ef 0%, #a21caf 100%); border-color: #f0abfc; }
+    
+    .btn-sub-ta { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-color: #93c5fd; }
+    .btn-sub-training { background: linear-gradient(135deg, #10b981 0%, #047857 100%); border-color: #6ee7b7; }
 
     /* Car Cards */
     .car-card { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 16px; padding: 20px; text-align: center; width: 100%; max-width: 280px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
@@ -130,21 +133,6 @@
     .menu-btn:hover{ background:white; color:#0f172a; }
     .menu-btn.red{ border-color:#ef4444; color:#ef4444; background:rgba(239,68,68,0.1); }
     .menu-btn.red:hover{ background:#ef4444; color:white; }
-
-    /* --- SCREEN ROTATION MESSAGE --- */
-    #rotate-device-overlay {
-        position: fixed; inset: 0; z-index: 9999;
-        background: #0f172a; color: white;
-        display: none; flex-direction: column; align-items: center; justify-content: center;
-        text-align: center; padding: 20px;
-    }
-    .rotate-icon { font-size: 3rem; animation: spinRotate 2s infinite linear; margin-bottom: 20px; }
-    @keyframes spinRotate { 0% { transform: rotate(0deg); } 25% { transform: rotate(-90deg); } 50% { transform: rotate(-90deg); } 100% { transform: rotate(0deg); } }
-    
-    /* Detect Portrait on Mobile Devices */
-    @media screen and (orientation: portrait) and (max-width: 1024px) {
-        #rotate-device-overlay { display: flex; }
-    }
 
     /* Controls */
     #mobile-controls{ position:absolute; left:0; right:0; bottom:calc(18px + env(safe-area-inset-bottom)); height:150px; display:flex; justify-content:space-between; padding:0 18px; pointer-events:none; z-index:20; transition: all 0.3s ease; }
@@ -201,11 +189,11 @@
     /* FREIN : MODIFIÉ - EN BAS, PLUS LARGE, TRANSPARENT */
     body.arcade-mode #btn-brake {
         position: absolute; 
-        bottom: 5px; /* Collé en bas */
+        bottom: 10px; /* Collé en bas */
         left: 50%;
         transform: translateX(-50%);
         width: 200px; /* Plus large */
-        height: 60px; /* Moins haut */
+        height: 70px; /* Moins haut */
         border-radius: 12px;
         font-size: 1.2rem;
         background: rgba(239, 68, 68, 0.2); /* Plus transparent */
@@ -218,12 +206,6 @@
 </head>
 
 <body>
-  <div id="rotate-device-overlay">
-      <div class="rotate-icon">🔄</div>
-      <h2 style="font-family:Orbitron; font-weight:900; font-size:1.5rem;">TOURNEZ VOTRE<br>APPAREIL</h2>
-      <p style="margin-top:10px; opacity:0.8;">Le drift, ça se passe à l'horizontale !</p>
-  </div>
-
   <div id="hud-layer">
     <div class="hud-card" style="text-align:left;">
       <div class="hud-top"><div class="label">Tour</div></div>
@@ -275,12 +257,20 @@
     <div class="poster-wrap">
       <img id="poster-img" src="https://i.postimg.cc/vB21QZmP/image-drift-nc.png" alt="Drift NC Poster">
     </div>
-    <div class="mb-2 text-sm text-gray-200 font-bold tracking-widest uppercase">Choisis ta catégorie</div>
+    <div class="mb-2 text-sm text-gray-200 font-bold tracking-widest uppercase">MODE DE JEU</div>
     <div class="mode-container">
-        <button id="btn-mode-normal" class="mode-btn btn-normal" onclick="AudioSys.unlock()">NORMAL<br><span style="font-size:0.65em; opacity:0.8;">Chrono</span></button>
-        <button id="btn-mode-expert" class="mode-btn btn-expert" onclick="AudioSys.unlock()">EXPERT<br><span style="font-size:0.65em; opacity:0.8;">Chrono</span></button>
-        <button id="btn-mode-drift" class="mode-btn btn-drift" onclick="AudioSys.unlock()">DRIFT<br><span style="font-size:0.65em; opacity:0.8;">Points</span></button>
+        <button id="btn-race-menu" class="mode-btn btn-race" onclick="RaceManager.showRaceSubMenu()">COURSE<br><span style="font-size:0.65em; opacity:0.8;">Vitesse</span></button>
+        <button id="btn-drift-menu" class="mode-btn btn-drift" onclick="RaceManager.selectMode('drift')">DRIFT<br><span style="font-size:0.65em; opacity:0.8;">Points</span></button>
     </div>
+  </div>
+
+  <div id="race-mode-select">
+      <h2 class="text-3xl font-black text-white mb-6" style="font-family:Orbitron;">TYPE DE COURSE</h2>
+      <div class="mode-container" style="flex-direction:column;">
+          <button class="mode-btn btn-sub-ta" onclick="RaceManager.selectMode('normal')">CONTRE-LA-MONTRE<br><span style="font-size:0.65em; opacity:0.8;">3 Tours • Classement</span></button>
+          <button class="mode-btn btn-sub-training" onclick="RaceManager.selectMode('training')">ENTRAÎNEMENT<br><span style="font-size:0.65em; opacity:0.8;">Infini • Fantôme Local</span></button>
+      </div>
+      <button class="text-gray-400 mt-8 hover:text-white text-sm uppercase font-bold tracking-widest" onclick="location.reload()">Retour</button>
   </div>
 
   <div id="car-select-screen">
@@ -406,6 +396,7 @@
     };
     const MODES = {
         normal: { id: 'normal', type: 'race', name: 'NORMAL', physics: { acceleration: 0.22, maxSpeed: 12.5, friction: 0.965, turnSpeed: 0.075, offRoadFriction: 0.75 }, collection: 'world_tour_records_v3_normal', colors: { body1: '#c53030', body2: '#e53e3e', body3: '#fc8181', wing: '#742a2a' } },
+        training: { id: 'training', type: 'race', name: 'ENTRAÎNEMENT', physics: { acceleration: 0.22, maxSpeed: 12.5, friction: 0.965, turnSpeed: 0.075, offRoadFriction: 0.75 }, collection: null, colors: { body1: '#2563eb', body2: '#3b82f6', body3: '#60a5fa', wing: '#1e40af' } },
         expert: { id: 'expert', type: 'race', name: 'EXPERT', physics: { acceleration: 0.35, maxSpeed: 22.0, friction: 0.96, turnSpeed: 0.085, offRoadFriction: 0.6 }, collection: 'world_tour_records_v3_expert', colors: { body1: '#111827', body2: '#1f2937', body3: '#374151', wing: '#000000' } },
         drift: { id: 'drift', type: 'drift', name: 'DRIFT KING', physics: DRIFT_CARS_CONFIG.pro.physics, collection: 'world_tour_records_v3_drift', colors: DRIFT_CARS_CONFIG.pro.colors }
     };
@@ -419,6 +410,11 @@
       db: null, bestScore: -Infinity, globalGhostData: null, unsubscribe: null,
       init(database) { this.db = database; },
       loadLeaderboard(modeConfig) {
+        if (modeConfig.id === 'training') {
+            document.getElementById('scores-list').innerHTML = '<div class="text-center text-green-400 text-sm py-4">MODE ENTRAÎNEMENT<br>PAS DE CLASSEMENT</div>';
+            document.getElementById('wr-display').innerText = "TRAINING";
+            return;
+        }
         if(!this.db) return; if(this.unsubscribe) this.unsubscribe();
         this.bestScore = modeConfig.type === 'race' ? Infinity : 0; this.globalGhostData = null; GhostSystem.setGlobalGhost(null);
         document.getElementById('wr-display').innerText = "--:--.---";
@@ -443,7 +439,7 @@
         });
       },
       async saveScore(name, value, displayStr, ghostData) {
-        if(!this.db) return false;
+        if(!this.db || currentMode.id === 'training') return false;
         const { collection, addDoc } = window.fs;
         const safeGhost = JSON.stringify(ghostData).length < 950000 ? JSON.stringify(ghostData) : null;
         const payload = { name: name.trim(), ghostData: safeGhost, date: Date.now() };
@@ -462,15 +458,25 @@
         this.recording.push({ t: Math.round(time), x: Math.round(car.x), y: Math.round(car.y), a: parseFloat(car.angle.toFixed(2)) });
       },
       drawGlobalGhost(ctx, time){
-        if (!this.globalFrames || this.globalFrames.length < 2) return;
-        const frames = this.globalFrames;
+        let frames = this.globalFrames;
+        // En mode entraînement, on utilise le fantôme local (bestRecording)
+        if (currentMode.id === 'training' && this.bestRecording.length > 0) {
+            frames = this.bestRecording;
+        }
+        
+        if (!frames || frames.length < 2) return;
+        
         let idx = 0; while(idx < frames.length - 1 && frames[idx+1].t < time) idx++;
         const curr = frames[idx], next = frames[idx+1]; if (!next) return;
         const r = Math.max(0, Math.min(1, (time - curr.t) / (next.t - curr.t)));
         const x = curr.x + (next.x - curr.x) * r, y = curr.y + (next.y - curr.y) * r, a = curr.a + (next.a - curr.a) * r;
         ctx.save(); ctx.translate(x, y); ctx.rotate(a + Math.PI/2); ctx.globalAlpha = 0.5;
         if(carImage.complete){ ctx.drawImage(carImage, -22, -40, 44, 80); ctx.globalCompositeOperation = 'source-atop'; ctx.fillStyle = 'rgba(251,191,36,0.6)'; ctx.fillRect(-22, -40, 44, 80); }
-        ctx.globalAlpha = 0.8; ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = "#fbbf24"; ctx.font = "bold 10px Arial"; ctx.textAlign = "center"; ctx.fillText("CHAMPION", 0, -45); ctx.restore();
+        ctx.globalAlpha = 0.8; ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = "#fbbf24"; ctx.font = "bold 10px Arial"; ctx.textAlign = "center"; 
+        
+        const ghostName = currentMode.id === 'training' ? "MEILLEUR TOUR" : "CHAMPION";
+        ctx.fillText(ghostName, 0, -45); 
+        ctx.restore();
       }
     };
 
@@ -607,10 +613,33 @@
       totalLaps: 3, currentLap: 1, state: 'menu', startTime: 0, lapStartTime: 0, bestLapTime: Infinity,
       checkpoints: [ {x:500,y:-400,p:false}, {x:400,y:100,p:false}, {x:-200,y:400,p:false}, {x:-900,y:0,p:false} ],
       
-      selectMode(modeKey) {
-        if (modeKey === 'drift') { document.getElementById('welcome-screen').style.display = 'none'; document.getElementById('car-select-screen').style.display = 'flex'; return; }
-        currentMode = MODES[modeKey]; this.finalizeModeSelection();
+      showRaceSubMenu() {
+          document.getElementById('welcome-screen').style.display = 'none';
+          document.getElementById('race-mode-select').style.display = 'flex';
       },
+      
+      selectMode(modeKey) {
+        if (modeKey === 'drift') { 
+            document.getElementById('welcome-screen').style.display = 'none'; 
+            document.getElementById('car-select-screen').style.display = 'flex'; 
+            return; 
+        }
+        
+        currentMode = MODES[modeKey];
+        
+        // Configuration spécifique Entraînement
+        if (modeKey === 'training') {
+            this.totalLaps = 999; // Quasi infini
+            GhostSystem.resetRecording();
+            GhostSystem.bestRecording = []; // Reset local ghost for new session
+        } else {
+            this.totalLaps = 3;
+        }
+        
+        document.getElementById('race-mode-select').style.display = 'none';
+        this.finalizeModeSelection();
+      },
+      
       confirmDriftCar(carType) {
           currentMode = MODES.drift; currentMode.physics = DRIFT_CARS_CONFIG[carType].physics; currentMode.colors = DRIFT_CARS_CONFIG[carType].colors;
           document.getElementById('car-select-screen').style.display = 'none'; this.finalizeModeSelection();
@@ -627,7 +656,13 @@
         this.checkpoints.forEach(cp=>cp.p=false); GhostSystem.resetRecording(); DriftSystem.reset(); 
         document.getElementById('leaderboard-panel').style.display='none'; document.getElementById('pause-menu').style.display='none'; document.getElementById('pause-btn').style.display='none'; document.getElementById('dq-screen').style.display='none'; document.getElementById('control-toggle-btn').style.display='none';
         document.getElementById('mobile-controls').style.display='flex';
-        document.getElementById('lap-display').innerText = `1 / ${this.totalLaps}`;
+        
+        if (currentMode.id === 'training') {
+            document.getElementById('lap-display').innerText = `1 / ∞`;
+        } else {
+            document.getElementById('lap-display').innerText = `1 / ${this.totalLaps}`;
+        }
+        
         if(currentMode.type === 'drift') document.getElementById('main-stat-display').innerText = "0"; else document.getElementById('main-stat-display').innerText = "00:00.000";
         const cd = document.getElementById('countdown-layer'); cd.style.display = 'flex'; cd.innerHTML = '<div class="rolling-text">PRÊT ?</div>';
       },
@@ -657,10 +692,40 @@
       completeLap(now){
         DriftSystem.bankPoints();
         const lapTime = now - this.lapStartTime;
-        if(currentMode.type === 'race' && lapTime < this.bestLapTime){ this.bestLapTime = lapTime; GhostSystem.saveRecordingAsBest(); } 
+        
+        // Logique Fantôme & Best Time
+        if(currentMode.type === 'race') {
+            if (lapTime < this.bestLapTime){ 
+                this.bestLapTime = lapTime; 
+                // En training, on save le ghost local immédiatement si c'est le meilleur de la session
+                if(currentMode.id === 'training') {
+                    GhostSystem.saveRecordingAsBest(); 
+                    // Petit feedback visuel
+                    const oldText = document.getElementById('main-stat-display').innerText;
+                    document.getElementById('main-stat-display').style.color = '#4ade80';
+                    setTimeout(() => document.getElementById('main-stat-display').style.color = 'white', 1000);
+                } else {
+                    GhostSystem.saveRecordingAsBest();
+                }
+            } 
+        }
         else if (currentMode.type === 'drift') { GhostSystem.saveRecordingAsBest(); }
-        if(this.currentLap >= this.totalLaps) this.finishRace(now);
-        else{ this.currentLap++; this.lapStartTime = now; document.getElementById('lap-display').innerText = `${this.currentLap} / ${this.totalLaps}`; this.checkpoints.forEach(cp=>cp.p=false); if(currentMode.type === 'race') GhostSystem.resetRecording(); }
+        
+        // Fin de course ou Tour suivant
+        if(this.currentLap >= this.totalLaps && currentMode.id !== 'training') {
+            this.finishRace(now);
+        } else {
+            this.currentLap++; 
+            this.lapStartTime = now; 
+            if(currentMode.id === 'training') {
+                document.getElementById('lap-display').innerText = `${this.currentLap} / ∞`;
+            } else {
+                document.getElementById('lap-display').innerText = `${this.currentLap} / ${this.totalLaps}`;
+            }
+            this.checkpoints.forEach(cp=>cp.p=false); 
+            // Reset recording for new lap
+            GhostSystem.resetRecording(); 
+        }
       },
       finishRace(now){
         this.state='finished'; let valueToSubmit, strToSubmit;
@@ -756,22 +821,8 @@
 
     // --- GESTION DES MODES DE CONTRÔLE ---
     
-    // Détection basique du tactile
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    
-    // Si tactile, on active le mode Arcade (Auto-Gas) par défaut
-    let autoGasMode = isTouchDevice; 
-
-    // Initialisation Visuelle
-    if (autoGasMode) {
-        document.body.classList.add('arcade-mode');
-        // Flèches sur les bords, pas de boutons
-        document.getElementById('btn-left').innerText = "⬅️";
-        document.getElementById('btn-right').innerText = "➡️";
-    } else {
-        document.body.classList.remove('arcade-mode');
-        // Boutons classiques
-    }
+    // Par défaut, pas d'auto-gas (le joueur doit l'activer via l'icone manette)
+    let autoGasMode = false; 
 
     // Gestion du Toggle Button
     document.getElementById('control-toggle-btn').onclick = () => {
@@ -788,9 +839,6 @@
         if(navigator.vibrate) navigator.vibrate(50);
     };
 
-    document.getElementById('btn-mode-normal').onclick = () => RaceManager.selectMode('normal');
-    document.getElementById('btn-mode-expert').onclick = () => RaceManager.selectMode('expert');
-    document.getElementById('btn-mode-drift').onclick = () => RaceManager.selectMode('drift');
     document.getElementById('start-btn').onclick = () => RaceManager.startRollingStart();
     document.getElementById('pause-btn').onclick = () => RaceManager.pauseGame();
     document.getElementById('resume-btn').onclick = () => RaceManager.resumeGame();
@@ -806,15 +854,8 @@
       if (!lastTime) lastTime = t; let dt = t - lastTime; lastTime = t; if (dt > 100) dt = 100; accumulator += dt;
       while (accumulator >= FIXED_STEP) { if (RaceManager.state === 'racing' || RaceManager.state === 'rolling') { car.update(); RaceManager.update(car); } Particles.update(); accumulator -= FIXED_STEP; }
       ctx.clearRect(0,0,canvas.width,canvas.height); ctx.save();
-      
-      // --- NOUVEAU SYSTÈME DE CAMÉRA (ZOOM & OFFSET) ---
-      const ZOOM = 0.65; // Dézoom (plus petit = plus loin)
-      ctx.translate(canvas.width/2, canvas.height/2); // Centre l'écran
-      ctx.scale(ZOOM, ZOOM); // Applique le zoom
-      // Caméra suit la voiture avec anticipation (offset)
-      ctx.translate(-car.x - car.vx*20, -car.y - car.vy*20);
-      
-      Track.draw(ctx);
+      let camX = canvas.width/2 - car.x - car.vx*10; let camY = canvas.height/2 - car.y - car.vy*10;
+      ctx.translate(camX, camY); Track.draw(ctx);
       if(RaceManager.state === 'racing' || RaceManager.state === 'paused'){ const time = (RaceManager.state==='paused'?RaceManager.pausedTime:Date.now()) - RaceManager.lapStartTime; GhostSystem.drawGlobalGhost(ctx, time); if(currentMode.type === 'race') document.getElementById('main-stat-display').innerText = RaceManager.formatTime(time); }
       Particles.draw(ctx); car.draw(ctx); ctx.restore();
       VIS.drawVignette(ctx, canvas.width, canvas.height);
