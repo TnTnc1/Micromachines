@@ -240,6 +240,7 @@
     <div class="hud-card" style="min-width: 320px; text-align:center; pointer-events:auto; background:transparent; border:none; box-shadow:none;">
       <h2 class="text-4xl font-black mb-6 text-white" style="font-family:Orbitron;">PAUSE</h2>
       <button id="resume-btn" class="menu-btn">Reprendre</button>
+      <button id="controls-btn" class="menu-btn">CONTRÔLES : CLASSIQUE</button>
       <button id="zoom-btn" class="menu-btn">CAMÉRA : PROCHE</button>
       <button id="restart-btn" class="menu-btn">Recommencer</button>
       <button id="quit-btn" class="menu-btn red">Quitter</button>
@@ -271,8 +272,8 @@
   <div id="race-mode-select">
       <h2 class="text-3xl font-black text-white mb-6" style="font-family:Orbitron;">TYPE DE COURSE</h2>
       <div class="mode-container" style="flex-direction:column;">
-          <button class="mode-btn btn-sub-ta" onclick="RaceManager.showDifficultySelect()">CONTRE-LA-MONTRE<br><span style="font-size:0.65em; opacity:0.8;">3 Tours • Classement</span></button>
-          <button class="mode-btn btn-sub-training" onclick="RaceManager.selectMode('training')">ENTRAÎNEMENT<br><span style="font-size:0.65em; opacity:0.8;">Infini • Fantôme Local</span></button>
+          <button class="mode-btn btn-sub-ta" onclick="RaceManager.setupRace('race')">CONTRE-LA-MONTRE<br><span style="font-size:0.65em; opacity:0.8;">3 Tours • Classement</span></button>
+          <button class="mode-btn btn-sub-training" onclick="RaceManager.setupRace('training')">ENTRAÎNEMENT<br><span style="font-size:0.65em; opacity:0.8;">Infini • Fantôme Local</span></button>
       </div>
       <button class="text-gray-400 mt-8 hover:text-white text-sm uppercase font-bold tracking-widest" onclick="location.reload()">Retour</button>
   </div>
@@ -280,8 +281,8 @@
   <div id="difficulty-select-screen">
       <h2 class="text-3xl font-black text-white mb-6" style="font-family:Orbitron;">DIFFICULTÉ</h2>
       <div class="mode-container" style="flex-direction:column;">
-          <button class="mode-btn btn-diff-normal" onclick="RaceManager.selectMode('normal')">NORMAL<br><span style="font-size:0.65em; opacity:0.8;">Standard • Voiture Rouge</span></button>
-          <button class="mode-btn btn-diff-expert" onclick="RaceManager.selectMode('expert')">EXPERT<br><span style="font-size:0.65em; opacity:0.8;">Vitesse Max • Voiture Noire</span></button>
+          <button class="mode-btn btn-diff-normal" onclick="RaceManager.launchSession('normal')">NORMAL<br><span style="font-size:0.65em; opacity:0.8;">Standard • Voiture Rouge</span></button>
+          <button class="mode-btn btn-diff-expert" onclick="RaceManager.launchSession('expert')">EXPERT<br><span style="font-size:0.65em; opacity:0.8;">Vitesse Max • Voiture Noire</span></button>
       </div>
       <button class="text-gray-400 mt-8 hover:text-white text-sm uppercase font-bold tracking-widest" onclick="RaceManager.showRaceSubMenu()">Retour</button>
   </div>
@@ -625,16 +626,42 @@
     const RaceManager = {
       totalLaps: 3, currentLap: 1, state: 'menu', startTime: 0, lapStartTime: 0, bestLapTime: Infinity,
       checkpoints: [ {x:500,y:-400,p:false}, {x:400,y:100,p:false}, {x:-200,y:400,p:false}, {x:-900,y:0,p:false} ],
-      
+      pendingSessionType: null, // 'race' or 'training'
+
       showRaceSubMenu() {
           document.getElementById('welcome-screen').style.display = 'none';
           document.getElementById('difficulty-select-screen').style.display = 'none';
           document.getElementById('race-mode-select').style.display = 'flex';
       },
       
-      showDifficultySelect() {
+      setupRace(type) {
+          this.pendingSessionType = type;
           document.getElementById('race-mode-select').style.display = 'none';
           document.getElementById('difficulty-select-screen').style.display = 'flex';
+      },
+      
+      launchSession(difficulty) { // difficulty = 'normal' or 'expert'
+          const baseConfig = MODES[difficulty];
+          
+          if (this.pendingSessionType === 'training') {
+              // Create a hybrid mode: Training Rules + Difficulty Physics
+              currentMode = {
+                  ...MODES.training, // Inherit training name, no collection
+                  physics: baseConfig.physics,
+                  colors: baseConfig.colors,
+                  name: "ENTRAÎNEMENT (" + baseConfig.name + ")"
+              };
+              this.totalLaps = 999;
+              GhostSystem.resetRecording();
+              GhostSystem.bestRecording = [];
+          } else {
+              // Standard Time Trial
+              currentMode = baseConfig;
+              this.totalLaps = 3;
+          }
+          
+          document.getElementById('difficulty-select-screen').style.display = 'none';
+          this.finalizeModeSelection();
       },
       
       selectMode(modeKey) {
@@ -643,20 +670,8 @@
             document.getElementById('car-select-screen').style.display = 'flex'; 
             return; 
         }
-        
+        // Fallback for direct calls if any
         currentMode = MODES[modeKey];
-        
-        // Configuration spécifique Entraînement
-        if (modeKey === 'training') {
-            this.totalLaps = 999; // Quasi infini
-            GhostSystem.resetRecording();
-            GhostSystem.bestRecording = []; // Reset local ghost for new session
-        } else {
-            this.totalLaps = 3;
-        }
-        
-        document.getElementById('race-mode-select').style.display = 'none';
-        document.getElementById('difficulty-select-screen').style.display = 'none';
         this.finalizeModeSelection();
       },
       
@@ -844,20 +859,28 @@
     // Par défaut, pas d'auto-gas (le joueur doit l'activer via l'icone manette)
     let autoGasMode = false; 
 
-    // Gestion du Toggle Button
-    document.getElementById('control-toggle-btn').onclick = () => {
+    // Fonction toggle controls
+    function toggleControls() {
         autoGasMode = !autoGasMode;
+        const ctrlBtn = document.getElementById('controls-btn');
+        
         if(autoGasMode) {
             document.body.classList.add('arcade-mode');
             document.getElementById('btn-left').innerText = "⬅️";
             document.getElementById('btn-right').innerText = "➡️";
+            ctrlBtn.innerText = "CONTRÔLES : ARCADE";
         } else {
             document.body.classList.remove('arcade-mode');
             document.getElementById('btn-left').innerText = "⬅️";
             document.getElementById('btn-right').innerText = "➡️";
+            ctrlBtn.innerText = "CONTRÔLES : CLASSIQUE";
         }
         if(navigator.vibrate) navigator.vibrate(50);
-    };
+    }
+
+    // Gestion du Toggle Button (Jeu + Menu)
+    document.getElementById('control-toggle-btn').onclick = toggleControls;
+    document.getElementById('controls-btn').onclick = toggleControls;
 
     // --- GESTION DU ZOOM ---
     let globalZoom = 1.0;
