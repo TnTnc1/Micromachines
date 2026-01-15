@@ -30,7 +30,6 @@
     const db = getFirestore(app);
 
     signInAnonymously(auth).then((u) => { window.Cloud.db = db; }).catch((e) => { console.error("Auth Error", e); });
-    // Ajout de getDocs à l'export pour le leaderboard global
     window.fs = { collection, addDoc, query, orderBy, limit, onSnapshot, getDocs };
   </script>
 
@@ -86,25 +85,18 @@
 
     .badge{ display:inline-flex; align-items:center; gap:8px; padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.4); background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); font-size: 12px; font-weight: 600; margin-bottom: 10px; flex-shrink: 0; }
     .badge-dot{ width: 8px; height: 8px; border-radius: 50%; background: #67e8f9; box-shadow: 0 0 10px #67e8f9; }
-
-    /* NOUVEAU STYLE POUR L'IMAGE CARRÉE SANS CADRE */
+    
     .poster-wrap {
         margin-bottom: 20px;
-        border-radius: 24px; /* Coins bien arrondis */
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); /* Ombre portée pour le relief */
+        border-radius: 24px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         display: block;
         width: 100%;
-        max-width: 450px; /* Limite la taille sur les très grands écrans */
+        max-width: 450px;
         overflow: hidden;
     }
-
     #poster-img {
-        display: block;
-        width: 100%;
-        height: auto;
-        aspect-ratio: 1 / 1; /* Force le ratio carré */
-        max-height: 50vh; /* Autorise une plus grande hauteur verticale */
-        object-fit: cover;
+        display: block; width: 100%; height: auto; aspect-ratio: 1 / 1; max-height: 50vh; object-fit: cover;
     }
 
     /* Mode Buttons */
@@ -365,19 +357,6 @@
       <button class="text-gray-400 mt-8 hover:text-white text-sm uppercase font-bold tracking-widest" onclick="location.reload()">Retour</button>
   </div>
 
-  <div id="leaderboard-panel">
-    <h1 class="text-2xl font-black text-yellow-400 mb-1" style="font-family:Orbitron;">CLASSEMENT <span id="mode-title" class="text-white text-lg ml-2">NORMAL</span></h1>
-    <p class="text-xs text-gray-400 mb-3" id="lb-subtitle">BATTEZ LE FANTÔME DU CHAMPION</p>
-    <div id="scores-list"><div class="text-center text-gray-400 text-sm py-4">Chargement...</div></div>
-    <button id="start-btn" class="action-btn">DÉMARRER</button>
-    <div id="name-input-area" style="display:none; margin-top: 14px;">
-      <h2 class="text-xl font-black mb-2 text-white">NOUVEAU RECORD !</h2>
-      <div class="text-yellow-300 text-2xl font-mono mb-3" id="final-score-display">00:00.00</div>
-      <input type="text" id="player-name" placeholder="VOTRE PSEUDO" maxlength="15">
-      <button id="submit-score-btn" class="action-btn">ENREGISTRER</button>
-    </div>
-  </div>
-
   <div id="mobile-controls" style="display:none;">
     <div class="control-group">
       <div id="btn-left" class="btn">
@@ -397,14 +376,8 @@
   <canvas id="gameCanvas"></canvas>
 
   <script>
-    // --- AI WAYPOINTS (TRAJECTOIRE IDÉALE) ---
-    const AI_PATH = [
-        {x:-1200, y:-550}, {x:-800, y:-550}, {x:-400, y:-550}, {x:0, y:-550}, {x:350, y:-550},
-        {x:550, y:-450}, {x:550, y:-350}, {x:400, y:-200}, {x:400, y:-100}, {x:500, y:0}, {x:550, y:150},
-        {x:400, y:250}, {x:200, y:150}, {x:0, y:200}, {x:-100, y:300},
-        {x:-150, y:500}, {x:-400, y:550}, {x:-600, y:450},
-        {x:-700, y:200}, {x:-850, y:0}, {x:-1000, y:-200}, {x:-1150, y:-400}
-    ];
+    // --- AI WAYPOINTS ---
+    const AI_PATH = [ {x:-1200, y:-550}, {x:-800, y:-550}, {x:-400, y:-550}, {x:0, y:-550}, {x:350, y:-550}, {x:550, y:-450}, {x:550, y:-350}, {x:400, y:-200}, {x:400, y:-100}, {x:500, y:0}, {x:550, y:150}, {x:400, y:250}, {x:200, y:150}, {x:0, y:200}, {x:-100, y:300}, {x:-150, y:500}, {x:-400, y:550}, {x:-600, y:450}, {x:-700, y:200}, {x:-850, y:0}, {x:-1000, y:-200}, {x:-1150, y:-400} ];
 
     // --- REAL AUDIO SYSTEM ---
     const AudioSys = {
@@ -450,19 +423,15 @@
       db: null, bestScore: -Infinity, globalGhostData: null, unsubscribe: null,
       init(database) { this.db = database; },
       
-      // Charge le leaderboard global pour l'écran "CLASSEMENT"
       fetchGlobalRankings(type) {
           if (!this.db) return;
           const listEl = document.getElementById('gl-list');
           listEl.innerHTML = '<div class="text-center text-gray-400 py-4">Chargement...</div>';
-          
           let colName, sortField, sortDir;
           if (type === 'normal') { colName = 'world_tour_records_v3_normal'; sortField = 'timeMs'; sortDir = 'asc'; }
           else if (type === 'expert') { colName = 'world_tour_records_v3_expert'; sortField = 'timeMs'; sortDir = 'asc'; }
           else if (type === 'drift') { colName = 'world_tour_records_v3_drift'; sortField = 'score'; sortDir = 'desc'; }
-          
           const q = window.fs.query(window.fs.collection(this.db, colName), window.fs.orderBy(sortField, sortDir), window.fs.limit(20));
-          
           window.fs.getDocs(q).then(snapshot => {
               listEl.innerHTML = '';
               if (snapshot.empty) { listEl.innerHTML = '<div class="text-center text-gray-400 py-4">Aucun record pour le moment.</div>'; return; }
@@ -928,7 +897,7 @@
           if (saved) { document.getElementById('name-input-area').innerHTML = '<div class="text-emerald-300 font-black py-4">SCORE ENREGISTRÉ !</div><button class="action-btn" onclick="location.reload()">REJOUER</button>'; } else { newBtn.innerText = "RÉESSAYER"; newBtn.disabled = false; }
         };
       },
-      formatTime(ms){ let m = Math.floor(ms/60000), s = Math.floor((ms%60000)/1000), c = Math.floor((ms%1000)/10); return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}.${c.toString().padStart(2,'0')}`; },
+      formatTime(ms){ let m = Math.floor(ms/60000); let s = Math.floor((ms%60000)/1000); let c = ms % 1000; return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}.${c.toString().padStart(3,'0')}`; },
       pauseGame(){ if(this.state==='racing'){ this.state='paused'; this.pausedTime = Date.now(); document.getElementById('pause-menu').style.display='flex'; document.getElementById('mobile-controls').style.display='none'; document.getElementById('control-toggle-btn').style.display='none'; } },
       resumeGame(){ if(this.state==='paused'){ const d = Date.now() - this.pausedTime; this.startTime += d; this.lapStartTime += d; this.state='racing'; document.getElementById('pause-menu').style.display='none'; document.getElementById('mobile-controls').style.display='flex'; document.getElementById('control-toggle-btn').style.display='flex'; } },
       quitToMenu(){ location.reload(); }
@@ -1001,7 +970,7 @@
     bindTouch('btn-left','l'); bindTouch('btn-right','r'); bindTouch('btn-gas','u'); bindTouch('btn-brake','d');
 
     // --- GESTION DES MODES DE CONTRÔLE ---
-    let autoGasMode = false; 
+    let autoGasMode = true; // DEFAULT: ARCADE (Auto-Gas)
 
     // Fonction toggle controls (centralisée)
     function toggleControls() {
@@ -1017,14 +986,10 @@
         
         if(autoGasMode) {
             document.body.classList.add('arcade-mode');
-            // Le texte n'est plus nécessaire car remplacé par les SVG
             if(ctrlBtnPause) ctrlBtnPause.innerText = "CONTRÔLES : ARCADE";
             if(ctrlBtnSettings) ctrlBtnSettings.innerText = "CONTRÔLES : ARCADE";
         } else {
             document.body.classList.remove('arcade-mode');
-             // Réinitialisation du texte pour le mode classique
-            document.getElementById('btn-left').innerText = "⬅️";
-            document.getElementById('btn-right').innerText = "➡️";
             if(ctrlBtnPause) ctrlBtnPause.innerText = "CONTRÔLES : CLASSIQUE";
             if(ctrlBtnSettings) ctrlBtnSettings.innerText = "CONTRÔLES : CLASSIQUE";
         }
@@ -1034,7 +999,7 @@
     document.getElementById('controls-btn').onclick = toggleControls;
 
     // --- GESTION DU ZOOM ---
-    let globalZoom = 1.0;
+    let globalZoom = 0.65; // DEFAULT: FAR
     
     function toggleZoom() {
         if(globalZoom === 1.0) globalZoom = 0.65; else globalZoom = 1.0;
@@ -1054,14 +1019,16 @@
 
     // --- INIT SETTINGS ---
     function initSettings() {
+        // Controls Default: Arcade unless user set Classic
         const savedCtrl = localStorage.getItem('drift_nc_controls');
         if (savedCtrl === 'classic') autoGasMode = false;
-        else autoGasMode = true; 
+        else autoGasMode = true; // FORCE ARCADE IF NULL
         updateControlUI();
         
+        // Zoom Default: Far unless user set Close
         const savedZoom = localStorage.getItem('drift_nc_zoom');
         if (savedZoom === 'close') globalZoom = 1.0;
-        else globalZoom = 0.65;
+        else globalZoom = 0.65; // FORCE FAR IF NULL
         updateZoomUI();
     }
     initSettings();
