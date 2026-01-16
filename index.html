@@ -30,7 +30,6 @@
     const db = getFirestore(app);
 
     signInAnonymously(auth).then((u) => { window.Cloud.db = db; }).catch((e) => { console.error("Auth Error", e); });
-    // Ajout de getDocs à l'export pour le leaderboard global
     window.fs = { collection, addDoc, query, orderBy, limit, onSnapshot, getDocs };
   </script>
 
@@ -55,26 +54,16 @@
     .combo-mult { font-size: 1rem; color: #f0abfc; margin-left: 5px; }
     .drift-score-inc { font-family: Orbitron; font-size: 1.2rem; color: #fbbf24; margin-top: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
     
-    /* Message Sens Interdit */
-    #wrong-way-alert { 
-        display: none; color: #ef4444; font-family: Orbitron; font-weight: 900; font-size: 1.5rem; 
-        text-transform: uppercase; margin-top: 5px; animation: blinkFast 0.2s infinite alternate; 
-        text-shadow: 0 0 20px red; background: rgba(0,0,0,0.7); padding: 5px 10px; border-radius: 5px;
-    }
+    #wrong-way-alert { display: none; color: #ef4444; font-family: Orbitron; font-weight: 900; font-size: 1.5rem; text-transform: uppercase; margin-top: 5px; animation: blinkFast 0.2s infinite alternate; text-shadow: 0 0 20px red; background: rgba(0,0,0,0.7); padding: 5px 10px; border-radius: 5px; }
     @keyframes blinkFast { from { opacity: 1; transform: scale(1); } to { opacity: 0.5; transform: scale(1.1); } }
 
-    /* DISQUALIFIED SCREEN */
-    #dq-screen {
-        position:absolute; inset:0; z-index: 95; background: rgba(127, 29, 29, 0.9); backdrop-filter: blur(10px);
-        display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-    }
+    #dq-screen { position:absolute; inset:0; z-index: 95; background: rgba(127, 29, 29, 0.9); backdrop-filter: blur(10px); display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
     .dq-title { font-family: Orbitron; font-weight: 900; font-size: 3rem; color: white; text-shadow: 0 5px 0 #000; margin-bottom: 10px; }
     .dq-sub { font-family: Inter; font-weight: 800; font-size: 1.2rem; color: #fca5a5; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 2px; }
 
     .pulse{ animation: pulseGlow 0.35s ease-out; }
     @keyframes pulseGlow{ 0%{ transform: scale(1); } 50%{ transform: scale(1.05); } 100%{ transform: scale(1); } }
 
-    /* Screens & Countdown */
     #countdown-layer{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; z-index:90; pointer-events:none; font-family: Orbitron, sans-serif; font-weight:900; text-align: center; color:white; text-shadow:0 0 40px rgba(0,0,0,0.8); }
     .rolling-text { font-size: 2.5rem; color: #fbbf24; animation: blink 0.5s infinite alternate; }
     @keyframes blink { from { opacity: 1; } to { opacity: 0.5; } }
@@ -87,27 +76,9 @@
     .badge{ display:inline-flex; align-items:center; gap:8px; padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.4); background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); font-size: 12px; font-weight: 600; margin-bottom: 10px; flex-shrink: 0; }
     .badge-dot{ width: 8px; height: 8px; border-radius: 50%; background: #67e8f9; box-shadow: 0 0 10px #67e8f9; }
 
-    /* NOUVEAU STYLE POUR L'IMAGE CARRÉE SANS CADRE */
-    .poster-wrap {
-        margin-bottom: 20px;
-        border-radius: 24px; /* Coins bien arrondis */
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); /* Ombre portée pour le relief */
-        display: block;
-        width: 100%;
-        max-width: 450px; /* Limite la taille sur les très grands écrans */
-        overflow: hidden;
-    }
+    .poster-wrap { margin-bottom: 20px; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); display: block; width: 100%; max-width: 450px; overflow: hidden; }
+    #poster-img { display: block; width: 100%; height: auto; aspect-ratio: 1 / 1; max-height: 50vh; object-fit: cover; }
 
-    #poster-img {
-        display: block;
-        width: 100%;
-        height: auto;
-        aspect-ratio: 1 / 1; /* Force le ratio carré */
-        max-height: 50vh; /* Autorise une plus grande hauteur verticale */
-        object-fit: cover;
-    }
-
-    /* Mode Buttons */
     .mode-container { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 600px; }
     .mode-btn { flex: 1; min-width: 140px; padding: 20px 10px; border-radius: 16px; font-weight: 800; font-size: 1.1rem; text-transform: uppercase; border: 2px solid rgba(255,255,255,0.2); color: #fff; cursor: pointer; transition: transform 0.2s, filter 0.2s; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
     .mode-btn:hover { transform: scale(1.05); filter: brightness(1.2); }
@@ -117,42 +88,16 @@
     .btn-drift { background: linear-gradient(135deg, #d946ef 0%, #a21caf 100%); border-color: #f0abfc; }
     .btn-settings { background: linear-gradient(135deg, #4b5563 0%, #1f2937 100%); border-color: #9ca3af; min-width: 300px; flex: 0 0 100%; margin-top: 10px; font-size: 0.9rem; padding: 15px;}
     .btn-rankings { background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%); border-color: #fcd34d; min-width: 300px; flex: 0 0 100%; font-size: 0.9rem; padding: 15px; margin-top: 0;}
-
     .btn-sub-ta { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-color: #93c5fd; }
     .btn-sub-training { background: linear-gradient(135deg, #10b981 0%, #047857 100%); border-color: #6ee7b7; }
-    
-    .btn-multi-locked {
-        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-        border: 2px solid #fbbf24;
-        color: #e5e7eb;
-        cursor: not-allowed;
-        opacity: 0.9;
-        position: relative;
-        overflow: hidden;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-    .btn-multi-locked:hover { transform: none; filter: none; }
-    .soon-badge {
-        margin-top: 5px;
-        background: #fbbf24;
-        color: #000;
-        padding: 2px 8px;
-        border-radius: 4px;
-        font-size: 0.6em;
-        font-weight: 900;
-        letter-spacing: 1px;
-        animation: pulseBadge 2s infinite;
-    }
-    @keyframes pulseBadge { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-    
     .btn-diff-normal { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); border-color: #fca5a5; }
     .btn-diff-expert { background: linear-gradient(135deg, #1f2937 0%, #000000 100%); border-color: #9ca3af; }
+    
+    .btn-multi-locked { background: linear-gradient(135deg, #1f2937 0%, #111827 100%); border: 2px solid #fbbf24; color: #e5e7eb; cursor: not-allowed; opacity: 0.9; position: relative; overflow: hidden; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .btn-multi-locked:hover { transform: none; filter: none; }
+    .soon-badge { margin-top: 5px; background: #fbbf24; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.6em; font-weight: 900; letter-spacing: 1px; animation: pulseBadge 2s infinite; }
+    @keyframes pulseBadge { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-    /* Leaderboard & Pause */
     #leaderboard-panel{ position:absolute; top:50%; left:50%; transform: translate(-50%,-50%); width: 92%; max-width: 480px; z-index:60; display:none; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255,255,255,0.2); border-radius: 18px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); backdrop-filter: blur(20px); padding: 18px; text-align:center; }
     .score-row{ display:flex; justify-content:space-between; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-family: Orbitron, monospace; font-size: 0.95rem; }
     #scores-list{ margin-top: 10px; text-align:left; background: rgba(0,0,0,0.3); border-radius: 14px; padding: 8px; max-height: 220px; overflow-y:auto; }
@@ -160,27 +105,22 @@
     .action-btn{ width: 100%; margin-top: 12px; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.18); font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; background: linear-gradient(90deg, rgba(72,187,120,1), rgba(34,197,94,0.85)); box-shadow: 0 18px 45px rgba(0,0,0,0.35); transition: transform 150ms ease, filter 200ms ease; cursor:pointer; }
     .action-btn:hover{ transform: translateY(-1px); filter: brightness(1.05); }
 
-    /* GLOBAL LEADERBOARD STYLES */
     #gl-tabs { display: flex; gap: 8px; margin-bottom: 15px; justify-content: center; }
     .gl-tab { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #ccc; padding: 8px 12px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer; flex: 1; transition: 0.2s; }
     .gl-tab.active { background: white; color: black; border-color: white; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
-    
     .gl-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-family: Inter; }
     .gl-row:last-child { border-bottom: none; }
     .gl-rank { font-family: Orbitron; font-weight: 900; width: 30px; text-align: center; color: #94a3b8; }
     .gl-name { flex: 1; font-weight: 600; text-transform: uppercase; padding-left: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .gl-score { font-family: Orbitron; font-weight: 700; color: #fbbf24; text-align: right; }
-    
     .rank-1 .gl-rank { color: #fbbf24; text-shadow: 0 0 10px #fbbf24; }
     .rank-2 .gl-rank { color: #e2e8f0; text-shadow: 0 0 10px #e2e8f0; }
     .rank-3 .gl-rank { color: #b45309; text-shadow: 0 0 10px #b45309; }
 
-    /* Buttons Layer */
     #pause-btn{ position:absolute; top:75px; right:16px; width:44px; height:44px; border-radius:999px; display:none; align-items:center; justify-content:center; pointer-events:auto; z-index:50; cursor:pointer; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); backdrop-filter:blur(5px); }
     .pause-icon{ width:16px; height:16px; position:relative; }
     .pause-icon::before, .pause-icon::after{ content:""; position:absolute; top:0; bottom:0; width:5px; border-radius:3px; background:white; }
     .pause-icon::before{ left:0; } .pause-icon::after{ right:0; }
-    
     #control-toggle-btn { position:absolute; top:75px; left:16px; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.2); backdrop-filter:blur(5px); border:1px solid rgba(255,255,255,0.3); z-index:50; display:none; align-items:center; justify-content:center; cursor:pointer; pointer-events:auto; font-size:20px; }
 
     #pause-menu{ position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; z-index:80; background:rgba(15,23,42,0.8); backdrop-filter:blur(15px); pointer-events:auto; }
@@ -189,7 +129,6 @@
     .menu-btn.red{ border-color:#ef4444; color:#ef4444; background:rgba(239,68,68,0.1); }
     .menu-btn.red:hover{ background:#ef4444; color:white; }
 
-    /* Controls */
     #mobile-controls{ position:absolute; left:0; right:0; bottom:calc(18px + env(safe-area-inset-bottom)); height:150px; display:flex; justify-content:space-between; padding:0 18px; pointer-events:none; z-index:20; transition: all 0.3s ease; }
     .control-group{ display:flex; gap:14px; align-items:flex-end; pointer-events:auto; }
     .btn{ width:78px; height:78px; border-radius:999px; display:flex; align-items:center; justify-content:center; font-weight:900; color:white; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); backdrop-filter:blur(10px); touch-action:none; user-select:none; }
@@ -197,54 +136,31 @@
     .btn.gas{ background:rgba(34,197,94,0.3); border-color:rgba(34,197,94,0.5); }
     .btn.brake{ background:rgba(239,68,68,0.3); border-color:rgba(239,68,68,0.5); }
 
-    /* --- ARCADE MODE (AUTO-GAS) STYLES --- */
     body.arcade-mode #mobile-controls { height: 100%; padding: 0; bottom: 0; align-items: flex-end; }
     body.arcade-mode #btn-gas { display: none !important; }
-    
     .arcade-arrow { opacity: 0.3; transition: opacity 0.2s ease, transform 0.2s ease, filter 0.2s ease; filter: drop-shadow(0 0 0 rgba(255,255,255,0)); }
-
-    body.arcade-mode #btn-left {
-        position: absolute; top: 0; left: 0; bottom: 0; width: 50%; height: 100%; border-radius: 0; border: none; background: transparent !important; backdrop-filter: none !important; box-shadow: none; display: block; transition: none;
-    }
+    body.arcade-mode #btn-left { position: absolute; top: 0; left: 0; bottom: 0; width: 50%; height: 100%; border-radius: 0; border: none; background: transparent !important; backdrop-filter: none !important; box-shadow: none; display: block; transition: none; }
     body.arcade-mode #btn-left .arcade-arrow { position: absolute; top: 75%; left: 12%; transform: translateY(-50%); width: 50px; height: 50px; }
     body.arcade-mode #btn-left:active, body.arcade-mode #btn-left.active { background: transparent !important; }
     body.arcade-mode #btn-left:active .arcade-arrow, body.arcade-mode #btn-left.active .arcade-arrow { opacity: 1; transform: translateY(-50%) scale(1.2); filter: drop-shadow(0 0 8px rgba(255,255,255,0.8)); }
-    
-    body.arcade-mode #btn-right {
-        position: absolute; top: 0; right: 0; bottom: 0; width: 50%; height: 100%; border-radius: 0; border: none; background: transparent !important; backdrop-filter: none !important; box-shadow: none; display: block; transition: none;
-    }
+    body.arcade-mode #btn-right { position: absolute; top: 0; right: 0; bottom: 0; width: 50%; height: 100%; border-radius: 0; border: none; background: transparent !important; backdrop-filter: none !important; box-shadow: none; display: block; transition: none; }
     body.arcade-mode #btn-right .arcade-arrow { position: absolute; top: 75%; right: 12%; transform: translateY(-50%); width: 50px; height: 50px; }
     body.arcade-mode #btn-right:active, body.arcade-mode #btn-right.active { background: transparent !important; }
     body.arcade-mode #btn-right:active .arcade-arrow, body.arcade-mode #btn-right.active .arcade-arrow { opacity: 1; transform: translateY(-50%) scale(1.2); filter: drop-shadow(0 0 8px rgba(255,255,255,0.8)); }
-    
-    body.arcade-mode #btn-brake {
-        position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); width: 200px; height: 70px; border-radius: 12px; font-size: 1.2rem; background: rgba(239, 68, 68, 0.2); border: 2px solid rgba(239, 68, 68, 0.4); backdrop-filter: none; z-index: 30;
-    }
+    body.arcade-mode #btn-brake { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); width: 200px; height: 70px; border-radius: 12px; font-size: 1.2rem; background: rgba(239, 68, 68, 0.2); border: 2px solid rgba(239, 68, 68, 0.4); backdrop-filter: none; z-index: 30; }
     body.arcade-mode .control-group { position: static; display: block; }
   </style>
 </head>
 
 <body>
   <div id="hud-layer">
-    <div class="hud-card" style="text-align:left;">
-      <div class="hud-top"><div class="label">Tour</div></div>
-      <div id="lap-display" class="sub-info">1 / 3</div>
-    </div>
-    <div class="hud-card" style="text-align:center; min-width: 110px; flex: 1; max-width: 250px;">
-      <div class="hud-top" style="justify-content:center;"><div class="label" id="main-stat-label">Chrono</div></div>
-      <div id="main-stat-display" class="big-time">00:00.000</div>
-    </div>
-    <div class="hud-card" style="text-align:right;">
-      <div class="hud-top" style="justify-content:flex-end;"><div class="label">Record</div></div>
-      <div id="wr-display" class="sub-info" style="color:#fbbf24;">--:--.---</div>
-    </div>
+    <div class="hud-card" style="text-align:left;"><div class="hud-top"><div class="label">Tour</div></div><div id="lap-display" class="sub-info">1 / 3</div></div>
+    <div class="hud-card" style="text-align:center; min-width: 110px; flex: 1; max-width: 250px;"><div class="hud-top" style="justify-content:center;"><div class="label" id="main-stat-label">Chrono</div></div><div id="main-stat-display" class="big-time">00:00.000</div></div>
+    <div class="hud-card" style="text-align:right;"><div class="hud-top" style="justify-content:flex-end;"><div class="label">Record</div></div><div id="wr-display" class="sub-info" style="color:#fbbf24;">--:--.---</div></div>
   </div>
 
   <div id="drift-ui">
-      <div class="combo-box">
-          <span class="combo-text">DRIFT</span>
-          <span id="drift-multiplier" class="combo-mult">x1</span>
-      </div>
+      <div class="combo-box"><span class="combo-text">DRIFT</span><span id="drift-multiplier" class="combo-mult">x1</span></div>
       <div id="drift-current-points" class="drift-score-inc">+0</div>
       <div id="wrong-way-alert">⚠️ SENS INTERDIT ⚠️</div>
   </div>
@@ -271,13 +187,8 @@
   </div>
 
   <div id="welcome-screen">
-    <div class="badge">
-      <span class="badge-dot"></span>
-      <span>Lagoon Edition • Nouvelle-Calédonie</span>
-    </div>
-    <div class="poster-wrap">
-      <img id="poster-img" src="https://i.postimg.cc/XvYKYH0t/image-carre.png" alt="Drift NC Poster">
-    </div>
+    <div class="badge"><span class="badge-dot"></span><span>Lagoon Edition • Nouvelle-Calédonie</span></div>
+    <div class="poster-wrap"><img id="poster-img" src="https://i.postimg.cc/XvYKYH0t/image-carre.png" alt="Drift NC Poster"></div>
     <div class="mb-2 text-sm text-gray-200 font-bold tracking-widest uppercase">MODE DE JEU</div>
     <div class="mode-container">
         <button id="btn-race-menu" class="mode-btn btn-race" onclick="RaceManager.showRaceSubMenu()">COURSE<br><span style="font-size:0.65em; opacity:0.8;">Vitesse</span></button>
@@ -380,33 +291,18 @@
 
   <div id="mobile-controls" style="display:none;">
     <div class="control-group">
-      <div id="btn-left" class="btn">
-        <svg class="arcade-arrow" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-      </div>
-      <div id="btn-right" class="btn">
-        <svg class="arcade-arrow" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-      </div>
+      <div id="btn-left" class="btn"><svg class="arcade-arrow" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></div>
+      <div id="btn-right" class="btn"><svg class="arcade-arrow" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
     </div>
-    <div class="control-group">
-      <div id="btn-brake" class="btn brake">R</div>
-      <div id="btn-gas" class="btn gas">GO</div>
-    </div>
+    <div class="control-group"><div id="btn-brake" class="btn brake">R</div><div id="btn-gas" class="btn gas">GO</div></div>
   </div>
 
   <div id="countdown-layer"></div>
   <canvas id="gameCanvas"></canvas>
 
   <script>
-    // --- AI WAYPOINTS (TRAJECTOIRE IDÉALE) ---
-    const AI_PATH = [
-        {x:-1200, y:-550}, {x:-800, y:-550}, {x:-400, y:-550}, {x:0, y:-550}, {x:350, y:-550},
-        {x:550, y:-450}, {x:550, y:-350}, {x:400, y:-200}, {x:400, y:-100}, {x:500, y:0}, {x:550, y:150},
-        {x:400, y:250}, {x:200, y:150}, {x:0, y:200}, {x:-100, y:300},
-        {x:-150, y:500}, {x:-400, y:550}, {x:-600, y:450},
-        {x:-700, y:200}, {x:-850, y:0}, {x:-1000, y:-200}, {x:-1150, y:-400}
-    ];
+    const AI_PATH = [ {x:-1200, y:-550}, {x:-800, y:-550}, {x:-400, y:-550}, {x:0, y:-550}, {x:350, y:-550}, {x:550, y:-450}, {x:550, y:-350}, {x:400, y:-200}, {x:400, y:-100}, {x:500, y:0}, {x:550, y:150}, {x:400, y:250}, {x:200, y:150}, {x:0, y:200}, {x:-100, y:300}, {x:-150, y:500}, {x:-400, y:550}, {x:-600, y:450}, {x:-700, y:200}, {x:-850, y:0}, {x:-1000, y:-200}, {x:-1150, y:-400} ];
 
-    // --- REAL AUDIO SYSTEM ---
     const AudioSys = {
         ctx: null, engine: null, skid: null, engineGain: null, skidGain: null, loaded: false,
         async unlock(){
@@ -428,7 +324,6 @@
         }
     };
 
-    // --- CONFIG ---
     const DRIFT_CARS_CONFIG = {
         street: { name: "STREET DRIFT", colors: { body1: '#14532d', body2: '#22c55e', body3: '#4ade80', wing: '#052e16' }, physics: { acceleration: 0.21, maxSpeed: 12.3, friction: 0.97, turnSpeed: 0.085, offRoadFriction: 0.6 } },
         pro: { name: "PRO DRIFT", colors: { body1: '#701a75', body2: '#d946ef', body3: '#f0abfc', wing: '#4a044e' }, physics: { acceleration: 0.23, maxSpeed: 12.8, friction: 0.98, turnSpeed: 0.09, offRoadFriction: 0.5 } }
@@ -442,27 +337,24 @@
     };
     let currentMode = MODES.normal;
 
-    function getCarSpriteUrl(colors) { return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 80'%3E%3Cdefs%3E%3ClinearGradient id='bodyGrad' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' style='stop-color:${encodeURIComponent(colors.body1)}' /%3E%3Cstop offset='50%25' style='stop-color:${encodeURIComponent(colors.body2)}' /%3E%3Cstop offset='100%25' style='stop-color:${encodeURIComponent(colors.body1)}' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='2' y='2' width='40' height='76' rx='8' fill='rgba(0,0,0,0.3)' /%3E%3Cpath d='M6,10 Q2,20 2,40 Q2,60 6,70 L6,76 Q6,78 8,78 L36,78 Q38,78 38,76 L38,70 Q42,60 42,40 Q42,20 38,10 L36,4 Q36,2 34,2 L10,2 Q8,2 8,4 Z' fill='url(%23bodyGrad)' stroke='${encodeURIComponent(colors.wing)}' stroke-width='1' /%3E%3Cpath d='M8,20 L36,20 L34,32 L10,32 Z' fill='%232d3748' /%3E%3Cpath d='M10,48 L34,48 L36,60 L8,60 Z' fill='%231a202c' /%3E%3Crect x='9' y='33' width='26' height='14' fill='${encodeURIComponent(colors.body2)}' /%3E%3Crect x='4' y='68' width='36' height='8' rx='2' fill='${encodeURIComponent(colors.wing)}' /%3E%3Crect x='6' y='4' width='6' height='4' fill='%23faf089' /%3E%3Crect x='32' y='4' width='6' height='4' fill='%23faf089' /%3E%3C/svg%3E`; }
+    function getCarSpriteUrl(colors) {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 80"><defs><linearGradient id="paint" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${colors.body1}"/><stop offset="0.32" stop-color="${colors.body2}"/><stop offset="0.68" stop-color="${colors.body3}"/><stop offset="1" stop-color="${colors.body1}"/></linearGradient><linearGradient id="vol" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(0,0,0,0.12)"/><stop offset="0.45" stop-color="rgba(0,0,0,0.42)"/><stop offset="1" stop-color="rgba(0,0,0,0.62)"/></linearGradient><linearGradient id="clear" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(255,255,255,0.85)"/><stop offset="0.22" stop-color="rgba(255,255,255,0.18)"/><stop offset="1" stop-color="rgba(255,255,255,0)"/></linearGradient><linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dbeafe" stop-opacity="0.95"/><stop offset="0.35" stop-color="#0b1220" stop-opacity="0.92"/><stop offset="1" stop-color="#070b14" stop-opacity="1"/></linearGradient><pattern id="carbon" patternUnits="userSpaceOnUse" width="6" height="6"><rect width="6" height="6" fill="#0b0f1a"/><path d="M0,3 L3,0 L6,3 L3,6 Z" fill="#111827" opacity="0.9"/></pattern><filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="shadow" x="-40%" y="-30%" width="180%" height="190%"><feGaussianBlur stdDeviation="1.25" result="s"/><feOffset dx="0" dy="1.3" result="o"/><feColorMatrix in="o" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.48 0" result="so"/><feMerge><feMergeNode in="so"/><feMergeNode in="SourceGraphic"/></feMerge></filter><radialGradient id="rim" cx="50%" cy="50%" r="60%"><stop offset="0" stop-color="#ffffff"/><stop offset="0.35" stop-color="#e5e7eb"/><stop offset="0.65" stop-color="#9ca3af"/><stop offset="1" stop-color="#111827"/></radialGradient><linearGradient id="stripe" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(255,255,255,0.9)"/><stop offset="1" stop-color="rgba(255,255,255,0.1)"/></linearGradient></defs><g filter="url(#shadow)"><path d="M9,6 Q6,10 5,18 Q3,30 3,40 Q3,50 5,62 Q6,70 9,74 Q11,78 15,78 L29,78 Q33,78 35,74 Q38,70 39,62 Q41,50 41,40 Q41,30 39,18 Q38,10 35,6 Q33,2 29,2 L15,2 Q11,2 9,6 Z" fill="url(#paint)" stroke="${colors.wing}" stroke-width="1"/><path d="M11,8 Q8,12 7,19 Q6,30 6,40 Q6,50 7,61 Q8,68 11,72 Q12,74 15,74 L29,74 Q32,74 33,72 Q36,68 37,61 Q38,50 38,40 Q38,30 37,19 Q36,12 33,8 Q32,6 29,6 L15,6 Q12,6 11,8 Z" fill="url(#vol)" opacity="0.55"/><path d="M12,26 L32,26" stroke="rgba(255,255,255,0.12)" stroke-width="1"/><path d="M13,52 L31,52" stroke="rgba(0,0,0,0.22)" stroke-width="1"/><path d="M6.2,38 Q6.0,44 7.3,48 L10.2,48 Q9.0,44 9.2,38 Z" fill="rgba(0,0,0,0.45)"/><path d="M37.8,38 Q38.0,44 36.7,48 L33.8,48 Q35.0,44 34.8,38 Z" fill="rgba(0,0,0,0.45)"/><path d="M16,6 L28,6 Q30,8 31,12 Q33,22 33,40 Q33,58 31,68 Q30,72 28,74 L16,74 Q14,72 13,68 Q11,58 11,40 Q11,22 13,12 Q14,8 16,6 Z" fill="rgba(255,255,255,0.055)"/><path d="M12.3,18 L31.7,18 Q33,18 33,20 L31.2,34 Q31,36 29.2,36 L14.8,36 Q13,36 12.8,34 L11,20 Q11,18 12.3,18 Z" fill="url(#glass)"/><path d="M14.8,44 L29.2,44 Q31,44 31,46 L33,60 Q33,62 31,62 L13,62 Q11,62 11,60 L13,46 Q13,44 14.8,44 Z" fill="rgba(7,11,20,0.88)"/><rect x="6.2" y="66.4" width="31.6" height="8.2" rx="2.2" fill="url(#carbon)" opacity="0.92"/><rect x="5.6" y="65.8" width="32.8" height="9.4" rx="2.6" fill="none" stroke="rgba(255,255,255,0.10)"/><path d="M9,63 Q22,60 35,63 L35,66 Q22,64 9,66 Z" fill="${colors.wing}" opacity="0.95"/><g filter="url(#glow)"><rect x="7.7" y="5.2" width="7.2" height="4.3" rx="1.3" fill="#fde68a" opacity="0.95"/><rect x="29.1" y="5.2" width="7.2" height="4.3" rx="1.3" fill="#fde68a" opacity="0.95"/></g><rect x="7.6" y="70.6" width="7.1" height="4.0" rx="1.2" fill="#ef4444" opacity="0.82"/><rect x="29.3" y="70.6" width="7.1" height="4.0" rx="1.2" fill="#ef4444" opacity="0.82"/><g opacity="0.98"><rect x="1.2" y="18" width="4.6" height="14.2" rx="2.1" fill="#0b0f1a"/><rect x="38.2" y="18" width="4.6" height="14.2" rx="2.1" fill="#0b0f1a"/><rect x="1.2" y="48" width="4.6" height="14.2" rx="2.1" fill="#0b0f1a"/><rect x="38.2" y="48" width="4.6" height="14.2" rx="2.1" fill="#0b0f1a"/><circle cx="3.5" cy="25.1" r="2.35" fill="url(#rim)"/><circle cx="40.5" cy="25.1" r="2.35" fill="url(#rim)"/><circle cx="3.5" cy="55.1" r="2.35" fill="url(#rim)"/><circle cx="40.5" cy="55.1" r="2.35" fill="url(#rim)"/></g><path d="M21.2,10 L22.8,10 Q24,12 24.6,18 Q26,30 26,40 Q26,50 24.6,62 Q24,68 22.8,70 L21.2,70 Q20,68 19.4,62 Q18,50 18,40 Q18,30 19.4,18 Q20,12 21.2,10 Z" fill="url(#stripe)" opacity="0.22"/><text x="22" y="48" text-anchor="middle" font-size="9" font-family="Inter, Arial" font-weight="900" fill="rgba(255,255,255,0.55)">07</text><path d="M12.2,10 Q10.5,16 10.6,26 Q10.6,34 11.2,42 Q12.1,56 13.2,66 Q13.4,70 14.2,72 L18.4,72 Q17.6,69 17.5,66 Q16.4,56 15.4,42 Q14.8,34 14.8,26 Q14.7,16 16.2,10 Z" fill="url(#clear)" opacity="0.58"/><path d="M9,6 Q6,10 5,18 Q3,30 3,40 Q3,50 5,62 Q6,70 9,74 Q11,78 15,78 L29,78 Q33,78 35,74 Q38,70 39,62 Q41,50 41,40 Q41,30 39,18 Q38,10 35,6 Q33,2 29,2 L15,2 Q11,2 9,6 Z" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="1"/></g></svg>`;
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+    }
     const carImage = new Image(); carImage.src = getCarSpriteUrl(currentMode.colors);
 
-    // --- CLOUD ---
     window.Cloud = {
       db: null, bestScore: -Infinity, globalGhostData: null, unsubscribe: null,
       init(database) { this.db = database; },
-      
-      // Charge le leaderboard global pour l'écran "CLASSEMENT"
       fetchGlobalRankings(type) {
           if (!this.db) return;
           const listEl = document.getElementById('gl-list');
           listEl.innerHTML = '<div class="text-center text-gray-400 py-4">Chargement...</div>';
-          
           let colName, sortField, sortDir;
           if (type === 'normal') { colName = 'world_tour_records_v3_normal'; sortField = 'timeMs'; sortDir = 'asc'; }
           else if (type === 'expert') { colName = 'world_tour_records_v3_expert'; sortField = 'timeMs'; sortDir = 'asc'; }
           else if (type === 'drift') { colName = 'world_tour_records_v3_drift'; sortField = 'score'; sortDir = 'desc'; }
-          
           const q = window.fs.query(window.fs.collection(this.db, colName), window.fs.orderBy(sortField, sortDir), window.fs.limit(20));
-          
           window.fs.getDocs(q).then(snapshot => {
               listEl.innerHTML = '';
               if (snapshot.empty) { listEl.innerHTML = '<div class="text-center text-gray-400 py-4">Aucun record pour le moment.</div>'; return; }
@@ -478,7 +370,6 @@
               });
           });
       },
-
       loadLeaderboard(modeConfig) {
         if (modeConfig.id === 'training' || modeConfig.id === 'arcade') {
             document.getElementById('scores-list').innerHTML = '<div class="text-center text-green-400 text-sm py-4">MODE LOCAL<br>PAS DE CLASSEMENT EN LIGNE</div>';
@@ -584,24 +475,29 @@
     };
 
     const VIS = {
-        noise: null, seaParticles: [], tires: [], palms: [], palmCache: null, skidsCanvas: null,
+        noise: null, seaParticles: [], tires: [], palms: [], palmCache: null, skidsCanvas: null, clouds: [],
         init(ctx){
             this.noise = document.createElement('canvas'); this.noise.width=128; this.noise.height=128;
             const nctx=this.noise.getContext('2d'); const id=nctx.createImageData(128,128);
             for(let i=0;i<id.data.length;i+=4){ const v=(Math.random()*255)|0; id.data[i]=v; id.data[i+1]=v; id.data[i+2]=v; id.data[i+3]=20; } nctx.putImageData(id,0,0);
+            
             this.palmCache = document.createElement('canvas'); this.palmCache.width = 64; this.palmCache.height = 64;
             const pctx = this.palmCache.getContext('2d'); pctx.translate(32, 32);
             pctx.fillStyle = "rgba(0,0,0,0.15)"; pctx.beginPath(); pctx.arc(6, 6, 12, 0, Math.PI * 2); pctx.fill();
             pctx.fillStyle = "#16a34a"; pctx.strokeStyle = "#14532d"; pctx.lineWidth = 1;
             for (let i = 0; i < 7; i++) { pctx.save(); pctx.rotate(i * (Math.PI * 2 / 7)); pctx.beginPath(); pctx.ellipse(0, -14, 4, 16, 0, 0, Math.PI * 2); pctx.fill(); pctx.stroke(); pctx.restore(); }
             pctx.fillStyle = "#5d4037"; pctx.beginPath(); pctx.arc(0, 0, 4, 0, Math.PI * 2); pctx.fill();
+            
             this.skidsCanvas = document.createElement('canvas'); this.skidsCanvas.width = 3000; this.skidsCanvas.height = 3000;
-            this.initSea(); this.initTires();
+            
+            this.initSea(); 
+            this.initTires();
+            this.initClouds(); // Initialisation des nuages
         },
         drawVignette(ctx,w,h){
             const g=ctx.createRadialGradient(w/2,h/2,Math.min(w,h)*0.2,w/2,h/2,Math.min(w,h)*0.7); g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,0.55)'); ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
         },
-        initSea(){ for(let i=0; i<50; i++) this.seaParticles.push({x:Math.random()*3000, y:Math.random()*3000, t:Math.random()*Math.PI*2}); },
+        initSea(){ for(let i=0; i<200; i++) this.seaParticles.push({x:Math.random()*3000, y:Math.random()*3000, t:Math.random()*Math.PI*2, sz: 0.5 + Math.random()}); },
         initTires(){ const add=(x,y)=>{for(let i=0;i<3;i++)this.tires.push({x:x+(Math.random()-0.5)*20,y:y+(Math.random()-0.5)*20,c:Math.random()>0.5?'#ef4444':'#ffffff'})}; add(300,-400); add(310,-380); add(300,0); add(-20,400); add(-550,450); },
         initPalms(track){
             this.palms = [];
@@ -611,14 +507,94 @@
                 if(safe) this.palms.push({x: x-1500, y: y-1500, s: 0.8+Math.random()*0.5});
             }
         },
+        initClouds(){
+            this.clouds = [];
+            for(let i=0; i<7; i++){
+                this.clouds.push({
+                    x: Math.random()*3000 - 1500,
+                    y: Math.random()*3000 - 1500,
+                    scale: 2 + Math.random() * 3, // Gros nuages
+                    speed: 0.2 + Math.random() * 0.3
+                });
+            }
+        },
+        drawClouds(ctx){
+            // Ombres portées des nuages (donne beaucoup de profondeur)
+            const t = Date.now() / 1000;
+            ctx.save();
+            ctx.translate(-1500, -1500);
+            ctx.filter = "blur(40px)"; // Nuages flous
+            ctx.fillStyle = "rgba(0, 0, 0, 0.15)"; // Ombre légère noire
+            
+            for(let c of this.clouds){
+                // Mouvement lent
+                let dx = c.x + t * 40 * c.speed; 
+                // Boucle infinie sur la carte (4000px de large pour marge)
+                dx = ((dx + 2000) % 4000) - 2000; 
+                
+                // Forme de nuage simple (3 cercles)
+                ctx.beginPath();
+                ctx.arc(dx, c.y, 100 * c.scale, 0, Math.PI*2);
+                ctx.arc(dx + 80*c.scale, c.y + 40*c.scale, 80 * c.scale, 0, Math.PI*2);
+                ctx.arc(dx - 60*c.scale, c.y + 20*c.scale, 70 * c.scale, 0, Math.PI*2);
+                ctx.fill();
+            }
+            ctx.restore();
+        },
         drawEnv(ctx){
+            const t = Date.now() / 800; // Temps pour le vent
+
             ctx.drawImage(this.skidsCanvas, -1500, -1500);
-            for(let t of this.tires){ctx.save();ctx.translate(t.x,t.y);ctx.shadowColor="rgba(0,0,0,0.5)";ctx.shadowBlur=5;ctx.fillStyle="#1a1a1a";ctx.beginPath();ctx.arc(0,0,12,0,6.28);ctx.fill();ctx.strokeStyle=t.c;ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,6,0,6.28);ctx.stroke();ctx.restore();}
-            if (this.palmCache) { for(let p of this.palms){ const size = 64 * p.s; ctx.drawImage(this.palmCache, p.x - size/2, p.y - size/2, size, size); } }
+            
+            for(let ti of this.tires){
+                ctx.save();ctx.translate(ti.x,ti.y);
+                ctx.shadowColor="rgba(0,0,0,0.5)";ctx.shadowBlur=5;
+                ctx.fillStyle="#1a1a1a";ctx.beginPath();ctx.arc(0,0,12,0,6.28);ctx.fill();
+                ctx.strokeStyle=ti.c;ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,6,0,6.28);ctx.stroke();
+                ctx.restore();
+            }
+            
+            if (this.palmCache) { 
+                for(let p of this.palms){ 
+                    const size = 64 * p.s;
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    // Animation : Oscillation légère (vent)
+                    const sway = Math.sin(t + p.x * 0.01) * 0.08; 
+                    ctx.rotate(sway);
+                    ctx.drawImage(this.palmCache, -size/2, -size/2, size, size); 
+                    ctx.restore();
+                } 
+            }
         },
         drawSea(ctx){
             const g=ctx.createRadialGradient(1500,1500,0,1500,1500,2000);g.addColorStop(0,'#06b6d4');g.addColorStop(1,'#0c4a6e');ctx.fillStyle=g;ctx.fillRect(0,0,3000,3000);
-            ctx.fillStyle="rgba(255,255,255,0.3)";for(let p of this.seaParticles){p.t+=0.05;ctx.globalAlpha=(Math.sin(p.t)+1)/4;ctx.beginPath();ctx.arc(p.x,p.y,2+Math.sin(p.t),0,6.28);ctx.fill();}ctx.globalAlpha=1;
+            
+            // Texture de l'eau (Bruit mouvant)
+            if(this.noise && this.noise.width){
+                 ctx.save();
+                 ctx.globalAlpha = 0.03;
+                 const waveTime = Date.now() / 5000;
+                 ctx.translate(Math.cos(waveTime)*40, Math.sin(waveTime)*20); 
+                 ctx.fillStyle = ctx.createPattern(this.noise, 'repeat');
+                 ctx.fillRect(-50,-50,3100,3100);
+                 ctx.restore();
+            }
+
+            // Petites vagues
+            ctx.fillStyle = "#e0f2fe"; 
+            for(let p of this.seaParticles){
+                p.t += 0.03; 
+                const pulse = Math.sin(p.t);
+                const size = p.sz * (1.5 + pulse * 0.5);
+                const alpha = 0.15 + (pulse + 1) * 0.15; 
+                const driftX = Math.sin(p.t * 0.5) * 10;
+                ctx.globalAlpha = alpha;
+                ctx.beginPath(); 
+                ctx.ellipse(p.x + driftX, p.y, 12 * size, 1.5 * size, 0, 0, Math.PI * 2); 
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
         },
         addSkid(x1, y1, x2, y2, opacity) {
             const ctx = this.skidsCanvas.getContext('2d'); ctx.save(); ctx.translate(1500, 1500); ctx.lineCap = 'round';
@@ -641,7 +617,10 @@
       }
     };
 
-    const TRACK_CONFIG = { roadColor: '#334155', sandColor: '#fcd34d' };
+    const TRACK_CONFIG = {
+      roadColor: '#1e293b', roadColor2: '#0f172a', sandColor: '#fef3c7', sandColor2: '#d97706',
+      curbRed: '#b91c1c', curbWhite: '#e2e8f0', lineWhite: 'rgba(255,255,255,0.4)', edgeDark: 'rgba(0,0,0,0.6)'
+    };
     const Track = {
       collisionCtx: null,
       init(){
@@ -658,13 +637,98 @@
         ctx.strokeStyle='#FF0000';ctx.lineWidth=450;this.trace(ctx);ctx.stroke(); ctx.strokeStyle='#FFFFFF';ctx.lineWidth=160;this.trace(ctx);ctx.stroke(); ctx.restore();
       },
       draw(ctx){
+        // Mer + décor
         ctx.save(); ctx.translate(-1500,-1500); VIS.drawSea(ctx); ctx.restore();
-        ctx.lineCap='round';ctx.lineJoin='round'; ctx.shadowColor="rgba(0,0,0,0.2)";ctx.shadowBlur=20;
-        ctx.strokeStyle=TRACK_CONFIG.sandColor;ctx.lineWidth=450;this.trace(ctx);ctx.stroke();ctx.shadowBlur=0;
-        ctx.strokeStyle=TRACK_CONFIG.roadColor;ctx.lineWidth=160;this.trace(ctx);ctx.stroke();
-        ctx.save();ctx.strokeStyle='#fff';ctx.setLineDash([40,40]);ctx.lineWidth=4;ctx.globalAlpha=0.3;this.trace(ctx);ctx.stroke();ctx.restore();
-        ctx.save();ctx.translate(0,-600);ctx.fillStyle='#fff';ctx.fillRect(-12,-80,24,160);for(let y=-80;y<80;y+=20)ctx.fillStyle=((y/20)%2===0)?'#000':'#fff',ctx.fillRect(y%40?-12:0,y,12,20);ctx.restore();
-        VIS.drawEnv(ctx);
+
+        ctx.lineCap='round'; ctx.lineJoin='round';
+
+        // ====== 1) SABLE ======
+        const sandGrad = ctx.createLinearGradient(0, -900, 0, 900);
+        sandGrad.addColorStop(0, TRACK_CONFIG.sandColor);
+        sandGrad.addColorStop(1, TRACK_CONFIG.sandColor2);
+
+        ctx.save();
+        ctx.shadowColor = "rgba(0,0,0,0.25)";
+        ctx.shadowBlur = 28;
+        ctx.strokeStyle = sandGrad;
+        ctx.lineWidth = 450;
+        this.trace(ctx);
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalAlpha = 0.22;
+        ctx.strokeStyle = "rgba(0,0,0,0.45)";
+        ctx.lineWidth = 470;
+        this.trace(ctx);
+        ctx.stroke();
+        ctx.restore();
+
+        // ====== 2) BORDURES (SOUS LA ROUTE) ======
+        ctx.save();
+        ctx.lineCap = 'butt'; 
+        ctx.lineWidth = 185; 
+        ctx.strokeStyle = TRACK_CONFIG.curbWhite;
+        this.trace(ctx);
+        ctx.stroke();
+        ctx.strokeStyle = TRACK_CONFIG.curbRed;
+        ctx.setLineDash([20, 20]);
+        this.trace(ctx);
+        ctx.stroke();
+        ctx.restore();
+
+        // ====== 3) ASPHALTE ======
+        ctx.save();
+        ctx.strokeStyle = TRACK_CONFIG.roadColor;
+        ctx.lineWidth = 160;
+        this.trace(ctx);
+        ctx.stroke();
+        
+        if (VIS.noise && VIS.noise.width) {
+            ctx.globalAlpha = 0.15;
+            ctx.globalCompositeOperation = 'overlay';
+            ctx.strokeStyle = ctx.createPattern(VIS.noise, 'repeat');
+            this.trace(ctx);
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        // Bords assombris
+        ctx.save();
+        ctx.globalAlpha = 0.35;
+        ctx.strokeStyle = TRACK_CONFIG.edgeDark;
+        ctx.lineWidth = 168;
+        this.trace(ctx);
+        ctx.stroke();
+        ctx.restore();
+
+        // ====== 4) MARQUAGES ======
+        ctx.save();
+        ctx.strokeStyle = TRACK_CONFIG.lineWhite;
+        ctx.setLineDash([34, 34]);
+        ctx.lineWidth = 4;
+        ctx.globalAlpha = 0.38;
+        this.trace(ctx);
+        ctx.stroke();
+        ctx.restore();
+
+        // Ligne de départ
+        ctx.save();
+        ctx.translate(0,-600);
+        ctx.rotate(Math.PI / 2);
+        ctx.fillStyle = '#ffffff';
+        for(let i=0; i<8; i++) {
+            const x = -80 + (i*20);
+            ctx.fillRect(x, -10, 10, 10); ctx.fillRect(x+10, 0, 10, 10); ctx.fillRect(x, 10, 10, 10);
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(x+10, -10, 10, 10); ctx.fillRect(x, 0, 10, 10); ctx.fillRect(x+10, 10, 10, 10);
+            ctx.fillStyle = '#ffffff';
+        }
+        ctx.restore();
+
+        // ====== 5) ATMOSPHÈRE (NUAGES) & DÉCOR ======
+        VIS.drawClouds(ctx); // Ombres au sol
+        VIS.drawEnv(ctx);    // Palmiers animés et pneus
       },
       check(x,y){
         const mx=Math.floor(x+1500),my=Math.floor(y+1500); if(mx<0||mx>=3000||my<0||my>=3000)return 'sea';
@@ -675,8 +739,7 @@
     const RaceManager = {
       totalLaps: 3, currentLap: 1, state: 'menu', startTime: 0, lapStartTime: 0, bestLapTime: Infinity,
       checkpoints: [ {x:500,y:-400,p:false}, {x:400,y:100,p:false}, {x:-200,y:400,p:false}, {x:-900,y:0,p:false} ],
-      pendingSessionType: null, // 'race', 'training', 'arcade'
-      trainingDifficulty: null, // 'normal' or 'expert' for storage
+      pendingSessionType: null, trainingDifficulty: null,
 
       showRaceSubMenu() {
           document.getElementById('welcome-screen').style.display = 'none';
@@ -685,32 +748,24 @@
           document.getElementById('global-leaderboard-screen').style.display = 'none';
           document.getElementById('race-mode-select').style.display = 'flex';
       },
-      
       showDifficultySelect() {
           document.getElementById('race-mode-select').style.display = 'none';
           document.getElementById('difficulty-select-screen').style.display = 'flex';
       },
-      
       showSettings() {
           document.getElementById('welcome-screen').style.display = 'none';
           document.getElementById('settings-screen').style.display = 'flex';
       },
-      
       showGlobalLeaderboard() {
           document.getElementById('welcome-screen').style.display = 'none';
           document.getElementById('global-leaderboard-screen').style.display = 'flex';
-          // Charge par défaut le classement Normal
           this.switchRankTab('normal', document.querySelector('#gl-tabs .gl-tab'));
       },
-      
       switchRankTab(type, el) {
-          // Gestion active class
           document.querySelectorAll('#gl-tabs .gl-tab').forEach(t => t.classList.remove('active'));
           el.classList.add('active');
-          // Fetch data
           window.Cloud.fetchGlobalRankings(type);
       },
-      
       showMainMenu() {
           document.getElementById('settings-screen').style.display = 'none';
           document.getElementById('difficulty-select-screen').style.display = 'none';
@@ -718,11 +773,9 @@
           document.getElementById('global-leaderboard-screen').style.display = 'none';
           document.getElementById('welcome-screen').style.display = 'flex';
       },
-      
       setupRace(type) {
           this.pendingSessionType = type;
           if (type === 'arcade') {
-              // Arcade start directly
               currentMode = MODES.arcade;
               this.totalLaps = 3;
               document.getElementById('race-mode-select').style.display = 'none';
@@ -732,49 +785,30 @@
               document.getElementById('difficulty-select-screen').style.display = 'flex';
           }
       },
-      
-      launchSession(difficulty) { // difficulty = 'normal' or 'expert'
+      launchSession(difficulty) {
           const baseConfig = MODES[difficulty];
-          
           if (this.pendingSessionType === 'training') {
-              this.trainingDifficulty = difficulty; // Save for local storage key
-              
-              // Load saved best time from LocalStorage
+              this.trainingDifficulty = difficulty; 
               const storageKey = `drift_nc_training_${difficulty}`;
               const savedBest = localStorage.getItem(storageKey);
               window.Cloud.bestScore = savedBest ? parseInt(savedBest) : Infinity;
               
-              // Load saved ghost data
               const ghostKey = `drift_nc_ghost_${difficulty}`;
               const savedGhost = localStorage.getItem(ghostKey);
-              if (savedGhost) {
-                  try {
-                      GhostSystem.bestRecording = JSON.parse(savedGhost);
-                  } catch(e) { console.error("Ghost load fail", e); }
-              } else {
-                  GhostSystem.bestRecording = [];
-              }
+              if (savedGhost) { try { GhostSystem.bestRecording = JSON.parse(savedGhost); } catch(e) { console.error("Ghost load fail", e); } } 
+              else { GhostSystem.bestRecording = []; }
 
-              // Create a hybrid mode
-              currentMode = {
-                  ...MODES.training, 
-                  physics: baseConfig.physics,
-                  colors: baseConfig.colors,
-                  name: "ENTRAÎNEMENT (" + baseConfig.name + ")"
-              };
+              currentMode = { ...MODES.training, physics: baseConfig.physics, colors: baseConfig.colors, name: "ENTRAÎNEMENT (" + baseConfig.name + ")" };
               this.totalLaps = 999;
               GhostSystem.resetRecording();
           } else {
-              // Standard Time Trial
               currentMode = baseConfig;
               this.totalLaps = 3;
-              window.Cloud.bestScore = Infinity; // Will be loaded from Cloud
+              window.Cloud.bestScore = Infinity; 
           }
-          
           document.getElementById('difficulty-select-screen').style.display = 'none';
           this.finalizeModeSelection();
       },
-      
       selectMode(modeKey) {
         if (modeKey === 'drift') { 
             document.getElementById('welcome-screen').style.display = 'none'; 
@@ -784,7 +818,6 @@
         currentMode = MODES[modeKey];
         this.finalizeModeSelection();
       },
-      
       confirmDriftCar(carType) {
           currentMode = MODES.drift; currentMode.physics = DRIFT_CARS_CONFIG[carType].physics; currentMode.colors = DRIFT_CARS_CONFIG[carType].colors;
           document.getElementById('car-select-screen').style.display = 'none'; this.finalizeModeSelection();
@@ -792,60 +825,40 @@
       finalizeModeSelection() {
           document.getElementById('welcome-screen').style.display = 'none'; document.getElementById('leaderboard-panel').style.display = 'block'; document.getElementById('mode-title').innerText = currentMode.name;
           const label = document.getElementById('main-stat-label'); const subtitle = document.getElementById('lb-subtitle');
-          
-          // Initial Reset for Training Display
           if (currentMode.id === 'training') {
-              label.innerText = "CHRONO"; 
-              subtitle.innerText = "BATTRE LE RECORD PERSONNEL"; 
-              document.getElementById('main-stat-display').innerText = "00:00.000";
-              // Show saved best time in Record slot immediately
+              label.innerText = "CHRONO"; subtitle.innerText = "BATTRE LE RECORD PERSONNEL"; document.getElementById('main-stat-display').innerText = "00:00.000";
               const best = window.Cloud.bestScore;
               document.getElementById('wr-display').innerText = (best !== Infinity) ? this.formatTime(best) : "--:--.---";
               window.Cloud.loadLeaderboard(currentMode); 
           }
           else if (currentMode.id === 'arcade') {
-              label.innerText = "POSITION"; subtitle.innerText = "FINISSEZ PREMIER"; 
-              document.getElementById('main-stat-display').innerText = "4 / 4";
+              label.innerText = "POSITION"; subtitle.innerText = "FINISSEZ PREMIER"; document.getElementById('main-stat-display').innerText = "4 / 4";
               window.Cloud.loadLeaderboard(currentMode);
           }
           else if (currentMode.type === 'drift') { label.innerText = "SCORE"; subtitle.innerText = "MAXIMISEZ VOS POINTS DE DÉRAPAGE"; document.getElementById('main-stat-display').innerText = "0"; window.Cloud.loadLeaderboard(currentMode); } 
           else { label.innerText = "CHRONO"; subtitle.innerText = "BATTEZ LE FANTÔME DU CHAMPION"; document.getElementById('main-stat-display').innerText = "00:00.000"; window.Cloud.loadLeaderboard(currentMode); }
-          
           carImage.src = getCarSpriteUrl(currentMode.colors); 
       },
       startRollingStart(){
         this.state = 'rolling'; car.reset(); car.x = -1200; car.y = -600; car.angle = 0; car.speed = currentMode.physics.maxSpeed; car.vx = car.speed;
         this.checkpoints.forEach(cp=>cp.p=false); GhostSystem.resetRecording(); DriftSystem.reset(); 
-        
         document.getElementById('leaderboard-panel').style.display='none'; document.getElementById('pause-menu').style.display='none'; document.getElementById('pause-btn').style.display='none'; document.getElementById('dq-screen').style.display='none'; document.getElementById('control-toggle-btn').style.display='none';
         document.getElementById('mobile-controls').style.display='flex';
-        
-        if (currentMode.id === 'training') {
-            document.getElementById('lap-display').innerText = `1 / ∞`;
-        } else {
-            document.getElementById('lap-display').innerText = `1 / ${this.totalLaps}`;
-        }
-        
+        if (currentMode.id === 'training') { document.getElementById('lap-display').innerText = `1 / ∞`; } else { document.getElementById('lap-display').innerText = `1 / ${this.totalLaps}`; }
         if(currentMode.type === 'drift') document.getElementById('main-stat-display').innerText = "0"; 
         else if (currentMode.id === 'arcade') document.getElementById('main-stat-display').innerText = "4 / 4";
         else document.getElementById('main-stat-display').innerText = "00:00.000";
-        
         const cd = document.getElementById('countdown-layer'); cd.style.display = 'flex'; cd.innerHTML = '<div class="rolling-text">PRÊT ?</div>';
       },
       beginRacing(){
         this.state='racing'; this.startTime = Date.now(); this.lapStartTime = this.startTime; this.currentLap = 1; this.bestLapTime = Infinity;
         document.getElementById('pause-btn').style.display='flex';
-        // Affiche le bouton Toggle Mode Arcade
         document.getElementById('control-toggle-btn').style.display='flex';
         const cd = document.getElementById('countdown-layer'); cd.innerHTML = '<div class="go-text">DRIFT!</div>'; setTimeout(() => { if(this.state === 'racing') cd.style.display = 'none'; }, 1000);
       },
       disqualify(){
           this.state = 'disqualified';
-          document.getElementById('mobile-controls').style.display = 'none';
-          document.getElementById('pause-btn').style.display = 'none';
-          document.getElementById('control-toggle-btn').style.display = 'none';
-          document.getElementById('drift-ui').style.display = 'none';
-          document.getElementById('dq-screen').style.display = 'flex';
+          document.getElementById('mobile-controls').style.display = 'none'; document.getElementById('pause-btn').style.display = 'none'; document.getElementById('control-toggle-btn').style.display = 'none'; document.getElementById('drift-ui').style.display = 'none'; document.getElementById('dq-screen').style.display = 'flex';
       },
       update(car){
         if (this.state === 'rolling') { car.controls = { u: true, d: false, l: false, r: false }; if (car.x >= 0) this.beginRacing(); return; }
@@ -858,52 +871,27 @@
       completeLap(now){
         DriftSystem.bankPoints();
         const lapTime = now - this.lapStartTime;
-        
-        // Logique Fantôme & Best Time
         if(currentMode.type === 'race' && currentMode.id !== 'arcade') {
-            // Check against current session OR stored best
             let currentRecord = (currentMode.id === 'training') ? window.Cloud.bestScore : this.bestLapTime;
-
             if (lapTime < currentRecord){ 
-                this.bestLapTime = lapTime; // Update session best
-                
+                this.bestLapTime = lapTime; 
                 if(currentMode.id === 'training') {
-                    // Update Global Storage & HUD
                     window.Cloud.bestScore = lapTime;
                     localStorage.setItem(`drift_nc_training_${this.trainingDifficulty}`, lapTime);
                     document.getElementById('wr-display').innerText = this.formatTime(lapTime);
-                    
-                    // SAVE GHOST TO STORAGE
                     GhostSystem.saveRecordingAsBest(); 
-                    try {
-                        localStorage.setItem(`drift_nc_ghost_${this.trainingDifficulty}`, JSON.stringify(GhostSystem.bestRecording));
-                    } catch(e) { console.warn("Ghost storage full"); }
-
-                    // Flash Feedback
-                    const disp = document.getElementById('main-stat-display');
-                    disp.style.color = '#4ade80';
-                    setTimeout(() => disp.style.color = 'white', 1000);
+                    try { localStorage.setItem(`drift_nc_ghost_${this.trainingDifficulty}`, JSON.stringify(GhostSystem.bestRecording)); } catch(e) { console.warn("Ghost storage full"); }
+                    const disp = document.getElementById('main-stat-display'); disp.style.color = '#4ade80'; setTimeout(() => disp.style.color = 'white', 1000);
                 }
-                
                 GhostSystem.saveRecordingAsBest(); 
             } 
         }
         else if (currentMode.type === 'drift') { GhostSystem.saveRecordingAsBest(); }
         
-        // Fin de course ou Tour suivant
-        if(this.currentLap >= this.totalLaps && currentMode.id !== 'training') {
-            this.finishRace(now);
-        } else {
-            this.currentLap++; 
-            this.lapStartTime = now; 
-            if(currentMode.id === 'training') {
-                document.getElementById('lap-display').innerText = `${this.currentLap} / ∞`;
-            } else {
-                document.getElementById('lap-display').innerText = `${this.currentLap} / ${this.totalLaps}`;
-            }
-            this.checkpoints.forEach(cp=>cp.p=false); 
-            // Reset recording for new lap
-            GhostSystem.resetRecording(); 
+        if(this.currentLap >= this.totalLaps && currentMode.id !== 'training') { this.finishRace(now); } else {
+            this.currentLap++; this.lapStartTime = now; 
+            if(currentMode.id === 'training') { document.getElementById('lap-display').innerText = `${this.currentLap} / ∞`; } else { document.getElementById('lap-display').innerText = `${this.currentLap} / ${this.totalLaps}`; }
+            this.checkpoints.forEach(cp=>cp.p=false); GhostSystem.resetRecording(); 
         }
       },
       finishRace(now){
@@ -913,11 +901,9 @@
         else { valueToSubmit = this.bestLapTime; strToSubmit = this.formatTime(valueToSubmit); }
         document.getElementById('pause-btn').style.display='none'; document.getElementById('control-toggle-btn').style.display='none'; document.getElementById('leaderboard-panel').style.display='block'; document.getElementById('start-btn').style.display='none'; document.getElementById('mobile-controls').style.display='none'; document.getElementById('drift-ui').style.display='none';
         document.getElementById('name-input-area').style.display='block'; document.getElementById('final-score-display').innerText = strToSubmit;
-        
         const nameInput = document.getElementById('player-name');
         const savedName = localStorage.getItem('drift_nc_username');
         if(savedName) nameInput.value = savedName;
-
         const submitBtn = document.getElementById('submit-score-btn'); const newBtn = submitBtn.cloneNode(true); submitBtn.parentNode.replaceChild(newBtn, submitBtn);
         newBtn.onclick = async () => {
           if (currentMode.id === 'arcade') { location.reload(); return; }
@@ -940,40 +926,25 @@
       update(){
         this.lastX=this.x; if(RaceManager.state!=='racing' && RaceManager.state !== 'rolling') return;
         const phys = currentMode.physics;
-        
-        // --- LOGIQUE AUTO-GAS POUR LE MODE ARCADE ---
-        if (autoGasMode && RaceManager.state === 'racing' && !this.controls.d) {
-             this.controls.u = true;
-        }
-        // --------------------------------------------
-
+        if (autoGasMode && RaceManager.state === 'racing' && !this.controls.d) { this.controls.u = true; }
         if(Math.abs(this.speed)>0.1){ const dir = this.speed>0?1:-1; if(this.controls.l) this.angle -= phys.turnSpeed*dir; if(this.controls.r) this.angle += phys.turnSpeed*dir; }
-        
-        let f=0; 
-        if(this.controls.u) f=phys.acceleration; 
-        if(this.controls.d) f = -phys.acceleration * 0.6; 
-
+        let f=0; if(this.controls.u) f=phys.acceleration; if(this.controls.d) f = -phys.acceleration * 0.6; 
         this.vx += Math.cos(this.angle)*f; this.vy += Math.sin(this.angle)*f;
         const surface = Track.check(this.x, this.y);
         let fric = phys.friction; if(surface === 'sand') fric = phys.offRoadFriction; if(surface === 'sea') fric = 0.5;
         this.speed = Math.hypot(this.vx, this.vy); this.vx *= fric; this.vy *= fric;
         if(this.speed>phys.maxSpeed){ const r = phys.maxSpeed/this.speed; this.vx*=r; this.vy*=r; this.speed = phys.maxSpeed; }
-        
         this.x += this.vx; this.y += this.vy;
-
         const moveA = Math.atan2(this.vy, this.vx);
         let slip = Math.abs(moveA - this.angle); while(slip>Math.PI) slip-=Math.PI*2; while(slip<-Math.PI) slip+=Math.PI*2;
         const drifting = (this.speed>4 && Math.abs(slip)>0.30);
         DriftSystem.update(this, surface);
         AudioSys.update(this.speed, (drifting && surface==='road'));
-
         if(drifting && surface==='road'){
           const c=Math.cos(this.angle), s=Math.sin(this.angle); const rX = this.x - c*20, rY = this.y - s*20;
           const x1=rX+s*11, y1=rY-c*11, x2=rX-s*11, y2=rY+c*11;
           this.skids.push({x:x1, y:y1, a:0.55, w:2.6}); this.skids.push({x:x2, y:y2, a:0.55, w:2.6});
-          // Dessiner trace permanente
-          VIS.addSkid(x1, y1, x1-this.vx*0.5, y1-this.vy*0.5, 0.2);
-          VIS.addSkid(x2, y2, x2-this.vx*0.5, y2-this.vy*0.5, 0.2);
+          VIS.addSkid(x1, y1, x1-this.vx*0.5, y1-this.vy*0.5, 0.2); VIS.addSkid(x2, y2, x2-this.vx*0.5, y2-this.vy*0.5, 0.2);
           if(Math.random()<0.55) Particles.spawn(rX, rY, -this.vx*0.15, -this.vy*0.15, 'smoke');
         }
         if(surface==='sand' && this.speed>3 && Math.random()<0.35) Particles.spawn(this.x, this.y, -this.vx*0.05, -this.vy*0.05, 'dust');
@@ -981,11 +952,22 @@
       }
       draw(ctx){
         ctx.save(); ctx.lineCap = 'round'; for(const sk of this.skids){ ctx.strokeStyle = `rgba(0,0,0,${sk.a})`; ctx.lineWidth = sk.w; ctx.beginPath(); ctx.moveTo(sk.x, sk.y); ctx.lineTo(sk.x-this.vx*0.25, sk.y-this.vy*0.25); ctx.stroke(); } ctx.restore();
-        ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle+Math.PI/2); ctx.globalAlpha = 0.28; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.ellipse(0, 10, 16, 26, 0, 0, 6.28); ctx.fill(); ctx.globalAlpha = 1; if(carImage.complete) ctx.drawImage(carImage,-22,-40,44,80); ctx.restore();
+        ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle + Math.PI/2);
+        const sh = ctx.createRadialGradient(0, 14, 6, 0, 14, 34); sh.addColorStop(0, 'rgba(0,0,0,0.38)'); sh.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = sh; ctx.beginPath(); ctx.ellipse(0, 14, 18, 30, 0, 0, Math.PI * 2); ctx.fill();
+        if (carImage.complete) {
+          const sp = Math.min(1, this.speed / (currentMode.physics.maxSpeed || 12)); const blur = sp * 6; 
+          ctx.globalAlpha = 0.18; ctx.drawImage(carImage, -22 - blur*0.35, -40 - blur*0.10, 44, 80);
+          ctx.globalAlpha = 0.10; ctx.drawImage(carImage, -22 - blur*0.65, -40 - blur*0.18, 44, 80);
+          ctx.globalAlpha = 1; ctx.filter = "contrast(1.08) saturate(1.12)"; ctx.drawImage(carImage, -22, -40, 44, 80); ctx.filter = "none";
+        }
+        ctx.restore();
       }
     }
 
-    const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d'); const car = new Car();
+    const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    const car = new Car();
     function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', resize); resize(); Track.init();
 
@@ -1000,48 +982,36 @@
     };
     bindTouch('btn-left','l'); bindTouch('btn-right','r'); bindTouch('btn-gas','u'); bindTouch('btn-brake','d');
 
-    // --- GESTION DES MODES DE CONTRÔLE ---
     let autoGasMode = false; 
-
-    // Fonction toggle controls (centralisée)
     function toggleControls() {
         autoGasMode = !autoGasMode;
         localStorage.setItem('drift_nc_controls', autoGasMode ? 'arcade' : 'classic');
         updateControlUI();
         if(navigator.vibrate) navigator.vibrate(50);
     }
-    
     function updateControlUI() {
         const ctrlBtnPause = document.getElementById('controls-btn');
         const ctrlBtnSettings = document.getElementById('set-ctrl-btn');
-        
         if(autoGasMode) {
             document.body.classList.add('arcade-mode');
-            // Le texte n'est plus nécessaire car remplacé par les SVG
             if(ctrlBtnPause) ctrlBtnPause.innerText = "CONTRÔLES : ARCADE";
             if(ctrlBtnSettings) ctrlBtnSettings.innerText = "CONTRÔLES : ARCADE";
         } else {
             document.body.classList.remove('arcade-mode');
-             // Réinitialisation du texte pour le mode classique
-            document.getElementById('btn-left').innerText = "⬅️";
-            document.getElementById('btn-right').innerText = "➡️";
+            document.getElementById('btn-left').innerText = "⬅️"; document.getElementById('btn-right').innerText = "➡️";
             if(ctrlBtnPause) ctrlBtnPause.innerText = "CONTRÔLES : CLASSIQUE";
             if(ctrlBtnSettings) ctrlBtnSettings.innerText = "CONTRÔLES : CLASSIQUE";
         }
     }
-
     document.getElementById('control-toggle-btn').onclick = toggleControls;
     document.getElementById('controls-btn').onclick = toggleControls;
 
-    // --- GESTION DU ZOOM ---
     let globalZoom = 1.0;
-    
     function toggleZoom() {
         if(globalZoom === 1.0) globalZoom = 0.65; else globalZoom = 1.0;
         localStorage.setItem('drift_nc_zoom', globalZoom === 1.0 ? 'close' : 'far');
         updateZoomUI();
     }
-    
     function updateZoomUI() {
         const zoomBtnPause = document.getElementById('zoom-btn');
         const zoomBtnSettings = document.getElementById('set-cam-btn');
@@ -1049,19 +1019,14 @@
         if(zoomBtnPause) zoomBtnPause.innerText = txt;
         if(zoomBtnSettings) zoomBtnSettings.innerText = txt;
     }
-    
     document.getElementById('zoom-btn').onclick = toggleZoom;
 
-    // --- INIT SETTINGS ---
     function initSettings() {
         const savedCtrl = localStorage.getItem('drift_nc_controls');
-        if (savedCtrl === 'classic') autoGasMode = false;
-        else autoGasMode = true; 
+        if (savedCtrl === 'classic') autoGasMode = false; else autoGasMode = true; 
         updateControlUI();
-        
         const savedZoom = localStorage.getItem('drift_nc_zoom');
-        if (savedZoom === 'close') globalZoom = 1.0;
-        else globalZoom = 0.65;
+        if (savedZoom === 'close') globalZoom = 1.0; else globalZoom = 0.65;
         updateZoomUI();
     }
     initSettings();
@@ -1072,7 +1037,6 @@
     document.getElementById('restart-btn').onclick = () => RaceManager.startRollingStart();
     document.getElementById('quit-btn').onclick = () => RaceManager.quitToMenu();
 
-    // AUTO-UNLOCK AUDIO ON ANY INTERACTION
     document.body.addEventListener('click', () => AudioSys.unlock(), {once:true});
     document.body.addEventListener('keydown', () => AudioSys.unlock(), {once:true});
 
@@ -1081,18 +1045,15 @@
       if (!lastTime) lastTime = t; let dt = t - lastTime; lastTime = t; if (dt > 100) dt = 100; accumulator += dt;
       while (accumulator >= FIXED_STEP) { if (RaceManager.state === 'racing' || RaceManager.state === 'rolling') { car.update(); RaceManager.update(car); } Particles.update(); accumulator -= FIXED_STEP; }
       ctx.clearRect(0,0,canvas.width,canvas.height); ctx.save();
-      
       ctx.translate(canvas.width/2, canvas.height/2);
       ctx.scale(globalZoom, globalZoom);
-      ctx.translate(-car.x - car.vx*10, -car.y - car.vy*10); // Offset caméra standard
-      
+      ctx.translate(-car.x - car.vx*10, -car.y - car.vy*10); 
       Track.draw(ctx);
       if(RaceManager.state === 'racing' || RaceManager.state === 'paused'){ 
           const time = (RaceManager.state==='paused'?RaceManager.pausedTime:Date.now()) - RaceManager.lapStartTime; 
           GhostSystem.drawGlobalGhost(ctx, time); 
           if(currentMode.type === 'race' && currentMode.id !== 'arcade') document.getElementById('main-stat-display').innerText = RaceManager.formatTime(time); 
       }
-      
       Particles.draw(ctx); car.draw(ctx); ctx.restore();
       VIS.drawVignette(ctx, canvas.width, canvas.height);
       if(VIS.noise && VIS.noise.width) { ctx.save(); ctx.globalAlpha=0.08; ctx.fillStyle=ctx.createPattern(VIS.noise,'repeat'); ctx.fillRect(0,0,canvas.width,canvas.height); ctx.restore(); }
