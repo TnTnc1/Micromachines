@@ -36,7 +36,8 @@
   <style>
     :root{ 
         --bg-lagoon: radial-gradient(circle at center, #22d3ee 0%, #0284c7 60%, #0c4a6e 100%);
-        --bg-mobile: radial-gradient(circle at center, #1e3a8a 0%, #172554 60%, #000000 100%); /* Bleu nuit Mobile */
+        /* FOND BLEU FONCÉ "MOBILE" */
+        --bg-mobile: radial-gradient(circle at center, #0033a0 0%, #001f60 70%, #000000 100%); 
         --glass: rgba(255,255,255,0.15); 
         --mobil-blue: #0033a0; 
         --mobil-red: #e32119;
@@ -132,14 +133,25 @@
     .btn-diff-normal { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); border-color: #fca5a5; }
     .btn-diff-expert { background: linear-gradient(135deg, #1f2937 0%, #000000 100%); border-color: #9ca3af; }
     
-    /* BOUTON MOBILE LA FOA SPECIAL */
+    /* BOUTON MOBILE LA FOA SPECIAL (ROUGE) */
     .btn-mobil-race {
-        background: linear-gradient(135deg, #0033a0 0%, #001f60 100%);
-        border-color: #e32119;
+        background: linear-gradient(135deg, #e32119 0%, #b91c1c 100%); /* ROUGE MOBIL */
+        border-color: #ffffff;
         color: #fff;
         min-width: 300px;
         flex: 0 0 100%;
         font-size: 1.2rem;
+    }
+    .btn-mobil-race::after {
+        content: "LA FOA";
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        font-size: 9px;
+        background: #0033a0;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 900;
     }
 
     .btn-multi-locked { background: linear-gradient(135deg, #1f2937 0%, #111827 100%); border: 2px solid #fbbf24; color: #e5e7eb; cursor: not-allowed; opacity: 0.9; position: relative; overflow: hidden; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -259,6 +271,7 @@
       <button id="resume-btn" class="menu-btn">Reprendre</button>
       <button id="controls-btn" class="menu-btn">CONTRÔLES : CLASSIQUE</button>
       <button id="zoom-btn" class="menu-btn">CAMÉRA : PROCHE</button>
+      <button id="set-ghost-btn" class="menu-btn" style="background:rgba(255,255,255,0.1);" onclick="toggleGhost()">FANTÔME : OUI</button>
       <button id="restart-btn" class="menu-btn">Recommencer</button>
       <button id="quit-btn" class="menu-btn red">Quitter</button>
     </div>
@@ -804,35 +817,33 @@
         ctx.stroke();
         ctx.restore();
 
-        // ====== 2) BORDURES & ROUTE ======
+        // ====== 2) BORDURES (SOUS LA ROUTE) ======
         const isMobileMode = (currentMode.id === 'mobile_lafoa');
-        const curbColor = isMobileMode ? '#0033a0' : '#ef4444'; // Bleu Mobil ou Rouge
-
-        ctx.save();
         
-        // A. BASE BORDURE (BLANC SOLIDE)
+        ctx.save();
         ctx.lineCap = 'butt'; 
         ctx.lineWidth = 185; 
-        ctx.strokeStyle = '#ffffff'; 
-        ctx.setLineDash([]); // S'assurer que c'est plein
-        this.trace(ctx);
-        ctx.stroke();
-
-        // B. RAYURES BORDURE (COULEUR)
-        ctx.strokeStyle = curbColor;
-        ctx.setLineDash([24, 24]); // Rayures nettes
-        this.trace(ctx);
-        ctx.stroke();
-
-        // C. ROUTE (BITUME) QUI RECOUVRE LE CENTRE
-        // Important : On remet en ligne pleine pour la route !
-        ctx.setLineDash([]); 
-        ctx.lineWidth = 160;
-        ctx.strokeStyle = TRACK_CONFIG.roadColor;
+        
+        // Base BLANCHE solide
+        ctx.strokeStyle = '#ffffff';
         this.trace(ctx);
         ctx.stroke();
         
-        // D. TEXTURE GRAIN ROUTE
+        // Surcouche COULEUR (Rouge ou Bleu) en pointillés
+        ctx.strokeStyle = isMobileMode ? '#0033a0' : '#ef4444'; // BLEU MOBIL ou ROUGE
+        ctx.setLineDash([40, 50]); // Pointillés clairs
+        this.trace(ctx);
+        ctx.stroke();
+        
+        ctx.restore();
+
+        // ====== 3) ASPHALTE ======
+        ctx.save();
+        ctx.strokeStyle = TRACK_CONFIG.roadColor;
+        ctx.lineWidth = 160;
+        this.trace(ctx);
+        ctx.stroke();
+        
         if (VIS.noise && VIS.noise.width) {
             ctx.globalAlpha = 0.15;
             ctx.globalCompositeOperation = 'overlay';
@@ -846,7 +857,7 @@
         ctx.save();
         ctx.globalAlpha = 0.35;
         ctx.strokeStyle = TRACK_CONFIG.edgeDark;
-        ctx.lineWidth = 168; // Un peu plus large que la route pour mordre sur les vibreurs
+        ctx.lineWidth = 168;
         this.trace(ctx);
         ctx.stroke();
         ctx.restore();
@@ -862,23 +873,14 @@
         ctx.restore();
 
         // Logo Sponsor au sol (Départ)
-        if(isMobileMode) {
-            ctx.save();
-            ctx.translate(-200, -600); // Juste avant la ligne
-            ctx.rotate(Math.PI/2);
-            ctx.textAlign = "center";
-            ctx.font = "900 40px Orbitron";
-            ctx.fillStyle = "#ffffff";
-            ctx.fillText("MOBIL", 0, -10);
-            ctx.font = "900 25px Inter";
-            ctx.fillStyle = "#e32119"; // Rouge Mobil
-            ctx.fillText("LA FOA", 0, 20);
-            ctx.restore();
-        } else if(trackLogo.complete && currentEdition === 'lagoon'){
+        if(trackLogo.complete){
              ctx.save();
              ctx.translate(-300, -600); // Positionné avant la ligne
              ctx.globalAlpha = 0.95;
+             // Blend mode pour effet "peinture sur bitume"
              ctx.globalCompositeOperation = 'source-over'; 
+             // On dessine le logo
+             // Ratio approx 3:1
              ctx.drawImage(trackLogo, -120, -60, 240, 120); 
              ctx.restore();
         }
@@ -896,6 +898,21 @@
             ctx.fillStyle = '#ffffff';
         }
         ctx.restore();
+        
+        // LOGO MOBILE LA FOA (Si mode mobile)
+        if(isMobileMode) {
+            ctx.save();
+            ctx.translate(-200, -600); // Juste avant la ligne
+            ctx.rotate(Math.PI/2);
+            ctx.textAlign = "center";
+            ctx.font = "900 40px Orbitron";
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText("MOBIL", 0, -10);
+            ctx.font = "900 25px Inter";
+            ctx.fillStyle = "#e32119"; // Rouge Mobil
+            ctx.fillText("LA FOA", 0, 20);
+            ctx.restore();
+        }
 
         // ====== 5) ATMOSPHÈRE (NUAGES) & DÉCOR ======
         VIS.drawClouds(ctx); // Ombres au sol
@@ -930,6 +947,7 @@
           const menuMobile = document.getElementById('menu-mobile');
           const tabLagoon = document.getElementById('tab-lagoon');
           const tabMobile = document.getElementById('tab-mobile');
+          const poster = document.getElementById('poster-img');
 
           if (edition === 'lagoon') {
               body.style.background = 'var(--bg-lagoon)';
@@ -938,6 +956,7 @@
               menuMobile.style.display = 'none';
               tabLagoon.classList.add('active');
               tabMobile.classList.remove('active-mobile');
+              poster.src = "https://i.postimg.cc/XvYKYH0t/image-carre.png"; // Original
               // Reset to normal mode just in case
               currentMode = MODES.normal;
               carImage.src = getCarSpriteUrl(currentMode.colors);
@@ -948,6 +967,7 @@
               menuMobile.style.display = 'flex';
               tabLagoon.classList.remove('active');
               tabMobile.classList.add('active-mobile');
+              poster.src = "https://i.postimg.cc/tgXQMsMP/mobillafoa.png"; // New Mobile Image
               // Pre-select Mobile Mode
               currentMode = MODES.mobile_lafoa;
               carImage.src = getCarSpriteUrl(currentMode.colors);
@@ -1098,7 +1118,6 @@
         
         document.getElementById('leaderboard-panel').style.display='none'; document.getElementById('pause-menu').style.display='none'; document.getElementById('pause-btn').style.display='none'; document.getElementById('dq-screen').style.display='none'; 
         
-        // HIDE RESTART BUTTON DURING ROLLING
         document.getElementById('quick-restart-btn').style.display='none';
 
         document.getElementById('mobile-controls').style.display='flex';
@@ -1118,7 +1137,6 @@
       beginRacing(){
         this.state='racing'; this.startTime = Date.now(); this.lapStartTime = this.startTime; this.currentLap = 1; this.bestLapTime = Infinity;
         document.getElementById('pause-btn').style.display='flex';
-        // SHOW RESTART BUTTON
         document.getElementById('quick-restart-btn').style.display='flex';
         
         const cd = document.getElementById('countdown-layer'); cd.innerHTML = '<div class="go-text">DRIFT!</div>'; setTimeout(() => { if(this.state === 'racing') cd.style.display = 'none'; }, 1000);
@@ -1263,15 +1281,12 @@
     }
 
     const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
-    // On définit la qualité une première fois, mais elle sera réinitialisée au resize
     ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
     const car = new Car();
-    
     function resize(){ 
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        // CORRECTION : On retire le ctx.scale ici pour éviter le conflit de coordonnées
-        // On réapplique la qualité car le redimensionnement du canvas réinitialise le contexte
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5); 
+        canvas.width = window.innerWidth * dpr;
+        canvas.height = window.innerHeight * dpr;
         ctx.imageSmoothingEnabled = true; 
         ctx.imageSmoothingQuality = 'high';
     }
@@ -1360,6 +1375,7 @@
     function closeCodeScreen() {
         document.getElementById('code-screen').style.display = 'none';
         document.getElementById('welcome-screen').style.display = 'flex';
+        // Re-select lagoon tab visually if we cancelled
         if (currentEdition === 'lagoon') {
             document.getElementById('tab-lagoon').classList.add('active');
             document.getElementById('tab-mobile').classList.remove('active-mobile');
@@ -1376,6 +1392,7 @@
         if (savedZoom === 'close') globalZoom = 1.0; else globalZoom = 0.65;
         updateZoomUI();
 
+        // Ghost setting
         const savedGhost = localStorage.getItem('drift_nc_ghost_visible');
         if (savedGhost !== null) ghostVisible = (savedGhost === 'true');
         updateGhostUI();
@@ -1395,18 +1412,12 @@
     function loop(t) {
       if (!lastTime) lastTime = t; let dt = t - lastTime; lastTime = t; if (dt > 100) dt = 100; accumulator += dt;
       while (accumulator >= FIXED_STEP) { if (RaceManager.state === 'racing' || RaceManager.state === 'rolling') { car.update(); RaceManager.update(car); } Particles.update(); accumulator -= FIXED_STEP; }
-      
       ctx.clearRect(0,0,canvas.width,canvas.height); ctx.save();
       
-      // 1. On centre la caméra au milieu de l'écran (Coordonnées physiques)
+      // CAMÉRA CENTRÉE (Version Corrigée)
       ctx.translate(canvas.width/2, canvas.height/2);
-      
-      // 2. On applique le Zoom ET le ratio de pixel (DPR) ici
-      // Cela permet d'avoir la bonne taille de jeu peu importe la densité de l'écran
       const currentDpr = canvas.width / window.innerWidth;
       ctx.scale(globalZoom * currentDpr, globalZoom * currentDpr);
-      
-      // 3. On déplace le monde pour centrer la voiture (Caméra)
       ctx.translate(-car.x - car.vx*10, -car.y - car.vy*10); 
       
       Track.draw(ctx);
