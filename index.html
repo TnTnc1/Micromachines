@@ -1263,13 +1263,18 @@
     }
 
     const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
+    // On définit la qualité une première fois, mais elle sera réinitialisée au resize
     ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
     const car = new Car();
+    
     function resize(){ 
         const dpr = Math.min(window.devicePixelRatio || 1, 1.5); 
         canvas.width = window.innerWidth * dpr;
         canvas.height = window.innerHeight * dpr;
-        ctx.scale(dpr, dpr);
+        // CORRECTION : On retire le ctx.scale ici pour éviter le conflit de coordonnées
+        // On réapplique la qualité car le redimensionnement du canvas réinitialise le contexte
+        ctx.imageSmoothingEnabled = true; 
+        ctx.imageSmoothingQuality = 'high';
     }
     window.addEventListener('resize', resize); resize(); Track.init();
 
@@ -1391,10 +1396,20 @@
     function loop(t) {
       if (!lastTime) lastTime = t; let dt = t - lastTime; lastTime = t; if (dt > 100) dt = 100; accumulator += dt;
       while (accumulator >= FIXED_STEP) { if (RaceManager.state === 'racing' || RaceManager.state === 'rolling') { car.update(); RaceManager.update(car); } Particles.update(); accumulator -= FIXED_STEP; }
+      
       ctx.clearRect(0,0,canvas.width,canvas.height); ctx.save();
+      
+      // 1. On centre la caméra au milieu de l'écran (Coordonnées physiques)
       ctx.translate(canvas.width/2, canvas.height/2);
-      ctx.scale(globalZoom, globalZoom);
+      
+      // 2. On applique le Zoom ET le ratio de pixel (DPR) ici
+      // Cela permet d'avoir la bonne taille de jeu peu importe la densité de l'écran
+      const currentDpr = canvas.width / window.innerWidth;
+      ctx.scale(globalZoom * currentDpr, globalZoom * currentDpr);
+      
+      // 3. On déplace le monde pour centrer la voiture (Caméra)
       ctx.translate(-car.x - car.vx*10, -car.y - car.vy*10); 
+      
       Track.draw(ctx);
       if(RaceManager.state === 'racing' || RaceManager.state === 'paused'){ 
           const time = (RaceManager.state==='paused'?RaceManager.pausedTime:Date.now()) - RaceManager.lapStartTime; 
