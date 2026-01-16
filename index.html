@@ -605,12 +605,8 @@
             const t = Date.now() / 1000;
             ctx.save();
             ctx.translate(-1500, -1500);
-            
-            // OPTIMISATION MOBILE: Suppression du flou coûteux
-            // ctx.filter = "blur(40px)"; // Nuages flous (TROP LOURD)
-            
-            // On utilise un simple dégradé ou une forme transparente à la place
-            ctx.fillStyle = "rgba(0, 0, 0, 0.08)"; // Ombre très légère et nette (plus rapide)
+            ctx.filter = "blur(40px)"; // Nuages flous
+            ctx.fillStyle = "rgba(0, 0, 0, 0.15)"; // Ombre légère noire
             
             for(let c of this.clouds){
                 // Mouvement lent
@@ -634,10 +630,7 @@
             
             for(let ti of this.tires){
                 ctx.save();ctx.translate(ti.x,ti.y);
-                
-                // OPTIMISATION MOBILE: Suppression de l'ombre portée floue
-                // ctx.shadowColor="rgba(0,0,0,0.5)";ctx.shadowBlur=5; 
-                
+                ctx.shadowColor="rgba(0,0,0,0.5)";ctx.shadowBlur=5;
                 ctx.fillStyle="#1a1a1a";ctx.beginPath();ctx.arc(0,0,12,0,6.28);ctx.fill();
                 ctx.strokeStyle=ti.c;ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,6,0,6.28);ctx.stroke();
                 ctx.restore();
@@ -737,10 +730,8 @@
         sandGrad.addColorStop(1, TRACK_CONFIG.sandColor2);
 
         ctx.save();
-        // OPTIMISATION MOBILE: Suppression des ombres floues
-        // ctx.shadowColor = "rgba(0,0,0,0.25)";
-        // ctx.shadowBlur = 28;
-        
+        ctx.shadowColor = "rgba(0,0,0,0.25)";
+        ctx.shadowBlur = 28;
         ctx.strokeStyle = sandGrad;
         ctx.lineWidth = 450;
         this.trace(ctx);
@@ -1078,12 +1069,7 @@
           const sp = Math.min(1, this.speed / (currentMode.physics.maxSpeed || 12)); const blur = sp * 6; 
           ctx.globalAlpha = 0.18; ctx.drawImage(carImage, -22 - blur*0.35, -40 - blur*0.10, 44, 80);
           ctx.globalAlpha = 0.10; ctx.drawImage(carImage, -22 - blur*0.65, -40 - blur*0.18, 44, 80);
-          
-          // OPTIMISATION MOBILE: Suppression des filtres de contraste
-          // ctx.filter = "contrast(1.08) saturate(1.12)"; 
-          
-          ctx.globalAlpha = 1; ctx.drawImage(carImage, -22, -40, 44, 80); 
-          // ctx.filter = "none";
+          ctx.globalAlpha = 1; ctx.filter = "contrast(1.08) saturate(1.12)"; ctx.drawImage(carImage, -22, -40, 44, 80); ctx.filter = "none";
         }
         ctx.restore();
       }
@@ -1092,13 +1078,7 @@
     const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
     const car = new Car();
-    function resize(){ 
-        // OPTIMISATION MOBILE: Limite la résolution à 1.5x pour éviter les lags sur écrans Retina/HD
-        const dpr = Math.min(window.devicePixelRatio || 1, 1.5); 
-        canvas.width = window.innerWidth * dpr;
-        canvas.height = window.innerHeight * dpr;
-        ctx.scale(dpr, dpr);
-    }
+    function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', resize); resize(); Track.init();
 
     const keys = {ArrowUp:'u',ArrowDown:'d',ArrowLeft:'l',ArrowRight:'r', z:'u',Z:'u',w:'u',W:'u', s:'d',S:'d', q:'l',Q:'l',a:'l',A:'l', d:'r',D:'r'};
