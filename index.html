@@ -422,6 +422,8 @@
       return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
     }
     const carImage = new Image(); carImage.src = getCarSpriteUrl(currentMode.colors);
+    // AJOUT DU LOGO
+    const trackLogo = new Image(); trackLogo.src = "https://i.postimg.cc/gk2bkb08/bridgestone-logo-hero.png";
 
     window.Cloud = {
       db: null, bestScore: -Infinity, globalGhostData: null, unsubscribe: null,
@@ -792,6 +794,19 @@
         ctx.stroke();
         ctx.restore();
 
+        // Logo Sponsor au sol (Départ)
+        if(trackLogo.complete){
+             ctx.save();
+             ctx.translate(-300, -600); // Positionné avant la ligne
+             ctx.globalAlpha = 0.95;
+             // Blend mode pour effet "peinture sur bitume"
+             ctx.globalCompositeOperation = 'source-over'; 
+             // On dessine le logo
+             // Ratio approx 3:1
+             ctx.drawImage(trackLogo, -120, -60, 240, 120); 
+             ctx.restore();
+        }
+
         // Ligne de départ
         ctx.save();
         ctx.translate(0,-600);
@@ -1003,7 +1018,13 @@
           if (saved) { document.getElementById('name-input-area').innerHTML = '<div class="text-emerald-300 font-black py-4">SCORE ENREGISTRÉ !</div><button class="action-btn" onclick="location.reload()">REJOUER</button>'; } else { newBtn.innerText = "RÉESSAYER"; newBtn.disabled = false; }
         };
       },
-      formatTime(ms){ let m = Math.floor(ms/60000), s = Math.floor((ms%60000)/1000), c = Math.floor((ms%1000)/10); return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}.${c.toString().padStart(2,'0')}`; },
+      // MODIFICATION ICI : Passage aux millièmes de seconde (3 digits)
+      formatTime(ms){ 
+          let m = Math.floor(ms/60000);
+          let s = Math.floor((ms%60000)/1000);
+          let c = ms % 1000; // Millièmes bruts
+          return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}.${c.toString().padStart(3,'0')}`; 
+      },
       pauseGame(){ if(this.state==='racing'){ this.state='paused'; this.pausedTime = Date.now(); document.getElementById('pause-menu').style.display='flex'; document.getElementById('mobile-controls').style.display='none'; document.getElementById('quick-restart-btn').style.display='none'; } },
       resumeGame(){ if(this.state==='paused'){ const d = Date.now() - this.pausedTime; this.startTime += d; this.lapStartTime += d; this.state='racing'; document.getElementById('pause-menu').style.display='none'; document.getElementById('mobile-controls').style.display='flex'; document.getElementById('quick-restart-btn').style.display='flex'; } },
       quitToMenu(){ location.reload(); }
