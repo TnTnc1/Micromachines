@@ -121,7 +121,10 @@
     .pause-icon{ width:16px; height:16px; position:relative; }
     .pause-icon::before, .pause-icon::after{ content:""; position:absolute; top:0; bottom:0; width:5px; border-radius:3px; background:white; }
     .pause-icon::before{ left:0; } .pause-icon::after{ right:0; }
-    #control-toggle-btn { position:absolute; top:75px; left:16px; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.2); backdrop-filter:blur(5px); border:1px solid rgba(255,255,255,0.3); z-index:50; display:none; align-items:center; justify-content:center; cursor:pointer; pointer-events:auto; font-size:20px; }
+    
+    /* RESTART BUTTON (Remplace le control-toggle) */
+    #quick-restart-btn { position:absolute; top:75px; left:16px; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.2); backdrop-filter:blur(5px); border:1px solid rgba(255,255,255,0.3); z-index:50; display:none; align-items:center; justify-content:center; cursor:pointer; pointer-events:auto; font-size:24px; font-weight:900; color:white; }
+    #quick-restart-btn:hover { background:rgba(255,255,255,0.4); }
 
     #pause-menu{ position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; z-index:80; background:rgba(15,23,42,0.8); backdrop-filter:blur(15px); pointer-events:auto; }
     .menu-btn{ background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.3); padding:12px 30px; color:white; font-weight:900; border-radius:999px; cursor:pointer; margin:10px; width:220px; text-transform:uppercase; transition:0.2s; pointer-events:auto; }
@@ -239,7 +242,7 @@
   </div>
 
   <div id="pause-btn"><div class="pause-icon"></div></div>
-  <div id="control-toggle-btn">🎮</div>
+  <div id="quick-restart-btn">↺</div>
 
   <div id="pause-menu">
     <div class="hud-card" style="min-width: 320px; text-align:center; pointer-events:auto; background:transparent; border:none; box-shadow:none;">
@@ -919,7 +922,11 @@
       startRollingStart(){
         this.state = 'rolling'; car.reset(); car.x = -1200; car.y = -600; car.angle = 0; car.speed = currentMode.physics.maxSpeed; car.vx = car.speed;
         this.checkpoints.forEach(cp=>cp.p=false); GhostSystem.resetRecording(); DriftSystem.reset(); 
-        document.getElementById('leaderboard-panel').style.display='none'; document.getElementById('pause-menu').style.display='none'; document.getElementById('pause-btn').style.display='none'; document.getElementById('dq-screen').style.display='none'; document.getElementById('control-toggle-btn').style.display='none';
+        document.getElementById('leaderboard-panel').style.display='none'; document.getElementById('pause-menu').style.display='none'; document.getElementById('pause-btn').style.display='none'; document.getElementById('dq-screen').style.display='none';
+        
+        // HIDE RESTART BUTTON DURING ROLLING
+        document.getElementById('quick-restart-btn').style.display='none';
+
         document.getElementById('mobile-controls').style.display='flex';
         if (currentMode.id === 'training') { document.getElementById('lap-display').innerText = `1 / ∞`; } else { document.getElementById('lap-display').innerText = `1 / ${this.totalLaps}`; }
         if(currentMode.type === 'drift') document.getElementById('main-stat-display').innerText = "0"; 
@@ -930,12 +937,15 @@
       beginRacing(){
         this.state='racing'; this.startTime = Date.now(); this.lapStartTime = this.startTime; this.currentLap = 1; this.bestLapTime = Infinity;
         document.getElementById('pause-btn').style.display='flex';
-        document.getElementById('control-toggle-btn').style.display='flex';
+        // SHOW RESTART BUTTON
+        document.getElementById('quick-restart-btn').style.display='flex';
+        
         const cd = document.getElementById('countdown-layer'); cd.innerHTML = '<div class="go-text">DRIFT!</div>'; setTimeout(() => { if(this.state === 'racing') cd.style.display = 'none'; }, 1000);
       },
       disqualify(){
           this.state = 'disqualified';
-          document.getElementById('mobile-controls').style.display = 'none'; document.getElementById('pause-btn').style.display = 'none'; document.getElementById('control-toggle-btn').style.display = 'none'; document.getElementById('drift-ui').style.display = 'none'; document.getElementById('dq-screen').style.display = 'flex';
+          document.getElementById('mobile-controls').style.display = 'none'; document.getElementById('pause-btn').style.display = 'none'; document.getElementById('drift-ui').style.display = 'none'; document.getElementById('dq-screen').style.display = 'flex';
+          document.getElementById('quick-restart-btn').style.display='none';
       },
       update(car){
         if (this.state === 'rolling') { car.controls = { u: true, d: false, l: false, r: false }; if (car.x >= 0) this.beginRacing(); return; }
@@ -976,8 +986,10 @@
         if (currentMode.type === 'drift') { valueToSubmit = DriftSystem.totalScore; strToSubmit = valueToSubmit.toLocaleString() + " pts"; } 
         else if (currentMode.id === 'arcade') { valueToSubmit = 0; strToSubmit = "COURSE TERMINÉE"; }
         else { valueToSubmit = this.bestLapTime; strToSubmit = this.formatTime(valueToSubmit); }
-        document.getElementById('pause-btn').style.display='none'; document.getElementById('control-toggle-btn').style.display='none'; document.getElementById('leaderboard-panel').style.display='block'; document.getElementById('start-btn').style.display='none'; document.getElementById('mobile-controls').style.display='none'; document.getElementById('drift-ui').style.display='none';
+        document.getElementById('pause-btn').style.display='none'; document.getElementById('leaderboard-panel').style.display='block'; document.getElementById('start-btn').style.display='none'; document.getElementById('mobile-controls').style.display='none'; document.getElementById('drift-ui').style.display='none';
         document.getElementById('name-input-area').style.display='block'; document.getElementById('final-score-display').innerText = strToSubmit;
+        document.getElementById('quick-restart-btn').style.display='none';
+
         const nameInput = document.getElementById('player-name');
         const savedName = localStorage.getItem('drift_nc_username');
         if(savedName) nameInput.value = savedName;
@@ -992,8 +1004,8 @@
         };
       },
       formatTime(ms){ let m = Math.floor(ms/60000), s = Math.floor((ms%60000)/1000), c = Math.floor((ms%1000)/10); return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}.${c.toString().padStart(2,'0')}`; },
-      pauseGame(){ if(this.state==='racing'){ this.state='paused'; this.pausedTime = Date.now(); document.getElementById('pause-menu').style.display='flex'; document.getElementById('mobile-controls').style.display='none'; document.getElementById('control-toggle-btn').style.display='none'; } },
-      resumeGame(){ if(this.state==='paused'){ const d = Date.now() - this.pausedTime; this.startTime += d; this.lapStartTime += d; this.state='racing'; document.getElementById('pause-menu').style.display='none'; document.getElementById('mobile-controls').style.display='flex'; document.getElementById('control-toggle-btn').style.display='flex'; } },
+      pauseGame(){ if(this.state==='racing'){ this.state='paused'; this.pausedTime = Date.now(); document.getElementById('pause-menu').style.display='flex'; document.getElementById('mobile-controls').style.display='none'; document.getElementById('quick-restart-btn').style.display='none'; } },
+      resumeGame(){ if(this.state==='paused'){ const d = Date.now() - this.pausedTime; this.startTime += d; this.lapStartTime += d; this.state='racing'; document.getElementById('pause-menu').style.display='none'; document.getElementById('mobile-controls').style.display='flex'; document.getElementById('quick-restart-btn').style.display='flex'; } },
       quitToMenu(){ location.reload(); }
     };
 
@@ -1080,8 +1092,13 @@
             if(ctrlBtnSettings) ctrlBtnSettings.innerText = "CONTRÔLES : CLASSIQUE";
         }
     }
-    document.getElementById('control-toggle-btn').onclick = toggleControls;
+    // Only in Settings/Pause now
     document.getElementById('controls-btn').onclick = toggleControls;
+
+    // Quick Restart
+    document.getElementById('quick-restart-btn').onclick = () => {
+        RaceManager.startRollingStart();
+    };
 
     let globalZoom = 1.0;
     function toggleZoom() {
