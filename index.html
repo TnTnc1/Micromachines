@@ -29,7 +29,18 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    signInAnonymously(auth).then((u) => { window.Cloud.db = db; }).catch((e) => { console.error("Auth Error", e); });
+    // CORRECTION : On ne redéfinit pas window.Cloud ici pour ne pas écraser l'objet principal
+    signInAnonymously(auth).then((u) => { 
+        // On injecte juste la DB dans l'objet existant
+        if (window.Cloud) {
+            window.Cloud.db = db; 
+            // Si la méthode init existe, on l'appelle
+            if(typeof window.Cloud.init === 'function') {
+                window.Cloud.init(db);
+            }
+        }
+    }).catch((e) => { console.error("Auth Error", e); });
+    
     window.fs = { collection, addDoc, query, orderBy, limit, onSnapshot, getDocs };
   </script>
 
@@ -912,6 +923,14 @@
             ctx.fillStyle = "#e32119"; // Rouge Mobil
             ctx.fillText("LA FOA", 0, 20);
             ctx.restore();
+        } else if(trackLogo.complete && currentEdition === 'lagoon'){
+             // ANCIEN LOGO BRIDGESTONE POUR LAGOON
+             ctx.save();
+             ctx.translate(-300, -600); // Positionné avant la ligne
+             ctx.globalAlpha = 0.95;
+             ctx.globalCompositeOperation = 'source-over'; 
+             ctx.drawImage(trackLogo, -120, -60, 240, 120); 
+             ctx.restore();
         }
 
         // ====== 5) ATMOSPHÈRE (NUAGES) & DÉCOR ======
@@ -1118,6 +1137,7 @@
         
         document.getElementById('leaderboard-panel').style.display='none'; document.getElementById('pause-menu').style.display='none'; document.getElementById('pause-btn').style.display='none'; document.getElementById('dq-screen').style.display='none'; 
         
+        // HIDE RESTART BUTTON DURING ROLLING
         document.getElementById('quick-restart-btn').style.display='none';
 
         document.getElementById('mobile-controls').style.display='flex';
@@ -1137,6 +1157,7 @@
       beginRacing(){
         this.state='racing'; this.startTime = Date.now(); this.lapStartTime = this.startTime; this.currentLap = 1; this.bestLapTime = Infinity;
         document.getElementById('pause-btn').style.display='flex';
+        // SHOW RESTART BUTTON
         document.getElementById('quick-restart-btn').style.display='flex';
         
         const cd = document.getElementById('countdown-layer'); cd.innerHTML = '<div class="go-text">DRIFT!</div>'; setTimeout(() => { if(this.state === 'racing') cd.style.display = 'none'; }, 1000);
@@ -1274,7 +1295,12 @@
           const sp = Math.min(1, this.speed / (currentMode.physics.maxSpeed || 12)); const blur = sp * 6; 
           ctx.globalAlpha = 0.18; ctx.drawImage(carImage, -22 - blur*0.35, -40 - blur*0.10, 44, 80);
           ctx.globalAlpha = 0.10; ctx.drawImage(carImage, -22 - blur*0.65, -40 - blur*0.18, 44, 80);
-          ctx.globalAlpha = 1; ctx.filter = "contrast(1.08) saturate(1.12)"; ctx.drawImage(carImage, -22, -40, 44, 80); ctx.filter = "none";
+          
+          // OPTIMISATION MOBILE: Suppression des filtres de contraste
+          // ctx.filter = "contrast(1.08) saturate(1.12)"; 
+          
+          ctx.globalAlpha = 1; ctx.drawImage(carImage, -22, -40, 44, 80); 
+          // ctx.filter = "none";
         }
         ctx.restore();
       }
@@ -1284,9 +1310,12 @@
     ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
     const car = new Car();
     function resize(){ 
+        // OPTIMISATION MOBILE: Limite la résolution à 1.5x pour éviter les lags sur écrans Retina/HD
         const dpr = Math.min(window.devicePixelRatio || 1, 1.5); 
         canvas.width = window.innerWidth * dpr;
         canvas.height = window.innerHeight * dpr;
+        // CORRECTION : On retire le ctx.scale ici pour éviter le conflit de coordonnées
+        // On réapplique la qualité car le redimensionnement du canvas réinitialise le contexte
         ctx.imageSmoothingEnabled = true; 
         ctx.imageSmoothingQuality = 'high';
     }
@@ -1416,8 +1445,13 @@
       
       // CAMÉRA CENTRÉE (Version Corrigée)
       ctx.translate(canvas.width/2, canvas.height/2);
+      
+      // 2. On applique le Zoom ET le ratio de pixel (DPR) ici
+      // Cela permet d'avoir la bonne taille de jeu peu importe la densité de l'écran
       const currentDpr = canvas.width / window.innerWidth;
       ctx.scale(globalZoom * currentDpr, globalZoom * currentDpr);
+      
+      // 3. On déplace le monde pour centrer la voiture (Caméra)
       ctx.translate(-car.x - car.vx*10, -car.y - car.vy*10); 
       
       Track.draw(ctx);
