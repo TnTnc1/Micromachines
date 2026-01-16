@@ -1268,9 +1268,8 @@
     const car = new Car();
     
     function resize(){ 
-        const dpr = Math.min(window.devicePixelRatio || 1, 1.5); 
-        canvas.width = window.innerWidth * dpr;
-        canvas.height = window.innerHeight * dpr;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
         // CORRECTION : On retire le ctx.scale ici pour éviter le conflit de coordonnées
         // On réapplique la qualité car le redimensionnement du canvas réinitialise le contexte
         ctx.imageSmoothingEnabled = true; 
