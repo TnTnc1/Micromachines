@@ -402,8 +402,8 @@
   <canvas id="gameCanvas"></canvas>
 
   <script>
-    // --- 1. CONFIGURATION DES CIRCUITS (URBANISTE CORRIGÉ) ---
-    // Note: Mobile La Foa reprend le tracé classique mais avec la terre rouge
+    // --- 1. CONFIGURATION DES CIRCUITS ---
+    // (J'ai remis le tracé spécifique "Serpent" pour Mobil La Foa comme demandé implicitement par l'Urbaniste, distinct de Lagoon)
     const TRACK_LAYOUTS = {
         lagoon: {
             name: "LAGOON",
@@ -426,7 +426,7 @@
             }
         },
         mobile_lafoa: {
-            name: "EDITION LA FOA",
+            name: "SERPENT LA FOA",
             type: "rally",
             backgroundStyle: "earth",
             assets: {
@@ -434,14 +434,15 @@
                 customText: { text: "MOBIL", x: 0, y: 120, rot: 0 }
             },
             colors: { ground: { type: 'solid', c1: '#b91c1c' }, kerbMain: '#0033a0', road: '#1e293b' },
-            // REPRISE DES CHECKPOINTS DU LAGOON (Tracé identique demandé)
-            checkpoints: [ {x:500,y:-400,p:false}, {x:400,y:100,p:false}, {x:-200,y:400,p:false}, {x:-900,y:0,p:false} ],
-            startPos: { x: -1200, y: -600, angle: 0 },
-            finishLine: { axis: 'Y', val: -600 },
+            // LE TRACÉ SPÉCIFIQUE SERPENT
+            checkpoints: [ {x:800, y:800, p:false}, {x:800, y:200, p:false}, {x:-400, y:500, p:false}, {x:-400, y:-100, p:false}, {x:600, y:-400, p:false}, {x:-1000, y:600, p:false} ],
+            startPos: { x: -600, y: 800, angle: 0 },
+            finishLine: { axis: 'X', val: 0 },
             drawPath: (ctx) => {
-                // MÊME TRACÉ QUE LAGOON
-                ctx.beginPath(); ctx.moveTo(-1200,-600); ctx.lineTo(400,-600); ctx.arc(400,-400,200,-1.57,1.57,false); ctx.arc(400,0,200,-1.57,1.57,false);
-                ctx.lineTo(-100,200); ctx.arc(-100,400,200,-1.57,3.14,false); ctx.lineTo(-600,400); ctx.arc(-600,-100,500,1.57,-1.57,false); ctx.lineTo(-1200,-600);
+                ctx.beginPath(); ctx.moveTo(-800, 800); ctx.lineTo(800, 800); ctx.arc(800, 500, 300, 0.5*Math.PI, 1.5*Math.PI, true);
+                ctx.bezierCurveTo(400, 200, 0, 500, -400, 500); ctx.arc(-400, 200, 300, 0.5*Math.PI, 1.5*Math.PI, true);
+                ctx.lineTo(600, -100); ctx.bezierCurveTo(900, -100, 900, -400, 600, -400); ctx.lineTo(0, -400);
+                ctx.arc(0, -600, 200, 0.5*Math.PI, 1.0*Math.PI, false); ctx.bezierCurveTo(-1000, -600, -1200, 400, -1000, 600); ctx.lineTo(-800, 800);
             }
         },
         parking: {
@@ -463,7 +464,7 @@
         }
     };
 
-    // --- 2. THEME CONFIG (GRAPHISTE) ---
+    // --- 2. THEME CONFIG ---
     const THEME_CONFIG = {
         lagoon: { className: '', sponsor: null },
         mobile: { 
@@ -482,63 +483,11 @@
         } else if (sponsorSlot) { sponsorSlot.classList.remove('visible'); }
     }
 
-    // --- NOUVEAU SYSTÈME AUDIO (Synthétiseur Web Audio API) ---
-    // Plus de fichiers MP3 à charger, donc plus d'erreur 404
+    // --- AUDIO DÉSACTIVÉ ---
     const AudioSys = {
-        ctx: null, engineOsc: null, engineGain: null, skidOsc: null, skidGain: null, loaded: false,
-        async unlock(){
-            if(this.ctx) { if(this.ctx.state === 'suspended') this.ctx.resume(); return; }
-            const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC();
-            
-            // Moteur (Onde en dent de scie filtrée)
-            this.engineOsc = this.ctx.createOscillator();
-            this.engineOsc.type = 'sawtooth';
-            this.engineGain = this.ctx.createGain();
-            this.engineGain.gain.value = 0;
-            const lowpass = this.ctx.createBiquadFilter();
-            lowpass.type = 'lowpass';
-            lowpass.frequency.value = 400;
-            
-            this.engineOsc.connect(lowpass);
-            lowpass.connect(this.engineGain);
-            this.engineGain.connect(this.ctx.destination);
-            this.engineOsc.start();
-
-            // Crissement (Bruit rose simplifié par modulation)
-            this.skidOsc = this.ctx.createOscillator();
-            this.skidOsc.type = 'square'; // Son âpre
-            this.skidGain = this.ctx.createGain();
-            this.skidGain.gain.value = 0;
-            
-            // Filtre pour rendre le son moins agressif
-            const skidFilter = this.ctx.createBiquadFilter();
-            skidFilter.type = 'highpass';
-            skidFilter.frequency.value = 1000;
-
-            this.skidOsc.connect(skidFilter);
-            skidFilter.connect(this.skidGain);
-            this.skidGain.connect(this.ctx.destination);
-            this.skidOsc.start();
-
-            this.loaded = true;
-        },
-        update(speed, driftFactor){
-            if(!this.ctx || !this.engineOsc) return;
-            // Engine pitch & vol
-            const spd = Math.abs(speed);
-            const freq = 60 + (spd * 15); // Hz de base + accélération
-            this.engineOsc.frequency.setTargetAtTime(freq, this.ctx.currentTime, 0.1);
-            const vol = Math.min(0.05 + spd/60, 0.2); 
-            this.engineGain.gain.setTargetAtTime(vol, this.ctx.currentTime, 0.1);
-
-            // Skid
-            const skidVol = driftFactor ? 0.15 : 0; 
-            if(this.skidGain) {
-                this.skidGain.gain.setTargetAtTime(skidVol, this.ctx.currentTime, 0.05);
-                // Modulation de fréquence aléatoire pour simuler le crissement
-                if(driftFactor) this.skidOsc.frequency.setValueAtTime(800 + Math.random()*400, this.ctx.currentTime);
-            }
-        }
+        ctx: null, loaded: true, // Loaded true pour ne pas bloquer
+        async unlock(){ },
+        update(speed, driftFactor){ }
     };
 
     const DRIFT_CARS_CONFIG = {
