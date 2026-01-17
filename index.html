@@ -310,6 +310,20 @@
     .stat-fill { height: 100%; border-radius: 3px; transition: width 1s ease-out; }
     .card-street .stat-fill { background: #34d399; box-shadow: 0 0 10px #34d399; }
     .card-pro .stat-fill { background: #e879f9; box-shadow: 0 0 10px #e879f9; }
+
+    /* --- CORRECTION MENU VERTICAL --- */
+    #race-mode-select .mode-container {
+        flex-direction: column !important;
+        flex-wrap: nowrap !important;
+        justify-content: flex-start;
+        gap: 15px; /* Espacement vertical */
+    }
+    #race-mode-select .mode-btn {
+        width: 100%;
+        flex: none;
+        height: auto;
+        min-height: 80px;
+    }
   </style>
 </head>
 
@@ -525,12 +539,13 @@
         arcade: { id: 'arcade', type: 'race', name: 'COURSE ARCADE', physics: { acceleration: 0.22, maxSpeed: 12.5, friction: 0.965, turnSpeed: 0.075, offRoadFriction: 0.75 }, collection: null, colors: { body1: '#c53030', body2: '#e53e3e', body3: '#fc8181', wing: '#742a2a' }, trackColors: { curbRed: '#ef4444' } },
         drift: { id: 'drift', type: 'drift', name: 'DRIFT KING', physics: DRIFT_CARS_CONFIG.pro.physics, collection: 'world_tour_records_v3_drift', colors: DRIFT_CARS_CONFIG.pro.colors, trackColors: { curbRed: '#ef4444' } },
         
-        // MODE MOBILE LA FOA
+        // MODE MOBILE LA FOA - BOOSTÉ
         mobile_lafoa: { 
             id: 'mobile_lafoa', 
             type: 'race', 
             name: 'EDITION MOBIL LA FOA', 
-            physics: { acceleration: 0.24, maxSpeed: 12.8, friction: 0.965, turnSpeed: 0.08, offRoadFriction: 0.75 }, 
+            // ACCELERATION ET VITESSE AUGMENTÉES (0.30 / 15.0 au lieu de 0.24 / 12.8)
+            physics: { acceleration: 0.30, maxSpeed: 15.0, friction: 0.97, turnSpeed: 0.085, offRoadFriction: 0.75 }, 
             collection: 'mobile_lafoa_records_v2', 
             colors: { body1: '#0033a0', body2: '#ffffff', body3: '#e32119', wing: '#0033a0' },
             trackColors: { curbRed: '#0033a0' } 
@@ -869,7 +884,7 @@
         ctx.lineTo(-100,200); ctx.arc(-100,400,200,-1.57,3.14,false); ctx.lineTo(-600,400); ctx.arc(-600,-100,500,1.57,-1.57,false); ctx.lineTo(-1200,-600);
       },
       traceMobile(ctx) {
-          // CIRCUIT "LA FOA RALLY" : 100% Bitume, complexe, SANS OVALE
+          // CIRCUIT "LA FOA RALLY"
           ctx.beginPath();
           // Start bottom-left (-800, 400) - Straight
           ctx.moveTo(-800, 400);
@@ -1012,7 +1027,9 @@
         // Ligne de départ
         ctx.save();
         if (isMobileModeDraw) {
-             ctx.translate(-700, 400); // Départ La Foa (Ligne droite bas)
+             // DEPLACEMENT DE LA LIGNE D'ARRIVEE POUR MOBILE
+             // On la met après le texte (vers x= -200)
+             ctx.translate(-200, 400); 
              ctx.rotate(Math.PI/2); // Vertical
         } else {
              ctx.translate(0,-600); // Départ Lagoon
@@ -1032,7 +1049,8 @@
         // LOGO MOBILE LA FOA
         if(isMobileModeDraw) {
             ctx.save();
-            ctx.translate(-500, 400); // Juste après la ligne Mobile
+            // On positionne le texte AVANT la ligne (vers x = -600)
+            ctx.translate(-600, 400); 
             ctx.textAlign = "center";
             ctx.font = "900 40px Orbitron";
             ctx.fillStyle = "#ffffff";
@@ -1209,18 +1227,17 @@
       },
       startRollingStart(){
         // DEFINITION DES CHECKPOINTS SELON LE CIRCUIT
-        // Fix: Ensure checkpoints cover the whole Mobile track 
-        // New Trace: Start -800,400 -> 200,400 -> Hairpin up to 200,100 -> S curve -> Loop back
         if (currentMode.id === 'mobile_lafoa') {
              // Circuit La Foa
              this.checkpoints = [ 
-                 {x:0,y:400,p:false}, // Bottom straight
-                 {x:200,y:200,p:false}, // Hairpin top
-                 {x:800,y:-200,p:false}, // Top right curve
-                 {x:-200,y:-400,p:false}, // Top left straight
-                 {x:-800,y:0,p:false} // Return down
+                 {x:0,y:400,p:false}, // Ligne droite bas
+                 {x:200,y:200,p:false}, // Epingle haut
+                 {x:800,y:-200,p:false}, // Courbe droite
+                 {x:-200,y:-400,p:false}, // Ligne droite haut
+                 {x:-800,y:0,p:false} // Retour bas
              ];
-             car.x = -900; car.y = 400; car.angle = 0; // Start
+             // Départ très en arrière pour l'élan
+             car.x = -1000; car.y = 400; car.angle = 0; 
         } else {
              // Circuit Lagoon
              this.checkpoints = [ {x:500,y:-400,p:false}, {x:400,y:100,p:false}, {x:-200,y:400,p:false}, {x:-900,y:0,p:false} ];
@@ -1234,7 +1251,7 @@
         VIS.initTires(); // Refresh tires too
 
         this.state = 'rolling'; car.reset(); 
-        if (currentMode.id === 'mobile_lafoa') { car.x = -900; car.y = 400; } else { car.x = -1200; car.y = -600; }
+        if (currentMode.id === 'mobile_lafoa') { car.x = -1000; car.y = 400; } else { car.x = -1200; car.y = -600; }
         
         car.angle = 0; car.speed = currentMode.physics.maxSpeed; car.vx = car.speed;
         // Reset flags
@@ -1270,7 +1287,8 @@
       update(car){
         if (this.state === 'rolling') { car.controls = { u: true, d: false, l: false, r: false }; 
              // Start logic based on track start X
-             if (currentMode.id === 'mobile_lafoa' && car.x >= -700) this.beginRacing(); 
+             // Si Mobile, on attend que la voiture dépasse le texte (vers -400)
+             if (currentMode.id === 'mobile_lafoa' && car.x >= -400) this.beginRacing(); 
              else if (currentMode.id !== 'mobile_lafoa' && car.x >= 0) this.beginRacing(); 
              return; 
         }
@@ -1281,8 +1299,8 @@
         
         // Lap completion logic with direction check
         if (currentMode.id === 'mobile_lafoa') {
-             // Finish line at x=-700, y=400. Car moving Right (+X)
-             if (Math.abs(car.y - 400) < 100 && car.x > -700 && car.lastX <= -700 && this.checkpoints.every(cp => cp.p)) {
+             // Finish line at x=-200 (après le texte), y=400. Car moving Right (+X)
+             if (Math.abs(car.y - 400) < 100 && car.x > -200 && car.lastX <= -200 && this.checkpoints.every(cp => cp.p)) {
                  this.completeLap(now);
              }
         } else {
